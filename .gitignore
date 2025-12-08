@@ -56,3 +56,6 @@ nunit-*.xml
 *.dll
 
 .env*
+
+# Production compose
+compose.prod.yaml
