@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("cryptocompete-api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9f5872f2b0e25c06ae944c7cffb0904447b3e79f")]
 [assembly: System.Reflection.AssemblyProductAttribute("cryptocompete-api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("cryptocompete-api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
