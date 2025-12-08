@@ -1,0 +1,15 @@
+services:
+  api:
+    image: oagesus/cryptocompete-api:${TAG:-latest}
+    build:
+      context: ./cryptocompete-api
+      target: final
+    ports:
+      - 5000:8080
+
+  web:
+    image: oagesus/cryptocompete-web:${TAG:-latest}
+    build:
+      context: ./cryptocompete-web
+    ports:
+      - 3000:3000
