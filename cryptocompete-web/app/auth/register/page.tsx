@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const registerSchema = z
   .object({
     username: z
@@ -37,7 +39,7 @@ const registerSchema = z
         /^[a-zA-Z0-9_]+$/,
         "Username can only contain letters, numbers and underscores"
       ),
-    email: z.email("Please enter a valid email address"),
+    email: z.string().email("Please enter a valid email address"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -73,8 +75,7 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      // TODO: API call to .NET backend
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +92,6 @@ export default function RegisterPage() {
         throw new Error(errorData.message || "Registration failed");
       }
 
-      // Redirect to login or verification page
       router.push("/auth/login?registered=true");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

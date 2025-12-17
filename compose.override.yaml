@@ -3,6 +3,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=cryptocompete_dev;Username=postgres;Password=devpassword
+      - Resend__ApiKey=${RESEND_API_KEY}
+      - Resend__FromEmail=noreply@mstubenvoll.com
     depends_on:
       db:
         condition: service_healthy
