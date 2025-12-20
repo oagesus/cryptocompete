@@ -8,17 +8,20 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     
     public DbSet<User> Users => Set<User>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        modelBuilder.Entity<EmailVerificationToken>(entity =>
         {
-            entity.SetTableName(entity.GetTableName()?.ToLower());
+            entity.HasIndex(e => e.Token).IsUnique();
             
-            foreach (var property in entity.GetProperties())
-            {
-                property.SetColumnName(property.GetColumnName()?.ToLower());
-            }
-        }
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
+        });
     }
 }
