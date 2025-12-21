@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
@@ -19,7 +19,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type VerificationStatus = "loading" | "success" | "error";
 
-export default function VerifyPage() {
+function VerifyContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<VerificationStatus>("loading");
@@ -88,5 +88,27 @@ export default function VerifyPage() {
         )}
       </CardFooter>
     </Card>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <Card className="text-center">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">
+              Email Verification
+            </CardTitle>
+            <CardDescription>Verifying your email address...</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
+          </CardContent>
+        </Card>
+      }
+    >
+      <VerifyContent />
+    </Suspense>
   );
 }
