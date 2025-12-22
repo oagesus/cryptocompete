@@ -58,6 +58,17 @@ export async function middleware(request: NextRequest) {
           maxAge: name === "access_token" ? 300 : 2592000,
         });
       }
+
+      if (name === "token_exp") {
+        response.cookies.set({
+          name,
+          value: decodeURIComponent(value),
+          httpOnly: false,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 300,
+        });
+      }
     }
 
     return response;

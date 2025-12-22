@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Models;
@@ -166,13 +165,23 @@ public class AuthController : ControllerBase
         var (refreshToken, refreshTokenHash) = _jwtService.GenerateRefreshToken();
 
         var deviceInfo = Request.Headers.UserAgent.ToString();
+        deviceInfo = deviceInfo.Length > 500 ? deviceInfo[..500] : deviceInfo;
+
+        var session = new UserSession
+        {
+            UserId = user.Id,
+            DeviceInfo = deviceInfo
+        };
+
+        _db.UserSessions.Add(session);
+        await _db.SaveChangesAsync();
 
         var refreshTokenEntity = new RefreshToken
         {
             UserId = user.Id,
+            SessionId = session.Id,
             TokenHash = refreshTokenHash,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenExpirationDays),
-            DeviceInfo = deviceInfo.Length > 500 ? deviceInfo[..500] : deviceInfo
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenExpirationDays)
         };
 
         _db.RefreshTokens.Add(refreshTokenEntity);
@@ -231,17 +240,12 @@ public class AuthController : ControllerBase
 
         var storedToken = await _db.RefreshTokens
             .Include(t => t.User)
+            .Include(t => t.Session)
             .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
 
         if (storedToken == null)
         {
             return Unauthorized(new { message = "Invalid refresh token" });
-        }
-
-        if (storedToken.RevokedAt != null)
-        {
-            await RevokeAllUserTokens(storedToken.UserId);
-            return Unauthorized(new { message = "Token has been revoked" });
         }
 
         if (storedToken.ExpiresAt < DateTimeOffset.UtcNow)
@@ -256,7 +260,9 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Your account has been blocked" });
         }
 
-        storedToken.RevokedAt = DateTimeOffset.UtcNow;
+        storedToken.Session.LastActivityAt = DateTimeOffset.UtcNow;
+
+        _db.RefreshTokens.Remove(storedToken);
 
         var accessToken = _jwtService.GenerateAccessToken(storedToken.User);
         var (newRefreshToken, newRefreshTokenHash) = _jwtService.GenerateRefreshToken();
@@ -264,9 +270,9 @@ public class AuthController : ControllerBase
         var newRefreshTokenEntity = new RefreshToken
         {
             UserId = storedToken.UserId,
+            SessionId = storedToken.SessionId,
             TokenHash = newRefreshTokenHash,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenExpirationDays),
-            DeviceInfo = storedToken.DeviceInfo
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenExpirationDays)
         };
 
         _db.RefreshTokens.Add(newRefreshTokenEntity);
@@ -285,11 +291,14 @@ public class AuthController : ControllerBase
         if (!string.IsNullOrEmpty(refreshToken))
         {
             var tokenHash = JwtService.HashToken(refreshToken);
-            var storedToken = await _db.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
+            var storedToken = await _db.RefreshTokens
+                .Include(t => t.Session)
+                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
 
             if (storedToken != null)
             {
-                storedToken.RevokedAt = DateTimeOffset.UtcNow;
+                storedToken.Session.LoggedOutAt = DateTimeOffset.UtcNow;
+                _db.RefreshTokens.Remove(storedToken);
                 await _db.SaveChangesAsync();
             }
         }
@@ -297,6 +306,88 @@ public class AuthController : ControllerBase
         DeleteTokenCookies();
 
         return Ok(new { message = "Logged out successfully" });
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+        if (user != null && !user.IsBlocked)
+        {
+            var lastToken = await _db.PasswordResetTokens
+                .Where(t => t.UserId == user.Id)
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (lastToken == null || lastToken.CreatedAt <= DateTimeOffset.UtcNow.AddSeconds(-60))
+            {
+                var unusedTokens = await _db.PasswordResetTokens
+                    .Where(t => t.UserId == user.Id && !t.IsUsed)
+                    .ToListAsync();
+
+                _db.PasswordResetTokens.RemoveRange(unusedTokens);
+
+                var resetToken = new PasswordResetToken
+                {
+                    UserId = user.Id
+                };
+
+                _db.PasswordResetTokens.Add(resetToken);
+                await _db.SaveChangesAsync();
+
+                var link = $"{_frontendUrl}/auth/reset-password?token={resetToken.Token}";
+
+                await _emailService.SendPasswordResetEmailAsync(
+                    user.Email,
+                    user.Username,
+                    link
+                );
+            }
+        }
+
+        return Ok(new { message = "If an account with this email exists, you will receive a password reset link." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if (!Guid.TryParse(request.Token, out var tokenGuid))
+        {
+            return BadRequest(new { message = "Invalid reset token" });
+        }
+
+        var resetToken = await _db.PasswordResetTokens
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(t => t.Token == tokenGuid);
+
+        if (resetToken == null)
+        {
+            return BadRequest(new { message = "Invalid reset token" });
+        }
+
+        if (resetToken.IsUsed)
+        {
+            return BadRequest(new { message = "Token has already been used" });
+        }
+
+        if (resetToken.ExpiresAt < DateTimeOffset.UtcNow)
+        {
+            return BadRequest(new { message = "Token has expired" });
+        }
+
+        if (resetToken.User.IsBlocked)
+        {
+            return BadRequest(new { message = "Account is blocked" });
+        }
+
+        resetToken.IsUsed = true;
+        resetToken.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        await RevokeAllUserTokens(resetToken.UserId);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Password reset successfully" });
     }
 
     private void SetTokenCookies(string accessToken, string refreshToken)
@@ -341,13 +432,16 @@ public class AuthController : ControllerBase
     private async Task RevokeAllUserTokens(int userId)
     {
         var tokens = await _db.RefreshTokens
-            .Where(t => t.UserId == userId && t.RevokedAt == null)
+            .Include(t => t.Session)
+            .Where(t => t.UserId == userId)
             .ToListAsync();
 
         foreach (var token in tokens)
         {
-            token.RevokedAt = DateTimeOffset.UtcNow;
+            token.Session.LoggedOutAt = DateTimeOffset.UtcNow;
         }
+
+        _db.RefreshTokens.RemoveRange(tokens);
 
         await _db.SaveChangesAsync();
     }
@@ -358,3 +452,5 @@ public record LoginRequest(string Identifier, string Password);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
 public record MeResponse(int Id, string Username, string Email);
+public record ForgotPasswordRequest(string Email);
+public record ResetPasswordRequest(string Token, string Password);

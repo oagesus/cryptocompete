@@ -33,6 +33,25 @@ public class EmailService : IEmailService
         await _resend.EmailSendAsync(message);
     }
 
+    public async Task SendPasswordResetEmailAsync(string toEmail, string username, string resetLink)
+    {
+        var template = await LoadTemplateAsync("PasswordResetEmail.html");
+        
+        var htmlContent = template
+            .Replace("{{USERNAME}}", username)
+            .Replace("{{RESET_LINK}}", resetLink);
+
+        var message = new EmailMessage
+        {
+            From = _fromEmail,
+            To = toEmail,
+            Subject = "Reset your CryptoCompete password",
+            HtmlBody = htmlContent
+        };
+
+        await _resend.EmailSendAsync(message);
+    }
+
     private static async Task<string> LoadTemplateAsync(string templateName)
     {
         var assembly = Assembly.GetExecutingAssembly();

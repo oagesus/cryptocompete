@@ -3,6 +3,7 @@ using System;
 using CryptoCompete.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace cryptocompete_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251222160727_AddUserSession")]
+    partial class AddUserSession
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,13 +126,13 @@ namespace cryptocompete_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("DeviceInfo")
+                        .HasColumnType("text")
+                        .HasColumnName("device_info");
+
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
-                        .HasColumnName("session_id");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
@@ -142,9 +145,6 @@ namespace cryptocompete_api.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_refresh_tokens");
-
-                    b.HasIndex("SessionId")
-                        .HasDatabaseName("ix_refresh_tokens_session_id");
 
                     b.HasIndex("TokenHash")
                         .IsUnique()
@@ -221,10 +221,6 @@ namespace cryptocompete_api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("device_info");
 
-                    b.Property<DateTimeOffset>("LastActivityAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_activity_at");
-
                     b.Property<DateTimeOffset>("LoggedInAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("logged_in_at");
@@ -272,21 +268,12 @@ namespace cryptocompete_api.Migrations
 
             modelBuilder.Entity("CryptoCompete.Api.Models.RefreshToken", b =>
                 {
-                    b.HasOne("CryptoCompete.Api.Models.UserSession", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_refresh_tokens_user_sessions_session_id");
-
                     b.HasOne("CryptoCompete.Api.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
-
-                    b.Navigation("Session");
 
                     b.Navigation("User");
                 });
