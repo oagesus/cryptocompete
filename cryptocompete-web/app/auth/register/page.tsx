@@ -27,8 +27,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 const registerSchema = z
   .object({
     username: z
@@ -75,7 +73,7 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
+      const response = await fetch(`/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

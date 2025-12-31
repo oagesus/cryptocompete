@@ -11,7 +11,7 @@ export function LogoutButton() {
       method: "POST",
       credentials: "include",
     });
-    router.push("/");
+    router.push("/auth/login");
     router.refresh();
   }
 

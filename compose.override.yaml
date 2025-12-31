@@ -12,7 +12,6 @@ services:
 
   web:
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
       - API_URL=http://api:8080
 
   db:

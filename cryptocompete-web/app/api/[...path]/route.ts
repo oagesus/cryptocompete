@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_URL = process.env.API_URL || "http://localhost:5000";
+const API_URL = process.env.API_URL;
 
 export async function GET(
   request: NextRequest,
@@ -35,7 +35,9 @@ async function proxyRequest(
   params: { path: string[] }
 ) {
   const path = params.path.join("/");
-  const url = `${API_URL}/api/${path}`;
+  const searchParams = request.nextUrl.searchParams.toString();
+  const queryString = searchParams ? `?${searchParams}` : "";
+  const url = `${API_URL}/api/${path}${queryString}`;
 
   const headers = new Headers();
   headers.set("Content-Type", request.headers.get("Content-Type") || "application/json");

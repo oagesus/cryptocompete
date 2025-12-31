@@ -15,8 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 type VerificationStatus = "loading" | "success" | "error";
 
 function VerifyContent() {
@@ -35,7 +33,7 @@ function VerifyContent() {
     async function verifyEmail() {
       try {
         const response = await fetch(
-          `${API_URL}/api/auth/verify?token=${token}`
+          `/api/auth/verify?token=${token}`
         );
         const data = await response.json();
 
