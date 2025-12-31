@@ -3,7 +3,6 @@ services:
     image: oagesus/cryptocompete-api:${TAG:-latest}
     build:
       context: ./cryptocompete-api
-      target: final
     ports:
       - 5000:8080
 
