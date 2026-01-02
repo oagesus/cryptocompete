@@ -19,10 +19,10 @@ export async function Navbar() {
           ) : (
             <>
               <Button variant="ghost" asChild>
-                <Link href="/auth/login">Login</Link>
+                <Link href="/auth/login">Sign In</Link>
               </Button>
               <Button asChild>
-                <Link href="/auth/register">Register</Link>
+                <Link href="/auth/register">Sign Up</Link>
               </Button>
             </>
           )}

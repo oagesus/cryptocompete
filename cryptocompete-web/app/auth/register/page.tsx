@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 const registerSchema = z
   .object({
@@ -56,6 +57,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<RegisterFormValues>({
@@ -125,7 +127,7 @@ export default function RegisterPage() {
                     <Input
                       placeholder="your_username"
                       autoComplete="username"
-                      disabled={isLoading}
+                      disabled={isLoading || isGoogleLoading}
                       {...field}
                     />
                   </FormControl>
@@ -145,7 +147,7 @@ export default function RegisterPage() {
                       type="email"
                       placeholder="name@example.com"
                       autoComplete="email"
-                      disabled={isLoading}
+                      disabled={isLoading || isGoogleLoading}
                       {...field}
                     />
                   </FormControl>
@@ -165,7 +167,7 @@ export default function RegisterPage() {
                       type="password"
                       placeholder="••••••••"
                       autoComplete="new-password"
-                      disabled={isLoading}
+                      disabled={isLoading || isGoogleLoading}
                       {...field}
                     />
                   </FormControl>
@@ -185,7 +187,7 @@ export default function RegisterPage() {
                       type="password"
                       placeholder="••••••••"
                       autoComplete="new-password"
-                      disabled={isLoading}
+                      disabled={isLoading || isGoogleLoading}
                       {...field}
                     />
                   </FormControl>
@@ -194,12 +196,31 @@ export default function RegisterPage() {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || isGoogleLoading}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create account
             </Button>
           </form>
         </Form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-card px-2 text-muted-foreground">or</span>
+          </div>
+        </div>
+
+        <GoogleSignInButton
+          disabled={isLoading}
+          onError={setError}
+          onLoadingChange={setIsGoogleLoading}
+        />
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">

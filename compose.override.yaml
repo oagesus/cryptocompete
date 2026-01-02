@@ -6,6 +6,7 @@ services:
       - Resend__ApiKey=${RESEND_API_KEY}
       - Resend__FromEmail=noreply@mstubenvoll.com
       - Jwt__Secret=${JWT_SECRET}
+      - Google__ClientId=${GOOGLE_CLIENT_ID}
     depends_on:
       db:
         condition: service_healthy
@@ -13,6 +14,7 @@ services:
   web:
     environment:
       - API_URL=http://api:8080
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 
   db:
     image: postgres:17-alpine

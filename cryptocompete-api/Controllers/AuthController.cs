@@ -2,6 +2,7 @@ using System.Security.Claims;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Models;
 using CryptoCompete.Api.Services;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ public class AuthController : ControllerBase
     private readonly int _refreshTokenExpirationDays;
     private readonly int _accessTokenExpirationMinutes;
     private readonly bool _isProduction;
+    private readonly string _googleClientId;
 
     public AuthController(
         AppDbContext db, 
@@ -35,6 +37,8 @@ public class AuthController : ControllerBase
         _refreshTokenExpirationDays = configuration.GetValue<int>("Jwt:RefreshTokenExpirationDays", 30);
         _accessTokenExpirationMinutes = configuration.GetValue<int>("Jwt:AccessTokenExpirationMinutes", 5);
         _isProduction = environment.IsProduction();
+        _googleClientId = configuration["Google:ClientId"] 
+            ?? throw new InvalidOperationException("Google:ClientId is not configured");
     }
 
     [HttpPost("register")]
@@ -146,6 +150,17 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid credentials" });
         }
 
+        if (string.IsNullOrEmpty(user.PasswordHash))
+        {
+            var providers = await _db.ExternalLogins
+                .Where(e => e.UserId == user.Id)
+                .Select(e => e.Provider)
+                .ToListAsync();
+
+            var providerList = string.Join(" or ", providers);
+            return Unauthorized(new { message = $"Please sign in with {providerList}" });
+        }
+
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             return Unauthorized(new { message = "Invalid credentials" });
@@ -161,41 +176,110 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Your account has been blocked" });
         }
 
-        var accessToken = _jwtService.GenerateAccessToken(user);
-        var (refreshToken, refreshTokenHash) = _jwtService.GenerateRefreshToken();
+        return await CreateSessionAndRespond(user);
+    }
 
-        var deviceInfo = Request.Headers.UserAgent.ToString();
-        deviceInfo = deviceInfo.Length > 500 ? deviceInfo[..500] : deviceInfo;
-
-        var session = new UserSession
+    [HttpPost("google")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        GoogleJsonWebSignature.Payload payload;
+        
+        try
         {
-            UserId = user.Id,
-            DeviceInfo = deviceInfo
-        };
-
-        _db.UserSessions.Add(session);
-        await _db.SaveChangesAsync();
-
-        var refreshTokenEntity = new RefreshToken
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { _googleClientId }
+            };
+            
+            payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
+        }
+        catch (InvalidJwtException)
         {
-            UserId = user.Id,
-            SessionId = session.Id,
-            TokenHash = refreshTokenHash,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenExpirationDays)
-        };
+            return Unauthorized(new { message = "Invalid Google token" });
+        }
 
-        _db.RefreshTokens.Add(refreshTokenEntity);
-        await _db.SaveChangesAsync();
+        if (!payload.EmailVerified)
+        {
+            return BadRequest(new { message = "Google email is not verified" });
+        }
 
-        SetTokenCookies(accessToken, refreshToken);
+        var externalLogin = await _db.ExternalLogins
+            .Include(e => e.User)
+            .FirstOrDefaultAsync(e => 
+                e.Provider == ExternalLoginProviders.Google && 
+                e.ProviderSubjectId == payload.Subject);
 
-        return Ok(new LoginResponse(
-            accessToken,
-            refreshToken,
-            user.Id,
-            user.Username,
-            user.Email
-        ));
+        User? user;
+
+        if (externalLogin != null)
+        {
+            user = externalLogin.User;
+        }
+        else
+        {
+            user = await _db.Users
+                .Include(u => u.ExternalLogins)
+                .FirstOrDefaultAsync(u => u.Email == payload.Email);
+
+            if (user != null)
+            {
+                if (user.EmailVerifiedAt == null)
+                {
+                    user.EmailVerifiedAt = DateTimeOffset.UtcNow;
+                }
+
+                var newExternalLogin = new ExternalLogin
+                {
+                    UserId = user.Id,
+                    Provider = ExternalLoginProviders.Google,
+                    ProviderSubjectId = payload.Subject,
+                    ProviderEmail = payload.Email,
+                    ProviderDisplayName = payload.Name
+                };
+
+                _db.ExternalLogins.Add(newExternalLogin);
+                await _db.SaveChangesAsync();
+            }
+            else
+            {
+                var username = await GenerateUniqueUsername(payload.Email);
+
+                user = new User
+                {
+                    Username = username,
+                    Email = payload.Email,
+                    PasswordHash = null,
+                    EmailVerifiedAt = DateTimeOffset.UtcNow
+                };
+
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+
+                var newExternalLogin = new ExternalLogin
+                {
+                    UserId = user.Id,
+                    Provider = ExternalLoginProviders.Google,
+                    ProviderSubjectId = payload.Subject,
+                    ProviderEmail = payload.Email,
+                    ProviderDisplayName = payload.Name
+                };
+
+                _db.ExternalLogins.Add(newExternalLogin);
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        if (user is null)
+        {
+            return BadRequest(new { message = "User could not be created" });
+        }
+
+        if (user.IsBlocked)
+        {
+            return Unauthorized(new { message = "Your account has been blocked" });
+        }
+
+        return await CreateSessionAndRespond(user);
     }
 
     [Authorize]
@@ -210,7 +294,9 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid token" });
         }
 
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _db.Users
+            .Include(u => u.ExternalLogins)
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
         {
@@ -223,7 +309,13 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Your account has been blocked" });
         }
 
-        return Ok(new MeResponse(user.Id, user.Username, user.Email));
+        return Ok(new MeResponse(
+            user.Id, 
+            user.Username, 
+            user.Email,
+            user.PasswordHash != null,
+            user.ExternalLogins.Select(e => e.Provider).ToList()
+        ));
     }
 
     [HttpPost("refresh")]
@@ -390,6 +482,129 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Password reset successfully" });
     }
 
+    private async Task<IActionResult> CreateSessionAndRespond(User user)
+    {
+        var accessToken = _jwtService.GenerateAccessToken(user);
+        var (refreshToken, refreshTokenHash) = _jwtService.GenerateRefreshToken();
+
+        var deviceInfo = Request.Headers.UserAgent.ToString();
+        deviceInfo = deviceInfo.Length > 500 ? deviceInfo[..500] : deviceInfo;
+
+        var session = new UserSession
+        {
+            UserId = user.Id,
+            DeviceInfo = deviceInfo
+        };
+
+        _db.UserSessions.Add(session);
+        await _db.SaveChangesAsync();
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            UserId = user.Id,
+            SessionId = session.Id,
+            TokenHash = refreshTokenHash,
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenExpirationDays)
+        };
+
+        _db.RefreshTokens.Add(refreshTokenEntity);
+        await _db.SaveChangesAsync();
+
+        SetTokenCookies(accessToken, refreshToken);
+
+        return Ok(new LoginResponse(
+            accessToken,
+            refreshToken,
+            user.Id,
+            user.Username,
+            user.Email
+        ));
+    }
+
+    private async Task<string> GenerateUniqueUsername(string email)
+    {
+        var baseUsername = email.Split('@')[0].ToLowerInvariant();
+
+        baseUsername = new string(baseUsername.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
+
+        if (baseUsername.Length > 17)
+        {
+            baseUsername = baseUsername[..17];
+        }
+
+        var existingUsernames = await _db.Users
+            .Where(u => u.Username.StartsWith(baseUsername))
+            .Select(u => u.Username)
+            .ToListAsync();
+
+        var existingSet = existingUsernames.ToHashSet();
+
+        if (baseUsername.Length < 3)
+        {
+            var usedNumbers = existingSet
+                .Where(u => u.Length > baseUsername.Length)
+                .Select(u => u[baseUsername.Length..])
+                .Where(suffix => int.TryParse(suffix, out _))
+                .Select(suffix => int.Parse(suffix))
+                .ToHashSet();
+
+            var availableNumbers = Enumerable.Range(100, 900)
+                .Where(n => !usedNumbers.Contains(n))
+                .ToList();
+
+            if (availableNumbers.Count > 0)
+            {
+                var randomNumber = availableNumbers[Random.Shared.Next(availableNumbers.Count)];
+                return $"{baseUsername}{randomNumber}";
+            }
+        }
+        else
+        {
+            if (!existingSet.Contains(baseUsername))
+            {
+                return baseUsername;
+            }
+
+            var usedNumbersForBase = existingSet
+                .Where(u => u.Length > baseUsername.Length)
+                .Select(u => u[baseUsername.Length..])
+                .Where(suffix => int.TryParse(suffix, out _))
+                .Select(suffix => int.Parse(suffix))
+                .ToHashSet();
+
+            var availableNumbersForBase = Enumerable.Range(1, 999)
+                .Where(n => !usedNumbersForBase.Contains(n))
+                .ToList();
+
+            if (availableNumbersForBase.Count > 0)
+            {
+                var randomNum = availableNumbersForBase[Random.Shared.Next(availableNumbersForBase.Count)];
+                return $"{baseUsername}{randomNum}";
+            }
+        }
+
+        var fallbackUsernames = await _db.Users
+            .Where(u => u.Username.StartsWith("user"))
+            .Select(u => u.Username)
+            .ToListAsync();
+
+        var fallbackSet = fallbackUsernames.ToHashSet();
+
+        var usedFallbackNumbers = fallbackSet
+            .Where(u => u.Length > 4)
+            .Select(u => u[4..])
+            .Where(suffix => int.TryParse(suffix, out _))
+            .Select(suffix => int.Parse(suffix))
+            .ToHashSet();
+
+        var availableFallbackNumbers = Enumerable.Range(1, 999999)
+            .Where(n => !usedFallbackNumbers.Contains(n))
+            .ToList();
+
+        var fallbackNumber = availableFallbackNumbers[Random.Shared.Next(availableFallbackNumbers.Count)];
+        return $"user{fallbackNumber}";
+    }
+
     private void SetTokenCookies(string accessToken, string refreshToken)
     {
         var tokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accessTokenExpirationMinutes).ToUnixTimeSeconds();
@@ -449,8 +664,9 @@ public class AuthController : ControllerBase
 
 public record RegisterRequest(string Username, string Email, string Password);
 public record LoginRequest(string Identifier, string Password);
+public record GoogleLoginRequest(string IdToken);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
-public record MeResponse(int Id, string Username, string Email);
+public record MeResponse(int Id, string Username, string Email, bool HasPassword, List<string> ConnectedProviders);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);

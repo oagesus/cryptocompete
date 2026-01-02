@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 const loginSchema = z.object({
   identifier: z.string().min(1, "Please enter your email or username"),
@@ -40,6 +41,7 @@ function LoginContent() {
   const registered = searchParams.get("registered");
   const verified = searchParams.get("verified");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
@@ -121,7 +123,8 @@ function LoginContent() {
                     <Input
                       placeholder="name@example.com or username"
                       autoComplete="username"
-                      disabled={isLoading}
+                      disabled={isLoading || isGoogleLoading}
+                      tabIndex={1}
                       {...field}
                     />
                   </FormControl>
@@ -140,6 +143,7 @@ function LoginContent() {
                     <Link
                       href="/auth/forgot-password"
                       className="text-sm text-muted-foreground hover:text-primary hover:underline"
+                      tabIndex={4}
                     >
                       Forgot password?
                     </Link>
@@ -149,7 +153,8 @@ function LoginContent() {
                       type="password"
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      disabled={isLoading}
+                      disabled={isLoading || isGoogleLoading}
+                      tabIndex={2}
                       {...field}
                     />
                   </FormControl>
@@ -158,12 +163,33 @@ function LoginContent() {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || isGoogleLoading}
+              tabIndex={3}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign in
             </Button>
           </form>
         </Form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-card px-2 text-muted-foreground">or</span>
+          </div>
+        </div>
+
+        <GoogleSignInButton
+          disabled={isLoading}
+          onError={setError}
+          onLoadingChange={setIsGoogleLoading}
+          tabIndex={5}
+        />
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
@@ -171,6 +197,7 @@ function LoginContent() {
           <Link
             href="/auth/register"
             className="font-medium text-primary hover:underline"
+            tabIndex={6}
           >
             Sign up
           </Link>
