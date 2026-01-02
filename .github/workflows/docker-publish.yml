@@ -26,7 +26,6 @@ jobs:
         with:
           context: ./cryptocompete-api
           push: true
-          target: final
           tags: ${{ vars.DOCKER_USERNAME }}/cryptocompete-api:latest
 
   build-web:
