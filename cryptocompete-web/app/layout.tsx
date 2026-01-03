@@ -38,7 +38,11 @@ export default function RootLayout({
         >
           <AuthGuardian />
           <Navbar />
-          {children}
+          <div className="flex flex-1 flex-col px-6 py-12">
+            <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">
+              {children}
+            </div>
+          </div>
         </ThemeProvider>
       </body>
     </html>

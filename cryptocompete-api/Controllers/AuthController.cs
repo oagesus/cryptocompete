@@ -51,14 +51,9 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email is already registered" });
         }
 
-        var existingUserByUsername = await _db.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+        var existingProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.Username == request.Username);
 
-        if (existingUserByUsername != null && existingUserByUsername.EmailVerifiedAt != null)
-        {
-            return BadRequest(new { message = "Username is already taken" });
-        }
-
-        if (existingUserByUsername != null && existingUserByUsername.Email != request.Email)
+        if (existingProfile != null)
         {
             return BadRequest(new { message = "Username is already taken" });
         }
@@ -82,12 +77,21 @@ public class AuthController : ControllerBase
 
         var user = new User
         {
-            Username = request.Username,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
         };
 
         _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        var mainProfile = new Profile
+        {
+            UserId = user.Id,
+            Username = request.Username,
+            IsMain = true
+        };
+
+        _db.Profiles.Add(mainProfile);
         await _db.SaveChangesAsync();
 
         var verificationToken = new EmailVerificationToken
@@ -102,7 +106,7 @@ public class AuthController : ControllerBase
 
         await _emailService.SendVerificationEmailAsync(
             user.Email,
-            user.Username,
+            mainProfile.Username,
             link
         );
 
@@ -142,8 +146,9 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => 
-            u.Email == request.Identifier || u.Username == request.Identifier);
+        var user = await _db.Users
+            .Include(u => u.Profiles)
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user == null)
         {
@@ -205,6 +210,7 @@ public class AuthController : ControllerBase
 
         var externalLogin = await _db.ExternalLogins
             .Include(e => e.User)
+                .ThenInclude(u => u.Profiles)
             .FirstOrDefaultAsync(e => 
                 e.Provider == ExternalLoginProviders.Google && 
                 e.ProviderSubjectId == payload.Subject);
@@ -219,6 +225,7 @@ public class AuthController : ControllerBase
         {
             user = await _db.Users
                 .Include(u => u.ExternalLogins)
+                .Include(u => u.Profiles)
                 .FirstOrDefaultAsync(u => u.Email == payload.Email);
 
             if (user != null)
@@ -246,7 +253,6 @@ public class AuthController : ControllerBase
 
                 user = new User
                 {
-                    Username = username,
                     Email = payload.Email,
                     PasswordHash = null,
                     EmailVerifiedAt = DateTimeOffset.UtcNow
@@ -254,6 +260,15 @@ public class AuthController : ControllerBase
 
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
+
+                var mainProfile = new Profile
+                {
+                    UserId = user.Id,
+                    Username = username,
+                    IsMain = true
+                };
+
+                _db.Profiles.Add(mainProfile);
 
                 var newExternalLogin = new ExternalLogin
                 {
@@ -266,6 +281,8 @@ public class AuthController : ControllerBase
 
                 _db.ExternalLogins.Add(newExternalLogin);
                 await _db.SaveChangesAsync();
+
+                user.Profiles.Add(mainProfile);
             }
         }
 
@@ -296,6 +313,7 @@ public class AuthController : ControllerBase
 
         var user = await _db.Users
             .Include(u => u.ExternalLogins)
+            .Include(u => u.Profiles)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
@@ -309,12 +327,15 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Your account has been blocked" });
         }
 
+        var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
+
         return Ok(new MeResponse(
             user.Id, 
-            user.Username, 
+            mainProfile?.Username ?? "Unknown",
             user.Email,
             user.PasswordHash != null,
-            user.ExternalLogins.Select(e => e.Provider).ToList()
+            user.ExternalLogins.Select(e => e.Provider).ToList(),
+            user.Profiles.Select(p => new ProfileDto(p.Id, p.Username, p.IsMain)).ToList()
         ));
     }
 
@@ -332,6 +353,7 @@ public class AuthController : ControllerBase
 
         var storedToken = await _db.RefreshTokens
             .Include(t => t.User)
+                .ThenInclude(u => u.Profiles)
             .Include(t => t.Session)
             .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
 
@@ -403,7 +425,9 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        var user = await _db.Users
+            .Include(u => u.Profiles)
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user != null && !user.IsBlocked)
         {
@@ -428,11 +452,12 @@ public class AuthController : ControllerBase
                 _db.PasswordResetTokens.Add(resetToken);
                 await _db.SaveChangesAsync();
 
+                var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
                 var link = $"{_frontendUrl}/auth/reset-password?token={resetToken.Token}";
 
                 await _emailService.SendPasswordResetEmailAsync(
                     user.Email,
-                    user.Username,
+                    mainProfile?.Username ?? "User",
                     link
                 );
             }
@@ -512,11 +537,13 @@ public class AuthController : ControllerBase
 
         SetTokenCookies(accessToken, refreshToken);
 
+        var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
+
         return Ok(new LoginResponse(
             accessToken,
             refreshToken,
             user.Id,
-            user.Username,
+            mainProfile?.Username ?? "Unknown",
             user.Email
         ));
     }
@@ -532,9 +559,9 @@ public class AuthController : ControllerBase
             baseUsername = baseUsername[..17];
         }
 
-        var existingUsernames = await _db.Users
-            .Where(u => u.Username.StartsWith(baseUsername))
-            .Select(u => u.Username)
+        var existingUsernames = await _db.Profiles
+            .Where(p => p.Username.StartsWith(baseUsername))
+            .Select(p => p.Username)
             .ToListAsync();
 
         var existingSet = existingUsernames.ToHashSet();
@@ -583,9 +610,9 @@ public class AuthController : ControllerBase
             }
         }
 
-        var fallbackUsernames = await _db.Users
-            .Where(u => u.Username.StartsWith("user"))
-            .Select(u => u.Username)
+        var fallbackUsernames = await _db.Profiles
+            .Where(p => p.Username.StartsWith("user"))
+            .Select(p => p.Username)
             .ToListAsync();
 
         var fallbackSet = fallbackUsernames.ToHashSet();
@@ -663,10 +690,11 @@ public class AuthController : ControllerBase
 }
 
 public record RegisterRequest(string Username, string Email, string Password);
-public record LoginRequest(string Identifier, string Password);
+public record LoginRequest(string Email, string Password);
 public record GoogleLoginRequest(string IdToken);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
-public record MeResponse(int Id, string Username, string Email, bool HasPassword, List<string> ConnectedProviders);
+public record ProfileDto(int Id, string Username, bool IsMain);
+public record MeResponse(int Id, string Username, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);

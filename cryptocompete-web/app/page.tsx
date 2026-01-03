@@ -4,7 +4,7 @@ import { TrendingUp } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6">
+    <div className="flex flex-1 flex-col items-center justify-center">
       <main className="flex flex-col items-center gap-8 text-center">
         <div className="flex items-center gap-3">
           <TrendingUp className="h-12 w-12 text-primary" />

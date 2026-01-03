@@ -8,6 +8,7 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     
     public DbSet<User> Users => Set<User>();
+    public DbSet<Profile> Profiles => Set<Profile>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
@@ -19,9 +20,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(e => e.Email).IsUnique();
-            entity.HasIndex(e => e.Username).IsUnique();
             entity.Property(e => e.IsBlocked).HasDefaultValue(false);
             entity.Property(e => e.PasswordHash).IsRequired(false);
+        });
+
+        modelBuilder.Entity<Profile>(entity =>
+        {
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.Property(e => e.Username).HasMaxLength(50);
+            entity.Property(e => e.IsMain).HasDefaultValue(false);
+            
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Profiles)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<EmailVerificationToken>(entity =>

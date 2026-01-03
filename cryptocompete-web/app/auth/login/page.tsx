@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 const loginSchema = z.object({
-  identifier: z.string().min(1, "Please enter your email or username"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Please enter your password"),
 });
 
@@ -47,7 +47,7 @@ function LoginContent() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: "",
+      email: "",
       password: "",
     },
   });
@@ -64,7 +64,7 @@ function LoginContent() {
         },
         credentials: "include",
         body: JSON.stringify({
-          identifier: data.identifier,
+          email: data.email,
           password: data.password,
         }),
       });
@@ -88,7 +88,7 @@ function LoginContent() {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
         <CardDescription>
-          Enter your credentials to sign in to your account
+          Enter your email to sign in to your account
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -115,14 +115,15 @@ function LoginContent() {
 
             <FormField
               control={form.control}
-              name="identifier"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email or Username</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="name@example.com or username"
-                      autoComplete="username"
+                      type="email"
+                      placeholder="name@example.com"
+                      autoComplete="email"
                       disabled={isLoading || isGoogleLoading}
                       tabIndex={1}
                       {...field}
@@ -215,7 +216,7 @@ export default function LoginPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
             <CardDescription>
-              Enter your credentials to sign in to your account
+              Enter your email to sign in to your account
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-8">
