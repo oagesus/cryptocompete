@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const BYPASS_ROUTES = ["/auth/clear"];
 const PUBLIC_ROUTES = ["/auth"];
-const PROTECTED_ROUTES = ["/dashboard"];
+const PROTECTED_ROUTES = ["/dashboard", "/account"];
 
 export function handleAuthRedirects(
   request: NextRequest,

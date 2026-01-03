@@ -300,6 +300,85 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
+    [HttpPost("google/link")]
+    public async Task<IActionResult> LinkGoogle([FromBody] GoogleLoginRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        GoogleJsonWebSignature.Payload payload;
+        
+        try
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { _googleClientId }
+            };
+            
+            payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
+        }
+        catch (InvalidJwtException)
+        {
+            return Unauthorized(new { message = "Invalid Google token" });
+        }
+
+        if (!payload.EmailVerified)
+        {
+            return BadRequest(new { message = "Google email is not verified" });
+        }
+
+        var existingExternalLogin = await _db.ExternalLogins
+            .FirstOrDefaultAsync(e => 
+                e.Provider == ExternalLoginProviders.Google && 
+                e.ProviderSubjectId == payload.Subject);
+
+        if (existingExternalLogin != null)
+        {
+            if (existingExternalLogin.UserId == userId)
+            {
+                return BadRequest(new { message = "Google account is already linked" });
+            }
+            return BadRequest(new { message = "This Google account is already linked to another user" });
+        }
+
+        var user = await _db.Users
+            .Include(u => u.ExternalLogins)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized(new { message = "User not found" });
+        }
+
+        var existingGoogleLink = user.ExternalLogins
+            .FirstOrDefault(e => e.Provider == ExternalLoginProviders.Google);
+
+        if (existingGoogleLink != null)
+        {
+            return BadRequest(new { message = "A Google account is already linked to your account" });
+        }
+
+        var newExternalLogin = new ExternalLogin
+        {
+            UserId = user.Id,
+            Provider = ExternalLoginProviders.Google,
+            ProviderSubjectId = payload.Subject,
+            ProviderEmail = payload.Email,
+            ProviderDisplayName = payload.Name
+        };
+
+        _db.ExternalLogins.Add(newExternalLogin);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Google account linked successfully" });
+    }
+
+    [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> Me()
     {
@@ -335,7 +414,7 @@ public class AuthController : ControllerBase
             user.Email,
             user.PasswordHash != null,
             user.ExternalLogins.Select(e => e.Provider).ToList(),
-            user.Profiles.Select(p => new ProfileDto(p.Id, p.Username, p.IsMain)).ToList()
+            user.Profiles.Select(p => new ProfileDto(p.PublicId, p.Username, p.IsMain)).ToList()
         ));
     }
 
@@ -694,7 +773,7 @@ public record LoginRequest(string Email, string Password);
 public record GoogleLoginRequest(string IdToken);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
-public record ProfileDto(int Id, string Username, bool IsMain);
+public record ProfileDto(Guid PublicId, string Username, bool IsMain);
 public record MeResponse(int Id, string Username, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);
