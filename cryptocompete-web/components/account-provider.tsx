@@ -3,28 +3,15 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useState,
   useCallback,
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-
-interface Profile {
-  publicId: string;
-  username: string;
-  isMain: boolean;
-}
-
-export interface AccountData {
-  email: string;
-  connectedProviders: string[];
-  profiles: Profile[];
-}
+import { User } from "@/lib/auth/get-user";
 
 interface AccountContextType {
-  accountData: AccountData | null;
-  isLoading: boolean;
+  user: User;
   refetch: () => Promise<void>;
 }
 
@@ -40,45 +27,35 @@ export function useAccount() {
 
 interface AccountProviderProps {
   children: ReactNode;
+  initialData: User;
 }
 
-export function AccountProvider({ children }: AccountProviderProps) {
+export function AccountProvider({ children, initialData }: AccountProviderProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [accountData, setAccountData] = useState<AccountData | null>(null);
+  const [user, setUser] = useState<User>(initialData);
 
-  const fetchAccountData = useCallback(async () => {
+  const refetch = useCallback(async () => {
     try {
       const response = await fetch("/api/auth/me", {
         credentials: "include",
       });
 
       if (response.status === 401) {
-        router.push("/auth/login");
+        router.push("/auth/clear");
         return;
       }
 
       if (response.ok) {
         const data = await response.json();
-        setAccountData({
-          email: data.email,
-          connectedProviders: data.connectedProviders,
-          profiles: data.profiles,
-        });
+        setUser(data);
       }
-    } finally {
-      setIsLoading(false);
+    } catch {
+      router.push("/auth/clear");
     }
   }, [router]);
 
-  useEffect(() => {
-    fetchAccountData();
-  }, [fetchAccountData]);
-
   return (
-    <AccountContext.Provider
-      value={{ accountData, isLoading, refetch: fetchAccountData }}
-    >
+    <AccountContext.Provider value={{ user, refetch }}>
       {children}
     </AccountContext.Provider>
   );

@@ -1,11 +1,21 @@
+// /lib/auth/get-user.ts
 import { cookies } from "next/headers";
 
 const API_URL = process.env.API_URL;
+
+export interface Profile {
+  publicId: string;
+  username: string;
+  isMain: boolean;
+}
 
 export interface User {
   id: number;
   username: string;
   email: string;
+  hasPassword: boolean;
+  connectedProviders: string[];
+  profiles: Profile[];
 }
 
 export async function getUser(): Promise<User | null> {

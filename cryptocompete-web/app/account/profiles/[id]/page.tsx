@@ -11,13 +11,9 @@ import { Separator } from "@/components/ui/separator";
 export default function ProfilePage() {
   const params = useParams();
   const publicId = params.id as string;
-  const { accountData } = useAccount();
+  const { user } = useAccount();
 
-  if (!accountData) {
-    return null;
-  }
-
-  const profile = accountData.profiles.find((p) => p.publicId === publicId);
+  const profile = user.profiles.find((p) => p.publicId === publicId);
 
   if (!profile) {
     return (

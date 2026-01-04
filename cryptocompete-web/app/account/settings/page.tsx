@@ -9,13 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default function AccountSettingsPage() {
-  const { accountData, refetch } = useAccount();
+  const { user, refetch } = useAccount();
 
-  if (!accountData) {
-    return null;
-  }
-
-  const isGoogleConnected = accountData.connectedProviders.includes("Google");
+  const isGoogleConnected = user.connectedProviders.includes("Google");
 
   return (
     <Card>
@@ -29,7 +25,7 @@ export default function AccountSettingsPage() {
             <Mail className="h-5 w-5" />
             Details
           </h3>
-          <EmailCard email={accountData.email} />
+          <EmailCard email={user.email} />
         </div>
 
         <div className="space-y-3">
