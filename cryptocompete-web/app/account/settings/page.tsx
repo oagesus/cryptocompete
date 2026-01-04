@@ -16,7 +16,7 @@ export default function AccountSettingsPage() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold">Account</CardTitle>
+        <CardTitle className="text-2xl font-bold">Account Settings</CardTitle>
       </CardHeader>
       <Separator />
       <CardContent className="pt-6 space-y-6">

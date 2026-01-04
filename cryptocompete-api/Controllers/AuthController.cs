@@ -230,6 +230,11 @@ public class AuthController : ControllerBase
 
             if (user != null)
             {
+                if (user.IsBlocked)
+                {
+                    return Unauthorized(new { message = "Your account has been blocked" });
+                }
+
                 if (user.EmailVerifiedAt == null)
                 {
                     user.EmailVerifiedAt = DateTimeOffset.UtcNow;
@@ -398,12 +403,6 @@ public class AuthController : ControllerBase
         if (user == null)
         {
             return Unauthorized(new { message = "User not found" });
-        }
-
-        if (user.IsBlocked)
-        {
-            DeleteTokenCookies();
-            return Unauthorized(new { message = "Your account has been blocked" });
         }
 
         var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);

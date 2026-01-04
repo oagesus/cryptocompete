@@ -1,5 +1,6 @@
 using System.Text;
 using CryptoCompete.Api.Data;
+using CryptoCompete.Api.Filters;
 using CryptoCompete.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,12 @@ using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddScoped<BlockedUserFilter>();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<BlockedUserFilter>();
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))

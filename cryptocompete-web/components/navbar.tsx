@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getUser } from "@/lib/auth/get-user";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { LogoutButton } from "@/components/logout-button";
+import { UserMenu } from "@/components/user-menu";
+import { MobileMenu } from "@/components/mobile-menu";
 
 export async function Navbar() {
   const user = await getUser();
@@ -15,7 +16,17 @@ export async function Navbar() {
         </Link>
         <div className="flex items-center gap-2">
           {user ? (
-            <LogoutButton />
+            <>
+              <Button variant="ghost" asChild className="hidden md:inline-flex">
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <div className="hidden md:block">
+                <UserMenu user={user} />
+              </div>
+              <div className="md:hidden">
+                <MobileMenu user={user} />
+              </div>
+            </>
           ) : (
             <>
               <Button variant="ghost" asChild>
@@ -24,9 +35,9 @@ export async function Navbar() {
               <Button asChild>
                 <Link href="/auth/register">Sign Up</Link>
               </Button>
+              <ThemeToggle />
             </>
           )}
-          <ThemeToggle />
         </div>
       </div>
     </header>
