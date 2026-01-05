@@ -52,6 +52,26 @@ public class EmailService : IEmailService
         await _resend.EmailSendAsync(message);
     }
 
+    public async Task SendEmailChangeEmailAsync(string toEmail, string username, string verifyLink, string newEmail)
+    {
+        var template = await LoadTemplateAsync("EmailChangeEmail.html");
+        
+        var htmlContent = template
+            .Replace("{{USERNAME}}", username)
+            .Replace("{{VERIFY_LINK}}", verifyLink)
+            .Replace("{{NEW_EMAIL}}", newEmail);
+
+        var message = new EmailMessage
+        {
+            From = _fromEmail,
+            To = toEmail,
+            Subject = "Verify your new email address",
+            HtmlBody = htmlContent
+        };
+
+        await _resend.EmailSendAsync(message);
+    }
+
     private static async Task<string> LoadTemplateAsync(string templateName)
     {
         var assembly = Assembly.GetExecutingAssembly();

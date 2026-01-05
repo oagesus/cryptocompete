@@ -26,40 +26,46 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+const changeEmailSchema = z.object({
+  newEmail: z.string().email("Please enter a valid email address"),
 });
 
-type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+type ChangeEmailFormValues = z.infer<typeof changeEmailSchema>;
 
-export default function ForgotPasswordPage() {
+export function ChangeEmailForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<ForgotPasswordFormValues>({
-    resolver: zodResolver(forgotPasswordSchema),
+  const form = useForm<ChangeEmailFormValues>({
+    resolver: zodResolver(changeEmailSchema),
     defaultValues: {
-      email: "",
+      newEmail: "",
     },
   });
 
-  async function onSubmit(data: ForgotPasswordFormValues) {
+  async function onSubmit(data: ChangeEmailFormValues) {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
+      const response = await fetch("/api/auth/change-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: data.email }),
+        credentials: "include",
+        body: JSON.stringify({ newEmail: data.newEmail }),
       });
+
+      if (response.status === 401) {
+        window.location.href = "/auth/login";
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send reset email");
+        throw new Error(errorData.message || "Failed to send verification email");
       }
 
       setIsSubmitted(true);
@@ -76,15 +82,15 @@ export default function ForgotPasswordPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
           <CardDescription>
-            If an account with this email exists, you will receive a password reset link.
+            We've sent a verification link to your new email address. Click the link to confirm the change.
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex justify-center">
           <Link
-            href="/auth/login"
+            href="/account/settings"
             className="text-sm font-medium text-primary hover:underline"
           >
-            Back to Sign in
+            Back to settings
           </Link>
         </CardFooter>
       </Card>
@@ -94,9 +100,9 @@ export default function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Forgot password</CardTitle>
+        <CardTitle className="text-2xl font-bold">Change email</CardTitle>
         <CardDescription>
-          Enter your email address and we'll send you a link to reset your password
+          Enter your new email address and we'll send you a verification link
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -110,10 +116,10 @@ export default function ForgotPasswordPage() {
 
             <FormField
               control={form.control}
-              name="email"
+              name="newEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>New Email</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -130,21 +136,18 @@ export default function ForgotPasswordPage() {
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send reset link
+              Change email
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
-          Remember your password?{" "}
-          <Link
-            href="/auth/login"
-            className="font-medium text-primary hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
+        <Link
+          href="/account/settings"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Back to settings
+        </Link>
       </CardFooter>
     </Card>
   );

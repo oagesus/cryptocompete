@@ -1,8 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,7 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const resetPasswordSchema = z
+const setPasswordSchema = z
   .object({
     password: z
       .string()
@@ -42,47 +41,45 @@ const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 
-type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+type SetPasswordFormValues = z.infer<typeof setPasswordSchema>;
 
-function ResetPasswordContent() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+export function SetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const form = useForm<ResetPasswordFormValues>({
-    resolver: zodResolver(resetPasswordSchema),
+  const form = useForm<SetPasswordFormValues>({
+    resolver: zodResolver(setPasswordSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
     },
   });
 
-  async function onSubmit(data: ResetPasswordFormValues) {
-    if (!token) {
-      setError("Invalid reset link");
-      return;
-    }
-
+  async function onSubmit(data: SetPasswordFormValues) {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
+      const response = await fetch("/api/auth/set-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
-          token,
           password: data.password,
         }),
       });
 
+      if (response.status === 401) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Password reset failed");
+        throw new Error(errorData.message || "Failed to set password");
       }
 
       setIsSuccess(true);
@@ -93,42 +90,21 @@ function ResetPasswordContent() {
     }
   }
 
-  if (!token) {
-    return (
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Invalid link</CardTitle>
-          <CardDescription>
-            This password reset link is invalid or has expired.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="flex justify-center">
-          <Link
-            href="/auth/forgot-password"
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            Request a new link
-          </Link>
-        </CardFooter>
-      </Card>
-    );
-  }
-
   if (isSuccess) {
     return (
       <Card className="text-center">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Password reset successful</CardTitle>
+          <CardTitle className="text-2xl font-bold">Password set successfully</CardTitle>
           <CardDescription>
-            Your password has been changed successfully.
+            Your password has been set
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
           <CheckCircle className="h-16 w-16 text-green-500" />
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button asChild>
-            <Link href="/auth/login">Continue to Sign in</Link>
+          <Button onClick={() => window.location.href = "/account/settings"}>
+            Back to Settings
           </Button>
         </CardFooter>
       </Card>
@@ -138,8 +114,8 @@ function ResetPasswordContent() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Reset password</CardTitle>
-        <CardDescription>Enter your new password below</CardDescription>
+        <CardTitle className="text-2xl font-bold">Set password</CardTitle>
+        <CardDescription>Create a password for your account</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -155,7 +131,7 @@ function ResetPasswordContent() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -192,42 +168,19 @@ function ResetPasswordContent() {
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reset password
+              Set password
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
-          Remember your password?{" "}
-          <Link
-            href="/auth/login"
-            className="font-medium text-primary hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
+        <Link
+          href="/account/settings"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Back to settings
+        </Link>
       </CardFooter>
     </Card>
-  );
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense
-      fallback={
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Reset password</CardTitle>
-            <CardDescription>Enter your new password below</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </CardContent>
-        </Card>
-      }
-    >
-      <ResetPasswordContent />
-    </Suspense>
   );
 }

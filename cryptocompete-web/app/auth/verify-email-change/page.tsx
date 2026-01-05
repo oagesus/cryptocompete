@@ -17,7 +17,7 @@ import {
 
 type VerificationStatus = "loading" | "success" | "error";
 
-function VerifyContent() {
+function VerifyEmailChangeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<VerificationStatus>("loading");
@@ -30,16 +30,16 @@ function VerifyContent() {
       return;
     }
 
-    async function verifyEmail() {
+    async function verifyEmailChange() {
       try {
         const response = await fetch(
-          `/api/auth/verify?token=${token}`
+          `/api/auth/verify-email-change?token=${token}`
         );
         const data = await response.json();
 
         if (response.ok) {
           setStatus("success");
-          setMessage(data.message || "Email verified successfully");
+          setMessage(data.message || "Email changed successfully");
         } else {
           setStatus("error");
           setMessage(data.message || "Verification failed");
@@ -50,16 +50,16 @@ function VerifyContent() {
       }
     }
 
-    verifyEmail();
+    verifyEmailChange();
   }, [token]);
 
   return (
     <Card className="text-center">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Email Verification</CardTitle>
+        <CardTitle className="text-2xl font-bold">Email Change</CardTitle>
         <CardDescription>
-          {status === "loading" && "Verifying your email address..."}
-          {status === "success" && "Your email has been verified"}
+          {status === "loading" && "Verifying your new email address..."}
+          {status === "success" && "Your email has been changed"}
           {status === "error" && "Verification failed"}
         </CardDescription>
       </CardHeader>
@@ -75,13 +75,13 @@ function VerifyContent() {
       </CardContent>
       <CardFooter className="flex justify-center">
         {status === "success" && (
-          <Button asChild>
-            <Link href="/auth/login">Continue to Sign in</Link>
+          <Button onClick={() => window.location.href = "/account/settings"}>
+            Back to Settings
           </Button>
         )}
         {status === "error" && (
           <Button variant="outline" asChild>
-            <Link href="/auth/register">Back to Sign up</Link>
+            <Link href="/auth/change-email">Try Again</Link>
           </Button>
         )}
       </CardFooter>
@@ -89,16 +89,16 @@ function VerifyContent() {
   );
 }
 
-export default function VerifyPage() {
+export default function VerifyEmailChangePage() {
   return (
     <Suspense
       fallback={
         <Card className="text-center">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              Email Verification
-            </CardTitle>
-            <CardDescription>Verifying your email address...</CardDescription>
+            <CardTitle className="text-2xl font-bold">Email Change</CardTitle>
+            <CardDescription>
+              Verifying your new email address...
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
@@ -106,7 +106,7 @@ export default function VerifyPage() {
         </Card>
       }
     >
-      <VerifyContent />
+      <VerifyEmailChangeContent />
     </Suspense>
   );
 }

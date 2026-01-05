@@ -155,6 +155,14 @@ public class AuthController : ControllerBase
 
         if (user == null)
         {
+            var externalLogin = await _db.ExternalLogins
+                .FirstOrDefaultAsync(e => e.ProviderEmail == request.Email);
+
+            if (externalLogin != null)
+            {
+                return Unauthorized(new { message = $"Please sign in with {externalLogin.Provider}" });
+            }
+
             return Unauthorized(new { message = "Invalid credentials" });
         }
 
@@ -226,75 +234,51 @@ public class AuthController : ControllerBase
         }
         else
         {
-            user = await _db.Users
-                .Include(u => u.ExternalLogins)
-                .Include(u => u.Profiles)
+            var existingUser = await _db.Users
                 .FirstOrDefaultAsync(u => u.Email == payload.Email);
 
-            if (user != null)
+            if (existingUser != null)
             {
-                if (user.IsBlocked)
-                {
-                    return Unauthorized(new { message = "Your account has been blocked" });
-                }
-
-                if (user.EmailVerifiedAt == null)
-                {
-                    user.EmailVerifiedAt = DateTimeOffset.UtcNow;
-                }
-
-                var newExternalLogin = new ExternalLogin
-                {
-                    UserId = user.Id,
-                    Provider = ExternalLoginProviders.Google,
-                    ProviderSubjectId = payload.Subject,
-                    ProviderEmail = payload.Email,
-                    ProviderDisplayName = payload.Name
-                };
-
-                _db.ExternalLogins.Add(newExternalLogin);
-                await _db.SaveChangesAsync();
+                return BadRequest(new { message = "Please sign in with your email and password" });
             }
-            else
+
+            var username = await GenerateUniqueUsername(payload.Email);
+
+            user = new User
             {
-                var username = await GenerateUniqueUsername(payload.Email);
+                Email = payload.Email,
+                PasswordHash = null,
+                EmailVerifiedAt = DateTimeOffset.UtcNow
+            };
 
-                user = new User
-                {
-                    Email = payload.Email,
-                    PasswordHash = null,
-                    EmailVerifiedAt = DateTimeOffset.UtcNow
-                };
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
 
-                _db.Users.Add(user);
-                await _db.SaveChangesAsync();
+            var mainProfile = new Profile
+            {
+                UserId = user.Id,
+                Username = username,
+                IsMain = true
+            };
 
-                var mainProfile = new Profile
-                {
-                    UserId = user.Id,
-                    Username = username,
-                    IsMain = true
-                };
+            _db.Profiles.Add(mainProfile);
 
-                _db.Profiles.Add(mainProfile);
+            var newExternalLogin = new ExternalLogin
+            {
+                UserId = user.Id,
+                Provider = ExternalLoginProviders.Google,
+                ProviderSubjectId = payload.Subject,
+                ProviderEmail = payload.Email,
+                ProviderDisplayName = payload.Name
+            };
 
-                var newExternalLogin = new ExternalLogin
-                {
-                    UserId = user.Id,
-                    Provider = ExternalLoginProviders.Google,
-                    ProviderSubjectId = payload.Subject,
-                    ProviderEmail = payload.Email,
-                    ProviderDisplayName = payload.Name
-                };
+            _db.ExternalLogins.Add(newExternalLogin);
+            await _db.SaveChangesAsync();
 
-                _db.ExternalLogins.Add(newExternalLogin);
-                await _db.SaveChangesAsync();
+            user.ActiveProfileId = mainProfile.Id;
+            await _db.SaveChangesAsync();
 
-                user.ActiveProfileId = mainProfile.Id;
-                await _db.SaveChangesAsync();
-
-                user.Profiles.Add(mainProfile);
-            }
+            user.Profiles.Add(mainProfile);
         }
 
         if (user is null)
@@ -521,31 +505,34 @@ public class AuthController : ControllerBase
                 .OrderByDescending(t => t.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            if (lastToken == null || lastToken.CreatedAt <= DateTimeOffset.UtcNow.AddSeconds(-60))
+            if (lastToken != null && lastToken.CreatedAt > DateTimeOffset.UtcNow.AddSeconds(-60))
             {
-                var unusedTokens = await _db.PasswordResetTokens
-                    .Where(t => t.UserId == user.Id && !t.IsUsed)
-                    .ToListAsync();
-
-                _db.PasswordResetTokens.RemoveRange(unusedTokens);
-
-                var resetToken = new PasswordResetToken
-                {
-                    UserId = user.Id
-                };
-
-                _db.PasswordResetTokens.Add(resetToken);
-                await _db.SaveChangesAsync();
-
-                var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
-                var link = $"{_frontendUrl}/auth/reset-password?token={resetToken.Token}";
-
-                await _emailService.SendPasswordResetEmailAsync(
-                    user.Email,
-                    mainProfile?.Username ?? "User",
-                    link
-                );
+                var secondsRemaining = (int)(60 - (DateTimeOffset.UtcNow - lastToken.CreatedAt).TotalSeconds);
+                return BadRequest(new { message = $"Please wait {secondsRemaining} seconds before requesting another email" });
             }
+
+            var unusedTokens = await _db.PasswordResetTokens
+                .Where(t => t.UserId == user.Id && !t.IsUsed)
+                .ToListAsync();
+
+            _db.PasswordResetTokens.RemoveRange(unusedTokens);
+
+            var resetToken = new PasswordResetToken
+            {
+                UserId = user.Id
+            };
+
+            _db.PasswordResetTokens.Add(resetToken);
+            await _db.SaveChangesAsync();
+
+            var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
+            var link = $"{_frontendUrl}/auth/reset-password?token={resetToken.Token}";
+
+            await _emailService.SendPasswordResetEmailAsync(
+                user.Email,
+                mainProfile?.Username ?? "User",
+                link
+            );
         }
 
         return Ok(new { message = "If an account with this email exists, you will receive a password reset link." });
@@ -580,7 +567,7 @@ public class AuthController : ControllerBase
 
         if (resetToken.User.IsBlocked)
         {
-            return BadRequest(new { message = "Account is blocked" });
+            return BadRequest(new { message = "Your account has been blocked" });
         }
 
         resetToken.IsUsed = true;
@@ -590,6 +577,200 @@ public class AuthController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Password reset successfully" });
+    }
+
+    [Authorize]
+    [HttpPost("set-password")]
+    public async Task<IActionResult> SetPassword([FromBody] SetPasswordRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized(new { message = "User not found" });
+        }
+
+        if (user.IsBlocked)
+        {
+            return BadRequest(new { message = "Your account has been blocked" });
+        }
+
+        if (!string.IsNullOrEmpty(user.PasswordHash))
+        {
+            return BadRequest(new { message = "Password is already set. Use change password instead." });
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Password set successfully" });
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized(new { message = "User not found" });
+        }
+
+        if (user.IsBlocked)
+        {
+            return BadRequest(new { message = "Your account has been blocked" });
+        }
+
+        if (string.IsNullOrEmpty(user.PasswordHash))
+        {
+            return BadRequest(new { message = "No password set. Use set password instead." });
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            return BadRequest(new { message = "Current password is incorrect" });
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Password changed successfully" });
+    }
+
+    [Authorize]
+    [HttpPost("change-email")]
+    public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _db.Users
+            .Include(u => u.Profiles)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized(new { message = "User not found" });
+        }
+
+        if (user.IsBlocked)
+        {
+            return BadRequest(new { message = "Your account has been blocked" });
+        }
+
+        if (user.Email == request.NewEmail)
+        {
+            return BadRequest(new { message = "New email must be different from current email" });
+        }
+
+        var existingUser = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.NewEmail);
+        if (existingUser != null)
+        {
+            return BadRequest(new { message = "Email is already in use" });
+        }
+
+        var lastToken = await _db.EmailChangeTokens
+            .Where(t => t.UserId == user.Id)
+            .OrderByDescending(t => t.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (lastToken != null && lastToken.CreatedAt > DateTimeOffset.UtcNow.AddSeconds(-60))
+        {
+            var secondsRemaining = (int)(60 - (DateTimeOffset.UtcNow - lastToken.CreatedAt).TotalSeconds);
+            return BadRequest(new { message = $"Please wait {secondsRemaining} seconds before requesting another email" });
+        }
+
+        var unusedTokens = await _db.EmailChangeTokens
+            .Where(t => t.UserId == user.Id && !t.IsUsed)
+            .ToListAsync();
+
+        _db.EmailChangeTokens.RemoveRange(unusedTokens);
+
+        var emailChangeToken = new EmailChangeToken
+        {
+            UserId = user.Id,
+            NewEmail = request.NewEmail
+        };
+
+        _db.EmailChangeTokens.Add(emailChangeToken);
+        await _db.SaveChangesAsync();
+
+        var activeProfile = user.Profiles.FirstOrDefault(p => p.Id == user.ActiveProfileId)
+                        ?? user.Profiles.FirstOrDefault(p => p.IsMain);
+
+        var link = $"{_frontendUrl}/auth/verify-email-change?token={emailChangeToken.Token}";
+
+        await _emailService.SendEmailChangeEmailAsync(
+            request.NewEmail,
+            activeProfile?.Username ?? "User",
+            link,
+            request.NewEmail
+        );
+
+        return Ok(new { message = "Verification email sent to your new email address" });
+    }
+
+    [HttpGet("verify-email-change")]
+    public async Task<IActionResult> VerifyEmailChange([FromQuery] Guid token)
+    {
+        var emailChangeToken = await _db.EmailChangeTokens
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(t => t.Token == token);
+
+        if (emailChangeToken == null)
+        {
+            return BadRequest(new { message = "Invalid verification token" });
+        }
+
+        if (emailChangeToken.IsUsed)
+        {
+            return BadRequest(new { message = "Token has already been used" });
+        }
+
+        if (emailChangeToken.ExpiresAt < DateTimeOffset.UtcNow)
+        {
+            return BadRequest(new { message = "Token has expired" });
+        }
+
+        if (emailChangeToken.User.IsBlocked)
+        {
+            return BadRequest(new { message = "Your account has been blocked" });
+        }
+
+        var existingUser = await _db.Users.FirstOrDefaultAsync(u => u.Email == emailChangeToken.NewEmail);
+        if (existingUser != null)
+        {
+            return BadRequest(new { message = "Email is already in use" });
+        }
+
+        emailChangeToken.IsUsed = true;
+        emailChangeToken.User.Email = emailChangeToken.NewEmail;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Email changed successfully" });
     }
 
     private async Task<IActionResult> CreateSessionAndRespond(User user)
@@ -795,3 +976,6 @@ public record ProfileDto(Guid PublicId, string Username, bool IsMain);
 public record MeResponse(int Id, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);
+public record SetPasswordRequest(string Password);
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+public record ChangeEmailRequest(string NewEmail);

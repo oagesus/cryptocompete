@@ -1,9 +1,10 @@
 "use client";
 
-import { Mail, Link2 } from "lucide-react";
+import { Mail, Link2, Shield } from "lucide-react";
 
 import { useAccount } from "@/components/account-provider";
 import { EmailCard } from "@/components/email-card";
+import { PasswordCard } from "@/components/password-card";
 import { GoogleConnectionCard } from "@/components/google-connection-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +27,14 @@ export default function AccountSettingsPage() {
             Details
           </h3>
           <EmailCard email={user.email} />
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
+            <Shield className="h-5 w-5" />
+            Security
+          </h3>
+          <PasswordCard hasPassword={user.hasPassword} />
         </div>
 
         <div className="space-y-3">

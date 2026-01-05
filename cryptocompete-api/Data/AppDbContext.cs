@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<EmailChangeToken> EmailChangeTokens => Set<EmailChangeToken>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
     
@@ -77,6 +78,19 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<EmailChangeToken>(entity =>
+        {
+            entity.HasIndex(e => e.Token).IsUnique();
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.NewEmail).HasMaxLength(255);
             entity.Property(e => e.IsUsed).HasDefaultValue(false);
         });
 
