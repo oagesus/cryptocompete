@@ -235,55 +235,84 @@ public class AuthController : ControllerBase
         else
         {
             var existingUser = await _db.Users
+                .Include(u => u.Profiles)
+                .Include(u => u.ExternalLogins)
                 .FirstOrDefaultAsync(u => u.Email == payload.Email);
 
             if (existingUser != null)
             {
-                return BadRequest(new { message = "Please sign in with your email and password" });
+                if (existingUser.IsBlocked)
+                {
+                    return Unauthorized(new { message = "Your account has been blocked" });
+                }
+
+                var hasGoogleLinked = existingUser.ExternalLogins
+                    .Any(e => e.Provider == ExternalLoginProviders.Google);
+
+                if (hasGoogleLinked)
+                {
+                    return BadRequest(new { message = "Your account already has a different Google account linked" });
+                }
+
+                if (existingUser.EmailVerifiedAt == null)
+                {
+                    existingUser.EmailVerifiedAt = DateTimeOffset.UtcNow;
+                }
+
+                var newExternalLogin = new ExternalLogin
+                {
+                    UserId = existingUser.Id,
+                    Provider = ExternalLoginProviders.Google,
+                    ProviderSubjectId = payload.Subject,
+                    ProviderEmail = payload.Email,
+                    ProviderDisplayName = payload.Name
+                };
+
+                _db.ExternalLogins.Add(newExternalLogin);
+                await _db.SaveChangesAsync();
+
+                user = existingUser;
             }
-
-            var username = await GenerateUniqueUsername(payload.Email);
-
-            user = new User
+            else
             {
-                Email = payload.Email,
-                PasswordHash = null,
-                EmailVerifiedAt = DateTimeOffset.UtcNow
-            };
+                var username = await GenerateUniqueUsername(payload.Email);
 
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
+                user = new User
+                {
+                    Email = payload.Email,
+                    PasswordHash = null,
+                    EmailVerifiedAt = DateTimeOffset.UtcNow
+                };
 
-            var mainProfile = new Profile
-            {
-                UserId = user.Id,
-                Username = username,
-                IsMain = true
-            };
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
 
-            _db.Profiles.Add(mainProfile);
+                var mainProfile = new Profile
+                {
+                    UserId = user.Id,
+                    Username = username,
+                    IsMain = true
+                };
 
-            var newExternalLogin = new ExternalLogin
-            {
-                UserId = user.Id,
-                Provider = ExternalLoginProviders.Google,
-                ProviderSubjectId = payload.Subject,
-                ProviderEmail = payload.Email,
-                ProviderDisplayName = payload.Name
-            };
+                _db.Profiles.Add(mainProfile);
 
-            _db.ExternalLogins.Add(newExternalLogin);
-            await _db.SaveChangesAsync();
+                var newExternalLogin = new ExternalLogin
+                {
+                    UserId = user.Id,
+                    Provider = ExternalLoginProviders.Google,
+                    ProviderSubjectId = payload.Subject,
+                    ProviderEmail = payload.Email,
+                    ProviderDisplayName = payload.Name
+                };
 
-            user.ActiveProfileId = mainProfile.Id;
-            await _db.SaveChangesAsync();
+                _db.ExternalLogins.Add(newExternalLogin);
+                await _db.SaveChangesAsync();
 
-            user.Profiles.Add(mainProfile);
-        }
+                user.ActiveProfileId = mainProfile.Id;
+                await _db.SaveChangesAsync();
 
-        if (user is null)
-        {
-            return BadRequest(new { message = "User could not be created" });
+                user.Profiles.Add(mainProfile);
+            }
         }
 
         if (user.IsBlocked)
