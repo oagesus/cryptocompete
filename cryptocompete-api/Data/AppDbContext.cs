@@ -22,6 +22,11 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.IsBlocked).HasDefaultValue(false);
             entity.Property(e => e.PasswordHash).IsRequired(false);
+
+            entity.HasOne(e => e.ActiveProfile)
+                .WithMany()
+                .HasForeignKey(e => e.ActiveProfileId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Profile>(entity =>

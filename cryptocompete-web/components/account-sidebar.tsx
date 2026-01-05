@@ -15,9 +15,10 @@ interface Profile {
 
 interface AccountSidebarProps {
   profiles: Profile[];
+  activeProfileId: string;
 }
 
-export function AccountSidebar({ profiles }: AccountSidebarProps) {
+export function AccountSidebar({ profiles, activeProfileId }: AccountSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -55,9 +56,9 @@ export function AccountSidebar({ profiles }: AccountSidebarProps) {
           >
             <User className="h-4 w-4" />
             {profile.username}
-            {profile.isMain && (
+            {profile.publicId === activeProfileId && (
               <span className="ml-auto text-xs text-muted-foreground">
-                Main
+                Active
               </span>
             )}
           </Link>

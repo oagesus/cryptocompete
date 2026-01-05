@@ -21,7 +21,7 @@ interface UserMenuProps {
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
 
-  const mainProfile = user.profiles.find((p) => p.isMain)!;
+  const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
 
   async function handleLogout() {
     await fetch("/api/auth/logout", {
@@ -45,12 +45,12 @@ export function UserMenu({ user }: UserMenuProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">{user.username}</p>
+          <p className="text-sm font-medium">{activeProfile.username}</p>
           <p className="text-xs text-muted-foreground">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => router.push(`/account/profiles/${mainProfile.publicId}`)}
+          onClick={() => router.push(`/account/profiles/${activeProfile.publicId}`)}
           className="cursor-pointer"
         >
           <User className="mr-2 h-4 w-4" />

@@ -8,6 +8,9 @@ public class User
     public bool IsBlocked { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? EmailVerifiedAt { get; set; }
+
+    public int? ActiveProfileId { get; set; }
+    public Profile? ActiveProfile { get; set; }
     
     public ICollection<ExternalLogin> ExternalLogins { get; set; } = new List<ExternalLogin>();
     public ICollection<Profile> Profiles { get; set; } = new List<Profile>();

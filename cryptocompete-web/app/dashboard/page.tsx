@@ -8,10 +8,12 @@ export default async function DashboardPage() {
     redirect("/auth/clear");
   }
 
+  const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
+
   return (
     <div>
       <h1>Dashboard</h1>
-      <p>Welcome {user.username}</p>
+      <p>Welcome {activeProfile.username}</p>
     </div>
   );
 }

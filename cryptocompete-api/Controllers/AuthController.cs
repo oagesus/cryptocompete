@@ -94,6 +94,9 @@ public class AuthController : ControllerBase
         _db.Profiles.Add(mainProfile);
         await _db.SaveChangesAsync();
 
+        user.ActiveProfileId = mainProfile.Id;
+        await _db.SaveChangesAsync();
+
         var verificationToken = new EmailVerificationToken
         {
             UserId = user.Id
@@ -287,6 +290,9 @@ public class AuthController : ControllerBase
                 _db.ExternalLogins.Add(newExternalLogin);
                 await _db.SaveChangesAsync();
 
+                user.ActiveProfileId = mainProfile.Id;
+                await _db.SaveChangesAsync();
+
                 user.Profiles.Add(mainProfile);
             }
         }
@@ -405,15 +411,16 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "User not found" });
         }
 
-        var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
+        var activeProfilePublicId = user.Profiles
+            .FirstOrDefault(p => p.Id == user.ActiveProfileId)?.PublicId;
 
         return Ok(new MeResponse(
-            user.Id, 
-            mainProfile?.Username ?? "Unknown",
+            user.Id,
             user.Email,
             user.PasswordHash != null,
             user.ExternalLogins.Select(e => e.Provider).ToList(),
-            user.Profiles.Select(p => new ProfileDto(p.PublicId, p.Username, p.IsMain)).ToList()
+            user.Profiles.Select(p => new ProfileDto(p.PublicId, p.Username, p.IsMain)).ToList(),
+            activeProfilePublicId
         ));
     }
 
@@ -587,6 +594,17 @@ public class AuthController : ControllerBase
 
     private async Task<IActionResult> CreateSessionAndRespond(User user)
     {
+        if (user.ActiveProfileId == null)
+        {
+            var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain) 
+                           ?? user.Profiles.FirstOrDefault();
+            if (mainProfile != null)
+            {
+                user.ActiveProfileId = mainProfile.Id;
+                await _db.SaveChangesAsync();
+            }
+        }
+
         var accessToken = _jwtService.GenerateAccessToken(user);
         var (refreshToken, refreshTokenHash) = _jwtService.GenerateRefreshToken();
 
@@ -615,13 +633,14 @@ public class AuthController : ControllerBase
 
         SetTokenCookies(accessToken, refreshToken);
 
-        var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
+        var activeProfile = user.Profiles.FirstOrDefault(p => p.Id == user.ActiveProfileId)
+                        ?? user.Profiles.FirstOrDefault(p => p.IsMain);
 
         return Ok(new LoginResponse(
             accessToken,
             refreshToken,
             user.Id,
-            mainProfile?.Username ?? "Unknown",
+            activeProfile?.Username ?? "Unknown",
             user.Email
         ));
     }
@@ -773,6 +792,6 @@ public record GoogleLoginRequest(string IdToken);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
 public record ProfileDto(Guid PublicId, string Username, bool IsMain);
-public record MeResponse(int Id, string Username, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles);
+public record MeResponse(int Id, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);
