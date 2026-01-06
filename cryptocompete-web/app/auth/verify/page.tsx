@@ -17,6 +17,11 @@ import {
 
 type VerificationStatus = "loading" | "success" | "error";
 
+function clearVerificationCookies() {
+  document.cookie = "pendingVerificationEmail=; path=/; max-age=0";
+  document.cookie = "verificationLastSentAt=; path=/; max-age=0";
+}
+
 function VerifyContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -32,14 +37,13 @@ function VerifyContent() {
 
     async function verifyEmail() {
       try {
-        const response = await fetch(
-          `/api/auth/verify?token=${token}`
-        );
+        const response = await fetch(`/api/auth/verify?token=${token}`);
         const data = await response.json();
 
         if (response.ok) {
           setStatus("success");
           setMessage(data.message || "Email verified successfully");
+          clearVerificationCookies();
         } else {
           setStatus("error");
           setMessage(data.message || "Verification failed");
@@ -80,7 +84,7 @@ function VerifyContent() {
           </Button>
         )}
         {status === "error" && (
-          <Button variant="outline" asChild>
+          <Button asChild>
             <Link href="/auth/register">Back to Sign up</Link>
           </Button>
         )}

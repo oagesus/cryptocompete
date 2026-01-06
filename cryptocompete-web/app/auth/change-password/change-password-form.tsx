@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,9 +47,9 @@ const changePasswordSchema = z
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 export function ChangePasswordForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   const form = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -76,7 +78,7 @@ export function ChangePasswordForm() {
       });
 
       if (response.status === 401) {
-        window.location.href = "/auth/login";
+        router.push("/auth/login");
         return;
       }
 
@@ -85,33 +87,13 @@ export function ChangePasswordForm() {
         throw new Error(errorData.message || "Failed to change password");
       }
 
-      setIsSuccess(true);
+      toast.success("Password changed successfully");
+      router.push("/account/settings");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
-  }
-
-  if (isSuccess) {
-    return (
-      <Card className="text-center">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Password changed successfully</CardTitle>
-          <CardDescription>
-            Your password has been changed
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <CheckCircle className="h-16 w-16 text-green-500" />
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button onClick={() => window.location.href = "/account/settings"}>
-            Back to Settings
-          </Button>
-        </CardFooter>
-      </Card>
-    );
   }
 
   return (

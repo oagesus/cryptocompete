@@ -92,7 +92,10 @@ export default function RegisterPage() {
         throw new Error(errorData.message || "Registration failed");
       }
 
-      router.push("/auth/login?registered=true");
+      const maxAge = 60 * 60 * 24;
+      document.cookie = `pendingVerificationEmail=${encodeURIComponent(data.email)}; path=/; max-age=${maxAge}; samesite=lax`;
+      document.cookie = `verificationLastSentAt=${Date.now()}; path=/; max-age=60; samesite=lax`;
+      router.push("/auth/check-email");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

@@ -44,18 +44,13 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        var existingUserByEmail = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        var existingUserByEmail = await _db.Users
+            .Include(u => u.Profiles)
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (existingUserByEmail != null && existingUserByEmail.EmailVerifiedAt != null)
         {
             return BadRequest(new { message = "Email is already registered" });
-        }
-
-        var existingProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.Username == request.Username);
-
-        if (existingProfile != null)
-        {
-            return BadRequest(new { message = "Username is already taken" });
         }
 
         if (existingUserByEmail != null)
@@ -70,6 +65,27 @@ public class AuthController : ControllerBase
                 var secondsRemaining = (int)(60 - (DateTimeOffset.UtcNow - lastToken.CreatedAt).TotalSeconds);
                 return BadRequest(new { message = $"Please wait {secondsRemaining} seconds before requesting another email" });
             }
+        }
+
+        var existingProfile = await _db.Profiles
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.Username == request.Username);
+
+        if (existingProfile != null)
+        {
+            var isOwnUnverifiedProfile = existingUserByEmail != null 
+                && existingProfile.UserId == existingUserByEmail.Id;
+            
+            if (!isOwnUnverifiedProfile)
+            {
+                return BadRequest(new { message = "Username is already taken" });
+            }
+        }
+
+        if (existingUserByEmail != null)
+        {
+            existingUserByEmail.ActiveProfileId = null;
+            await _db.SaveChangesAsync();
 
             _db.Users.Remove(existingUserByEmail);
             await _db.SaveChangesAsync();
@@ -144,6 +160,59 @@ public class AuthController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Email verified successfully" });
+    }
+
+    [HttpPost("resend-verification")]
+    public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
+    {
+        var user = await _db.Users
+            .Include(u => u.Profiles)
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+        if (user == null)
+        {
+            return BadRequest(new { message = "User not found" });
+        }
+
+        if (user.EmailVerifiedAt != null)
+        {
+            return BadRequest(new { message = "Email is already verified" });
+        }
+
+        var lastToken = await _db.EmailVerificationTokens
+            .Where(t => t.UserId == user.Id)
+            .OrderByDescending(t => t.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (lastToken != null && lastToken.CreatedAt > DateTimeOffset.UtcNow.AddSeconds(-60))
+        {
+            var secondsRemaining = (int)(60 - (DateTimeOffset.UtcNow - lastToken.CreatedAt).TotalSeconds);
+            return BadRequest(new { message = $"Please wait {secondsRemaining} seconds before requesting another email", secondsRemaining });
+        }
+
+        var unusedTokens = await _db.EmailVerificationTokens
+            .Where(t => t.UserId == user.Id && !t.IsUsed)
+            .ToListAsync();
+        _db.EmailVerificationTokens.RemoveRange(unusedTokens);
+
+        var verificationToken = new EmailVerificationToken
+        {
+            UserId = user.Id
+        };
+
+        _db.EmailVerificationTokens.Add(verificationToken);
+        await _db.SaveChangesAsync();
+
+        var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain) ?? user.Profiles.FirstOrDefault();
+        var link = $"{_frontendUrl}/auth/verify?token={verificationToken.Token}";
+
+        await _emailService.SendVerificationEmailAsync(
+            user.Email,
+            mainProfile?.Username ?? "User",
+            link
+        );
+
+        return Ok(new { message = "Verification email sent" });
     }
 
     [HttpPost("login")]
@@ -1008,3 +1077,4 @@ public record ResetPasswordRequest(string Token, string Password);
 public record SetPasswordRequest(string Password);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record ChangeEmailRequest(string NewEmail);
+public record ResendVerificationRequest(string Email);

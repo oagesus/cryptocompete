@@ -6,6 +6,8 @@ export async function GET() {
   cookieStore.delete("access_token");
   cookieStore.delete("refresh_token");
   cookieStore.delete("token_exp");
+  cookieStore.delete("pendingVerificationEmail");
+  cookieStore.delete("verificationLastSentAt");
 
   redirect("/auth/login");
 }

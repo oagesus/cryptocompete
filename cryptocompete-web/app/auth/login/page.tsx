@@ -38,7 +38,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const registered = searchParams.get("registered");
   const verified = searchParams.get("verified");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -94,13 +93,6 @@ function LoginContent() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {registered && (
-              <div className="p-3 text-sm text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-400 rounded-md">
-                Registration successful! Please check your email to verify your
-                account.
-              </div>
-            )}
-
             {verified && (
               <div className="p-3 text-sm text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-400 rounded-md">
                 Email verified successfully! You can now sign in.

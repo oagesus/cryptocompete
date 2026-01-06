@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -44,9 +46,9 @@ const setPasswordSchema = z
 type SetPasswordFormValues = z.infer<typeof setPasswordSchema>;
 
 export function SetPasswordForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   const form = useForm<SetPasswordFormValues>({
     resolver: zodResolver(setPasswordSchema),
@@ -73,7 +75,7 @@ export function SetPasswordForm() {
       });
 
       if (response.status === 401) {
-        window.location.href = "/auth/login";
+        router.push("/auth/login");
         return;
       }
 
@@ -82,33 +84,13 @@ export function SetPasswordForm() {
         throw new Error(errorData.message || "Failed to set password");
       }
 
-      setIsSuccess(true);
+      toast.success("Password set successfully");
+      router.push("/account/settings");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
-  }
-
-  if (isSuccess) {
-    return (
-      <Card className="text-center">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Password set successfully</CardTitle>
-          <CardDescription>
-            Your password has been set
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <CheckCircle className="h-16 w-16 text-green-500" />
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button onClick={() => window.location.href = "/account/settings"}>
-            Back to Settings
-          </Button>
-        </CardFooter>
-      </Card>
-    );
   }
 
   return (
