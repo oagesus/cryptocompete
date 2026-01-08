@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Script from "next/script";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -86,6 +87,8 @@ export function GoogleLinkButton({ onSuccess, onError }: GoogleLinkButtonProps) 
           throw new Error(errorData.message || "Failed to link Google account");
         }
 
+        const data = await res.json();
+        toast.success(data.message);
         onSuccess?.();
         router.refresh();
       } catch (err) {

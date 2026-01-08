@@ -468,7 +468,47 @@ public class AuthController : ControllerBase
         _db.ExternalLogins.Add(newExternalLogin);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Google account linked successfully" });
+        return Ok(new { message = "Google account connected successfully" });
+    }
+
+    [Authorize]
+    [HttpDelete("google/unlink")]
+    public async Task<IActionResult> UnlinkGoogle()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _db.Users
+            .Include(u => u.ExternalLogins)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized(new { message = "User not found" });
+        }
+
+        if (!user.HasPassword)
+        {
+            return BadRequest(new { message = "You must set a password before disconnecting your Google account" });
+        }
+
+        var googleLogin = user.ExternalLogins
+            .FirstOrDefault(e => e.Provider == ExternalLoginProviders.Google);
+
+        if (googleLogin == null)
+        {
+            return BadRequest(new { message = "No Google account connected" });
+        }
+
+        _db.ExternalLogins.Remove(googleLogin);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Google account disconnected successfully" });
     }
 
     [Authorize]

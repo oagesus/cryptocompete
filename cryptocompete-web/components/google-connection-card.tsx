@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { GoogleLinkButton } from "@/components/google-link-button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,11 +31,13 @@ function GoogleIcon({ className }: { className?: string }) {
 
 interface GoogleConnectionCardProps {
   isConnected: boolean;
+  hasPassword: boolean;
   onConnectionChange: () => void;
 }
 
 export function GoogleConnectionCard({
   isConnected,
+  hasPassword,
   onConnectionChange,
 }: GoogleConnectionCardProps) {
   const [error, setError] = useState<string | null>(null);
@@ -48,19 +51,50 @@ export function GoogleConnectionCard({
     setError(errorMessage);
   }
 
+  async function handleDisconnect() {
+    try {
+      const res = await fetch("/api/auth/google/unlink", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to disconnect Google account");
+      }
+
+      const data = await res.json();
+      toast.success(data.message);
+      onConnectionChange();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    }
+  }
+
   if (isConnected) {
     return (
-      <Card className="border-green-500/50 bg-green-50/50 dark:bg-green-950/20">
-        <CardContent className="flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <GoogleIcon className="h-4 w-4" />
-            <span className="text-sm font-medium">Google</span>
+      <div className="space-y-2">
+        {error && (
+          <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+            {error}
           </div>
-          <span className="text-sm font-medium text-green-600 dark:text-green-400">
-            Connected
-          </span>
-        </CardContent>
-      </Card>
+        )}
+        <Card
+          onClick={handleDisconnect}
+          className="group cursor-pointer transition-colors border-green-500/50 bg-green-50/50 dark:bg-green-950/20 hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-950/20"
+        >
+          <CardContent className="flex items-center justify-between px-4">
+            <div className="flex items-center gap-3">
+              <GoogleIcon className="h-4 w-4" />
+              <span className="text-sm font-medium">Google</span>
+            </div>
+            <span className="text-sm font-medium text-green-600 dark:text-green-400 group-hover:text-red-600 dark:group-hover:text-red-400">
+              <span className="group-hover:hidden">Connected</span>
+              <span className="hidden group-hover:inline">Disconnect</span>
+            </span>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 

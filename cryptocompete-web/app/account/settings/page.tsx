@@ -44,6 +44,7 @@ export default function AccountSettingsPage() {
           </h3>
           <GoogleConnectionCard
             isConnected={isGoogleConnected}
+            hasPassword={user.hasPassword}
             onConnectionChange={refetch}
           />
         </div>
