@@ -14,6 +14,7 @@ public class User
     
     public ICollection<ExternalLogin> ExternalLogins { get; set; } = new List<ExternalLogin>();
     public ICollection<Profile> Profiles { get; set; } = new List<Profile>();
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     
     public bool HasPassword => !string.IsNullOrEmpty(PasswordHash);
     public bool HasAnyLoginMethod => HasPassword || ExternalLogins.Any();

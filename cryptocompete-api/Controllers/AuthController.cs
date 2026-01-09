@@ -97,6 +97,8 @@ public class AuthController : ControllerBase
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
         };
 
+        user.UserRoles.Add(new UserRole { Role = Role.Free });
+
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
@@ -353,6 +355,8 @@ public class AuthController : ControllerBase
                     EmailVerifiedAt = DateTimeOffset.UtcNow
                 };
 
+                user.UserRoles.Add(new UserRole { Role = Role.Free });
+
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
 
@@ -585,7 +589,12 @@ public class AuthController : ControllerBase
 
         _db.RefreshTokens.Remove(storedToken);
 
-        var accessToken = _jwtService.GenerateAccessToken(storedToken.User);
+        var roles = await _db.UserRoles
+            .Where(ur => ur.UserId == storedToken.UserId)
+            .Select(ur => ur.Role)
+            .ToListAsync();
+
+        var accessToken = _jwtService.GenerateAccessToken(storedToken.User, roles);
         var (newRefreshToken, newRefreshTokenHash) = _jwtService.GenerateRefreshToken();
 
         var newRefreshTokenEntity = new RefreshToken
@@ -916,7 +925,7 @@ public class AuthController : ControllerBase
         if (user.ActiveProfileId == null)
         {
             var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain) 
-                           ?? user.Profiles.FirstOrDefault();
+                        ?? user.Profiles.FirstOrDefault();
             if (mainProfile != null)
             {
                 user.ActiveProfileId = mainProfile.Id;
@@ -924,7 +933,12 @@ public class AuthController : ControllerBase
             }
         }
 
-        var accessToken = _jwtService.GenerateAccessToken(user);
+        var roles = await _db.UserRoles
+            .Where(ur => ur.UserId == user.Id)
+            .Select(ur => ur.Role)
+            .ToListAsync();
+
+        var accessToken = _jwtService.GenerateAccessToken(user, roles);
         var (refreshToken, refreshTokenHash) = _jwtService.GenerateRefreshToken();
 
         var deviceInfo = Request.Headers.UserAgent.ToString();
