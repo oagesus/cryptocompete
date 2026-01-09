@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CryptoCompete.Api.Constants;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Models;
 using CryptoCompete.Api.Services;
@@ -530,6 +531,7 @@ public class AuthController : ControllerBase
         var user = await _db.Users
             .Include(u => u.ExternalLogins)
             .Include(u => u.Profiles)
+            .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
@@ -540,13 +542,18 @@ public class AuthController : ControllerBase
         var activeProfilePublicId = user.Profiles
             .FirstOrDefault(p => p.Id == user.ActiveProfileId)?.PublicId;
 
+        var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
+        var maxProfiles = isPremium ? ProfileLimits.Premium : ProfileLimits.Free;
+
         return Ok(new MeResponse(
             user.Id,
             user.Email,
             user.PasswordHash != null,
             user.ExternalLogins.Select(e => e.Provider).ToList(),
             user.Profiles.Select(p => new ProfileDto(p.PublicId, p.Username, p.IsMain)).ToList(),
-            activeProfilePublicId
+            activeProfilePublicId,
+            user.UserRoles.Select(r => r.Role.ToString()).ToList(),
+            maxProfiles
         ));
     }
 
@@ -1125,7 +1132,7 @@ public record GoogleLoginRequest(string IdToken);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
 public record ProfileDto(Guid PublicId, string Username, bool IsMain);
-public record MeResponse(int Id, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId);
+public record MeResponse(int Id, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId, List<string> Roles, int MaxProfiles);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);
 public record SetPasswordRequest(string Password);

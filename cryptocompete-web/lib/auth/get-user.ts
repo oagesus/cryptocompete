@@ -15,6 +15,8 @@ export interface User {
   connectedProviders: string[];
   profiles: Profile[];
   activeProfileId: string | null;
+  roles: string[];
+  maxProfiles: number;
 }
 
 export async function getUser(): Promise<User | null> {

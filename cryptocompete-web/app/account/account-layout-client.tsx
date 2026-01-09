@@ -16,10 +16,7 @@ export function AccountLayoutClient({ children, initialData }: Props) {
       <div className="flex flex-1">
         <div className="flex w-full flex-col gap-6 md:flex-row">
           <div className="w-full shrink-0 md:w-80">
-            <AccountSidebar 
-              profiles={initialData.profiles} 
-              activeProfileId={initialData.activeProfileId!}
-            />
+            <AccountSidebar />
           </div>
           <div className="flex-1">{children}</div>
         </div>
