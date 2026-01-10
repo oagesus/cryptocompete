@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, User } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAccount } from "@/components/account-provider";
 import { isPremium } from "@/lib/auth/user-utils";
@@ -100,6 +101,7 @@ export default function CreateProfilePage() {
       const profile = await response.json();
       justCreated.current = true;
       await refetch();
+      toast.success("Profile created successfully");
       router.push(`/account/profiles/${profile.publicId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -115,15 +117,18 @@ export default function CreateProfilePage() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold">Profiles</CardTitle>
+        <CardTitle className="text-2xl font-bold">Create Profile</CardTitle>
       </CardHeader>
       <Separator />
       <CardContent className="pt-6">
         <div className="space-y-3">
           <h3 className="flex items-center gap-2 text-lg font-semibold">
             <User className="h-5 w-5" />
-            Enter Username
+            Username
           </h3>
+          <p className="text-sm text-muted-foreground">
+            Enter a username to create your profile
+          </p>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {error && (

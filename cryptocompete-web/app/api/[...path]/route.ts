@@ -23,6 +23,13 @@ export async function PUT(
   return proxyRequest(request, await params);
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  return proxyRequest(request, await params);
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -62,7 +69,7 @@ async function proxyRequest(
     body,
   });
 
-  const responseBody = await response.text();
+  const responseBody = response.status === 204 ? null : await response.text();
 
   const nextResponse = new NextResponse(responseBody, {
     status: response.status,

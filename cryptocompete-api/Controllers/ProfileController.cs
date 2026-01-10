@@ -54,6 +54,35 @@ public class ProfileController : ControllerBase
 
         return Ok(new CreateProfileResponse(profile.PublicId, profile.Username));
     }
+
+    [HttpPatch("{publicId}/activate")]
+    public async Task<IActionResult> ActivateProfile(Guid publicId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var profile = await _db.Profiles
+            .FirstOrDefaultAsync(p => p.PublicId == publicId && p.UserId == userId);
+
+        if (profile == null)
+        {
+            return NotFound(new { message = "Profile not found" });
+        }
+
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        user.ActiveProfileId = profile.Id;
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
 
 public record CreateProfileRequest(string Username);

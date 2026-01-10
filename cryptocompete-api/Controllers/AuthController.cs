@@ -539,8 +539,15 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "User not found" });
         }
 
-        var activeProfilePublicId = user.Profiles
-            .FirstOrDefault(p => p.Id == user.ActiveProfileId)?.PublicId;
+        var activeProfile = user.Profiles.FirstOrDefault(p => p.Id == user.ActiveProfileId);
+        
+        if (activeProfile == null && user.Profiles.Any())
+        {
+            activeProfile = user.Profiles.FirstOrDefault(p => p.IsMain) 
+                         ?? user.Profiles.First();
+            user.ActiveProfileId = activeProfile.Id;
+            await _db.SaveChangesAsync();
+        }
 
         var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
         var maxProfiles = isPremium ? ProfileLimits.Premium : ProfileLimits.Free;
@@ -551,7 +558,7 @@ public class AuthController : ControllerBase
             user.PasswordHash != null,
             user.ExternalLogins.Select(e => e.Provider).ToList(),
             user.Profiles.Select(p => new ProfileDto(p.PublicId, p.Username, p.IsMain)).ToList(),
-            activeProfilePublicId,
+            activeProfile?.PublicId,
             user.UserRoles.Select(r => r.Role.ToString()).ToList(),
             maxProfiles
         ));

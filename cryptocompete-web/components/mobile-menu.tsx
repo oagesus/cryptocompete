@@ -60,8 +60,8 @@ export function MobileMenu({ user }: MobileMenuProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">{activeProfile.username}</p>
-          <p className="text-xs text-muted-foreground">{user.email}</p>
+          <p className="text-sm font-medium truncate">{activeProfile.username}</p>
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -77,7 +77,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
           className="cursor-pointer"
         >
           <User className="mr-2 h-4 w-4" />
-          Profiles
+          Profile
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/account/settings")}
