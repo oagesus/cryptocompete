@@ -1,7 +1,5 @@
 "use client";
 
-import { Mail, Link2, Shield } from "lucide-react";
-
 import { useAccount } from "@/components/account-provider";
 import { EmailCard } from "@/components/email-card";
 import { PasswordCard } from "@/components/password-card";
@@ -12,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 export default function AccountSettingsPage() {
   const { user, refetch } = useAccount();
 
-  const isGoogleConnected = user.connectedProviders.includes("Google");
+  const googleConnection = user.connectedProviders.find(p => p.provider === "Google");
 
   return (
     <Card>
@@ -22,28 +20,19 @@ export default function AccountSettingsPage() {
       <Separator />
       <CardContent className="pt-6 space-y-6">
         <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <Mail className="h-5 w-5" />
-            Details
-          </h3>
+          <h3 className="text-lg font-semibold">Details</h3>
           <EmailCard email={user.email} />
         </div>
 
         <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <Shield className="h-5 w-5" />
-            Security
-          </h3>
+          <h3 className="text-lg font-semibold">Security</h3>
           <PasswordCard hasPassword={user.hasPassword} />
         </div>
 
         <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <Link2 className="h-5 w-5" />
-            Connections
-          </h3>
+          <h3 className="text-lg font-semibold">Connections</h3>
           <GoogleConnectionCard
-            isConnected={isGoogleConnected}
+            googleConnection={googleConnection}
             hasPassword={user.hasPassword}
             onConnectionChange={refetch}
           />

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { User, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAccount } from "@/components/account-provider";
@@ -77,14 +77,9 @@ export default function ProfilePage() {
         </div>
       </CardHeader>
       <Separator />
-      <CardContent className="pt-6 space-y-6">
-        <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <User className="h-5 w-5" />
-            Details
-          </h3>
-          <UsernameCard username={profile.username} />
-        </div>
+      <CardContent className="pt-6 space-y-3">
+        <h3 className="text-lg font-semibold">Details</h3>
+        <UsernameCard username={profile.username} />
       </CardContent>
     </Card>
   );

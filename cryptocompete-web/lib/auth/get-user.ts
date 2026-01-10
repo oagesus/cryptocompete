@@ -8,11 +8,16 @@ export interface Profile {
   isMain: boolean;
 }
 
+export interface ExternalLogin {
+  provider: string;
+  email: string;
+}
+
 export interface User {
   id: number;
   email: string;
   hasPassword: boolean;
-  connectedProviders: string[];
+  connectedProviders: ExternalLogin[];
   profiles: Profile[];
   activeProfileId: string | null;
   roles: string[];

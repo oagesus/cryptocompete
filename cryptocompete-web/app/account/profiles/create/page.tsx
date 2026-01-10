@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, User } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAccount } from "@/components/account-provider";
@@ -122,10 +122,7 @@ export default function CreateProfilePage() {
       <Separator />
       <CardContent className="pt-6">
         <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <User className="h-5 w-5" />
-            Username
-          </h3>
+          <h3 className="text-lg font-semibold">Username</h3>
           <p className="text-sm text-muted-foreground">
             Enter a username to create your profile
           </p>
@@ -142,7 +139,7 @@ export default function CreateProfilePage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-3 md:flex-row">
                       <FormControl>
                         <Input
                           placeholder="your_username"
@@ -151,7 +148,7 @@ export default function CreateProfilePage() {
                           {...field}
                         />
                       </FormControl>
-                      <Button type="submit" disabled={isLoading}>
+                      <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create Profile
                       </Button>

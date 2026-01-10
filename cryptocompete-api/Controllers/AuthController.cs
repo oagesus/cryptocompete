@@ -556,7 +556,7 @@ public class AuthController : ControllerBase
             user.Id,
             user.Email,
             user.PasswordHash != null,
-            user.ExternalLogins.Select(e => e.Provider).ToList(),
+            user.ExternalLogins.Select(e => new ExternalLoginDto(e.Provider, e.ProviderEmail ?? "")).ToList(),
             user.Profiles.Select(p => new ProfileDto(p.PublicId, p.Username, p.IsMain)).ToList(),
             activeProfile?.PublicId,
             user.UserRoles.Select(r => r.Role.ToString()).ToList(),
@@ -1139,7 +1139,8 @@ public record GoogleLoginRequest(string IdToken);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
 public record ProfileDto(Guid PublicId, string Username, bool IsMain);
-public record MeResponse(int Id, string Email, bool HasPassword, List<string> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId, List<string> Roles, int MaxProfiles);
+public record ExternalLoginDto(string Provider, string Email);
+public record MeResponse(int Id, string Email, bool HasPassword, List<ExternalLoginDto> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId, List<string> Roles, int MaxProfiles);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);
 public record SetPasswordRequest(string Password);

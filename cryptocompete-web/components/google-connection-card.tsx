@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { GoogleLinkButton } from "@/components/google-link-button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ExternalLogin } from "@/lib/auth/get-user";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -30,13 +31,13 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 interface GoogleConnectionCardProps {
-  isConnected: boolean;
+  googleConnection: ExternalLogin | undefined;
   hasPassword: boolean;
   onConnectionChange: () => void;
 }
 
 export function GoogleConnectionCard({
-  isConnected,
+  googleConnection,
   hasPassword,
   onConnectionChange,
 }: GoogleConnectionCardProps) {
@@ -71,7 +72,7 @@ export function GoogleConnectionCard({
     }
   }
 
-  if (isConnected) {
+  if (googleConnection) {
     return (
       <div className="space-y-2">
         {error && (
@@ -83,12 +84,13 @@ export function GoogleConnectionCard({
           onClick={handleDisconnect}
           className="group cursor-pointer transition-colors border-green-500/50 bg-green-50/50 dark:bg-green-950/20 hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-950/20"
         >
-          <CardContent className="flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
-              <GoogleIcon className="h-4 w-4" />
-              <span className="text-sm font-medium">Google</span>
+          <CardContent className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2">
+              <GoogleIcon className="h-4 w-4 shrink-0" />
+              <span className="text-sm text-muted-foreground">Google</span>
             </div>
-            <span className="text-sm font-medium text-green-600 dark:text-green-400 group-hover:text-red-600 dark:group-hover:text-red-400">
+            <span className="text-sm font-medium truncate">{googleConnection.email}</span>
+            <span className="text-sm font-medium text-green-600 dark:text-green-400 group-hover:text-red-600 dark:group-hover:text-red-400 md:ml-auto">
               <span className="group-hover:hidden">Connected</span>
               <span className="hidden group-hover:inline">Disconnect</span>
             </span>
