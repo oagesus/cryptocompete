@@ -6,6 +6,7 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string? PasswordHash { get; set; }
     public bool IsBlocked { get; set; }
+    public string DisplayCurrency { get; set; } = "EUR";
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? EmailVerifiedAt { get; set; }
 
