@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, User, Plus } from "lucide-react";
+import { Settings, User, Plus, Wallet } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,25 +54,45 @@ export function AccountSidebar() {
               Profiles ({profiles.length}/{maxProfiles})
             </span>
           </div>
-          {profiles.map((profile) => (
-            <Link
-              key={profile.publicId}
-              href={`/account/profiles/${profile.publicId}`}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted min-h-[40px]",
-                pathname === `/account/profiles/${profile.publicId}` &&
-                  "bg-muted font-medium"
-              )}
-            >
-              <User className="h-4 w-4 shrink-0" />
-              <span className="truncate">{profile.username}</span>
-              {profile.publicId === activeProfileId && (
-                <span className="ml-auto">
-                  <ActiveBadge />
-                </span>
-              )}
-            </Link>
-          ))}
+          {profiles.map((profile) => {
+            const profilePath = `/account/profiles/${profile.publicId}`;
+            const portfolioPath = `${profilePath}/portfolio`;
+            const isProfileActive = pathname === profilePath;
+            const isPortfolioActive = pathname === portfolioPath;
+            const isExpanded = pathname.startsWith(profilePath);
+
+            return (
+              <div key={profile.publicId} className="space-y-1">
+                <Link
+                  href={profilePath}
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted min-h-[40px]",
+                    isProfileActive && "bg-muted font-medium"
+                  )}
+                >
+                  <User className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{profile.username}</span>
+                  {profile.publicId === activeProfileId && (
+                    <span className="ml-auto">
+                      <ActiveBadge />
+                    </span>
+                  )}
+                </Link>
+                {isExpanded && (
+                  <Link
+                    href={portfolioPath}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-3 py-2 pl-9 text-sm transition-colors hover:bg-muted min-h-[40px]",
+                      isPortfolioActive && "bg-muted font-medium"
+                    )}
+                  >
+                    <Wallet className="h-4 w-4 shrink-0" />
+                    <span>Portfolio</span>
+                  </Link>
+                )}
+              </div>
+            );
+          })}
           {showAddButton && userIsPremium && (
             <Link href="/account/profiles/create">
               <Button

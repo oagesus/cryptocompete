@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Settings, User, LogOut } from "lucide-react";
+import { LayoutDashboard, Settings, User, LogOut, Wallet } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -70,6 +70,13 @@ export function MobileMenu({ user }: MobileMenuProps) {
         >
           <LayoutDashboard className="mr-2 h-4 w-4" />
           Dashboard
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push(`/account/profiles/${activeProfile.publicId}/portfolio`)}
+          className="cursor-pointer"
+        >
+          <Wallet className="mr-2 h-4 w-4" />
+          Portfolio
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
