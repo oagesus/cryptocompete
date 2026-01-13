@@ -14,9 +14,10 @@ import {
 import { cn } from "@/lib/utils";
 
 function getCurrencySymbol(code: string): string {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: code })
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: code })
     .format(0)
-    .replace(/[\d.,\s]/g, "");
+    .replace(/[\d.,]/g, "")
+    .trim();
 }
 
 function getCurrencyName(code: string): string {
