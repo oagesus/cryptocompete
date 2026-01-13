@@ -15,10 +15,10 @@ export function HoldingCard({ symbol, name, amount }: HoldingCardProps) {
         <div className="flex flex-col">
           <span className="font-medium">{name}</span>
           <span className="text-sm text-muted-foreground">
-            {amount.toLocaleString("de-DE", {
+            {symbol}{" "}
+            {amount.toLocaleString("en-US", {
               maximumFractionDigits: 8,
-            })}{" "}
-            {symbol}
+            })}
           </span>
         </div>
       </CardContent>

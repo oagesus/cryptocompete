@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface BalanceCardProps {
   balance: number;
+  currency: string;
 }
 
-export function BalanceCard({ balance }: BalanceCardProps) {
-  const formattedBalance = new Intl.NumberFormat("de-DE", {
+export function BalanceCard({ balance, currency }: BalanceCardProps) {
+  const formattedBalance = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "EUR",
+    currency: currency,
   }).format(balance);
 
   return (

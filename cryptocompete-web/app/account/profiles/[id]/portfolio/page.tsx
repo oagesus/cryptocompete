@@ -28,7 +28,7 @@ export default async function PortfolioPage({
         <CardContent className="pt-6 space-y-6">
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">Balance</h3>
-            <BalanceCard balance={portfolio.balance} />
+            <BalanceCard balance={portfolio.balance} currency={portfolio.currency} />
           </div>
 
           <div className="space-y-3">

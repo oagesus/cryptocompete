@@ -30,7 +30,7 @@ export function ThemeToggleIcon() {
       `}</style>
       <div
         onClick={handleThemeToggle}
-        className="flex justify-center py-2 rounded-sm cursor-pointer hover:bg-accent active:bg-accent"
+        className="flex flex-1 justify-center py-2 rounded-sm cursor-pointer hover:bg-accent active:bg-accent"
       >
         <div className="relative h-5 w-5">
           <Sun

@@ -560,8 +560,42 @@ public class AuthController : ControllerBase
             user.Profiles.Select(p => new ProfileDto(p.PublicId, p.Username, p.IsMain)).ToList(),
             activeProfile?.PublicId,
             user.UserRoles.Select(r => r.Role.ToString()).ToList(),
-            maxProfiles
+            maxProfiles,
+            user.DisplayCurrency,
+            SupportedCurrencies.Codes.ToList()
         ));
+    }
+
+    [Authorize]
+    [HttpPatch("me")]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateMeRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return Unauthorized(new { message = "User not found" });
+        }
+
+        if (request.DisplayCurrency != null)
+        {
+            if (!SupportedCurrencies.IsSupported(request.DisplayCurrency))
+            {
+                return BadRequest(new { message = "Unsupported currency" });
+            }
+            user.DisplayCurrency = request.DisplayCurrency.ToUpperInvariant();
+        }
+
+        await _db.SaveChangesAsync();
+
+        return NoContent();
     }
 
     [HttpPost("refresh")]
@@ -1140,7 +1174,8 @@ public record LoginResponse(string AccessToken, string RefreshToken, int UserId,
 public record RefreshResponse(string AccessToken, string RefreshToken);
 public record ProfileDto(Guid PublicId, string Username, bool IsMain);
 public record ExternalLoginDto(string Provider, string Email);
-public record MeResponse(int Id, string Email, bool HasPassword, List<ExternalLoginDto> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId, List<string> Roles, int MaxProfiles);
+public record MeResponse(int Id, string Email, bool HasPassword, List<ExternalLoginDto> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId, List<string> Roles, int MaxProfiles, string DisplayCurrency, List<string> SupportedCurrencies);
+public record UpdateMeRequest(string? DisplayCurrency);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);
 public record SetPasswordRequest(string Password);

@@ -77,6 +77,8 @@ builder.Services.Configure<ResendClientOptions>(o =>
 builder.Services.AddTransient<IResend, ResendClient>();
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
 
 builder.Services.AddOpenApi();
 

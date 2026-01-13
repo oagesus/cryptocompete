@@ -13,6 +13,7 @@ export interface Portfolio {
   profilePublicId: string;
   username: string;
   balance: number;
+  currency: string;
   holdings: Holding[];
 }
 

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
+import { CurrencyToggleIcon } from "@/components/currency-toggle-icon";
 import { User as UserType } from "@/lib/auth/get-user";
 
 interface MobileMenuProps {
@@ -102,7 +103,14 @@ export function MobileMenu({ user }: MobileMenuProps) {
           Sign Out
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <ThemeToggleIcon />
+        <div className="flex items-center">
+          <ThemeToggleIcon />
+          <div className="w-px h-5 bg-border" />
+          <CurrencyToggleIcon
+            currentCurrency={user.displayCurrency}
+            supportedCurrencies={user.supportedCurrencies}
+          />
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
