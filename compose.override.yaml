@@ -7,6 +7,7 @@ services:
       - Resend__FromEmail=noreply@mstubenvoll.com
       - Jwt__Secret=${JWT_SECRET}
       - Google__ClientId=${GOOGLE_CLIENT_ID}
+      - CoinMarketCap__ApiKey=${COINMARKETCAP_API_KEY}
     depends_on:
       db:
         condition: service_healthy

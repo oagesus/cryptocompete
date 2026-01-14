@@ -79,6 +79,8 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
+builder.Services.AddHttpClient<ICryptocurrencyListService, CryptocurrencyListService>();
+builder.Services.AddHostedService<CryptocurrencyListBackgroundService>();
 
 builder.Services.AddOpenApi();
 
