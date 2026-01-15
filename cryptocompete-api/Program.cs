@@ -1,6 +1,7 @@
 using System.Text;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Filters;
+using CryptoCompete.Api.Hubs;
 using CryptoCompete.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     context.Token = token;
                 }
+
+                // SignalR sends token via query string
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
                 return Task.CompletedTask;
             }
         };
@@ -68,6 +78,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSignalR();
+
 builder.Services.AddOptions();
 builder.Services.AddHttpClient<ResendClient>();
 builder.Services.Configure<ResendClientOptions>(o =>
@@ -81,6 +93,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
 builder.Services.AddHttpClient<ICryptocurrencyListService, CryptocurrencyListService>();
 builder.Services.AddHostedService<CryptocurrencyListBackgroundService>();
+builder.Services.AddSingleton<CryptoPriceBackgroundService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<CryptoPriceBackgroundService>());
 
 builder.Services.AddOpenApi();
 
@@ -102,5 +116,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<CryptoPriceHub>("/hubs/prices");
 
 app.Run();

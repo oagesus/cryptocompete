@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
 
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
-import { BalanceCard } from "@/components/balance-card";
-import { HoldingCard } from "@/components/holding-card";
+import { CashCard } from "@/components/cash-card";
+import { PortfolioHero } from "@/components/portfolio-hero";
+import { HoldingsList } from "@/components/holdings-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+
+export const dynamic = "force-dynamic";
 
 export default async function PortfolioPage({
   params,
@@ -25,35 +28,26 @@ export default async function PortfolioPage({
           <CardTitle className="text-2xl font-bold">Portfolio</CardTitle>
         </CardHeader>
         <Separator />
+        <PortfolioHero
+          balance={portfolio.balance}
+          holdings={portfolio.holdings}
+          currency={portfolio.currency}
+          exchangeRate={portfolio.exchangeRate}
+        />
+        <Separator />
         <CardContent className="pt-6 space-y-6">
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Balance</h3>
-            <BalanceCard balance={portfolio.balance} currency={portfolio.currency} />
+            <h3 className="text-lg font-semibold">Cash</h3>
+            <CashCard balance={portfolio.balance} currency={portfolio.currency} />
           </div>
 
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">Holdings</h3>
-
-            {portfolio.holdings.length === 0 ? (
-              <Card>
-                <CardContent className="px-4">
-                  <p className="text-sm text-muted-foreground">
-                    No holdings yet. Start trading to build your portfolio!
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2">
-                {portfolio.holdings.map((holding) => (
-                  <HoldingCard
-                    key={holding.symbol}
-                    symbol={holding.symbol}
-                    name={holding.name}
-                    amount={holding.amount}
-                  />
-                ))}
-              </div>
-            )}
+            <HoldingsList
+              holdings={portfolio.holdings}
+              currency={portfolio.currency}
+              exchangeRate={portfolio.exchangeRate}
+            />
           </div>
         </CardContent>
       </Card>

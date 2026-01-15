@@ -6,6 +6,10 @@ export interface Holding {
   symbol: string;
   name: string;
   amount: number;
+  price: number | null;
+  currentValue: number | null;
+  investedValue: number;
+  profitLossPercent: number | null;
   updatedAt: string;
 }
 
@@ -14,6 +18,7 @@ export interface Portfolio {
   username: string;
   balance: number;
   currency: string;
+  exchangeRate: number;
   holdings: Holding[];
 }
 
@@ -30,7 +35,6 @@ export async function getPortfolio(publicId: string): Promise<Portfolio | null> 
       headers: {
         Cookie: `access_token=${accessToken}`,
       },
-      cache: "no-store",
     });
 
     if (!response.ok) {

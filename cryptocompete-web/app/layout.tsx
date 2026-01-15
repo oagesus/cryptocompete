@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { AuthGuardian } from "@/components/auth-guardian";
 import { ThemedToaster } from "@/components/themed-toaster";
+import { CryptoPriceProvider } from "@/providers/crypto-price-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,14 +38,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthGuardian />
-          <Navbar />
-          <div className="flex flex-1 flex-col px-6 py-12">
-            <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">
-              {children}
+          <CryptoPriceProvider>
+            <AuthGuardian />
+            <Navbar />
+            <div className="flex flex-1 flex-col px-6 py-12">
+              <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">
+                {children}
+              </div>
             </div>
-          </div>
-          <ThemedToaster />
+            <ThemedToaster />
+          </CryptoPriceProvider>
         </ThemeProvider>
       </body>
     </html>
