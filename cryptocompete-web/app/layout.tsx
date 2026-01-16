@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { AuthGuardian } from "@/components/auth-guardian";
 import { ThemedToaster } from "@/components/themed-toaster";
 import { CryptoPriceProvider } from "@/providers/crypto-price-provider";
+import { CryptoPriceSubscriber } from "@/components/crypto-price-subscriber";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <CryptoPriceProvider>
+            <CryptoPriceSubscriber />
             <AuthGuardian />
             <Navbar />
             <div className="flex flex-1 flex-col px-6 py-12">

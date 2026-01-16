@@ -62,6 +62,7 @@ public class CryptoPriceBackgroundService : BackgroundService
     private async Task ConnectAndReceiveAsync(CancellationToken stoppingToken)
     {
         _webSocket = new ClientWebSocket();
+        _webSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
         var uri = new Uri("wss://stream.binance.com:9443/ws/!ticker@arr");
 
         _logger.LogInformation("Connecting to Binance WebSocket...");
@@ -124,6 +125,11 @@ public class CryptoPriceBackgroundService : BackgroundService
     public decimal? GetPrice(string symbol)
     {
         return _prices.TryGetValue(symbol.ToUpperInvariant(), out var update) ? update.Price : null;
+    }
+
+    public decimal? GetChangePercent24h(string symbol)
+    {
+        return _prices.TryGetValue(symbol.ToUpperInvariant(), out var update) ? update.ChangePercent24h : null;
     }
 
     public Dictionary<string, decimal> GetAllPrices()

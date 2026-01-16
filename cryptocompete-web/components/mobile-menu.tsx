@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Settings, User, LogOut, Wallet } from "lucide-react";
+import { LayoutDashboard, Settings, User, LogOut, Wallet, TrendingUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -78,6 +78,13 @@ export function MobileMenu({ user }: MobileMenuProps) {
         >
           <Wallet className="mr-2 h-4 w-4" />
           Portfolio
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push("/trade")}
+          className="cursor-pointer"
+        >
+          <TrendingUp className="mr-2 h-4 w-4" />
+          Trade
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

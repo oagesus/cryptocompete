@@ -25,6 +25,9 @@ export async function Navbar() {
               <Button variant="ghost" asChild className="hidden md:inline-flex">
                 <Link href={`/account/profiles/${activeProfile?.publicId}/portfolio`}>Portfolio</Link>
               </Button>
+              <Button variant="ghost" asChild className="hidden md:inline-flex">
+                <Link href="/trade">Trade</Link>
+              </Button>
               <div className="hidden md:block">
                 <UserMenu user={user} />
               </div>
