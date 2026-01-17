@@ -1,14 +1,13 @@
 "use client";
 
-import { Banknote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface CashCardProps {
+interface BalanceCardProps {
   balance: number;
   currency: string;
 }
 
-export function CashCard({ balance, currency }: CashCardProps) {
+export function BalanceCardPortfolio({ balance, currency }: BalanceCardProps) {
   const formattedBalance = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currency,
@@ -17,10 +16,7 @@ export function CashCard({ balance, currency }: CashCardProps) {
   return (
     <Card>
       <CardContent className="flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Banknote className="h-5 w-5 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Cash</span>
-        </div>
+        <span className="text-sm text-muted-foreground">Balance</span>
         <span className="font-semibold">{formattedBalance}</span>
       </CardContent>
     </Card>

@@ -35,6 +35,7 @@ export async function getPortfolio(publicId: string): Promise<Portfolio | null> 
       headers: {
         Cookie: `access_token=${accessToken}`,
       },
+      cache: "no-store",
     });
 
     if (!response.ok) {

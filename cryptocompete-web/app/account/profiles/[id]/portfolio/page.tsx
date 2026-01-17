@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
-import { CashCard } from "@/components/cash-card";
+import { BalanceCardPortfolio } from "@/components/balance-card-portfolio";
 import { PortfolioHero } from "@/components/portfolio-hero";
 import { HoldingsList } from "@/components/holdings-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,8 +37,8 @@ export default async function PortfolioPage({
         <Separator />
         <CardContent className="pt-6 space-y-6">
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Cash</h3>
-            <CashCard balance={portfolio.balance} currency={portfolio.currency} />
+            <h3 className="text-lg font-semibold">Balance</h3>
+            <BalanceCardPortfolio balance={portfolio.balance} currency={portfolio.currency} />
           </div>
 
           <div className="space-y-3">
