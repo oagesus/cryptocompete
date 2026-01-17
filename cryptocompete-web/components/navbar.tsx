@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
 import { MobileMenu } from "@/components/mobile-menu";
+import { MobileMenuPublic } from "@/components/mobile-menu-public";
 
 export async function Navbar() {
   const user = await getUser();
@@ -37,13 +38,22 @@ export async function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" asChild className="hidden md:inline-flex">
+                <Link href="/trade">Trade</Link>
+              </Button>
+              <div className="hidden md:block w-px h-5 bg-border" />
+              <Button variant="ghost" asChild className="hidden md:inline-flex">
                 <Link href="/auth/login">Sign In</Link>
               </Button>
-              <Button asChild>
+              <Button asChild className="hidden md:inline-flex">
                 <Link href="/auth/register">Sign Up</Link>
               </Button>
-              <ThemeToggle />
+              <div className="hidden md:block">
+                <ThemeToggle />
+              </div>
+              <div className="md:hidden">
+                <MobileMenuPublic />
+              </div>
             </>
           )}
         </div>
