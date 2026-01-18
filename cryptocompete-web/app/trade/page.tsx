@@ -1,13 +1,22 @@
-import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import { PlusCircle } from "lucide-react";
+import { getUser } from "@/lib/auth/get-user";
+import { SellLink } from "./sell-link";
 
-export default function TradePage() {
+export default async function TradePage() {
+  const user = await getUser();
+  const isAuthenticated = !!user;
+
   return (
-    <Card>
-      <CardContent>
-        <p className="text-muted-foreground">
-          Select a cryptocurrency from the sidebar to view its live price and trade.
-        </p>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 gap-4">
+      <Link
+        href="/trade/buy"
+        className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50 transition-colors"
+      >
+        <PlusCircle className="h-12 w-12" />
+        <span className="text-xl font-semibold">Buy</span>
+      </Link>
+      <SellLink isAuthenticated={isAuthenticated} />
+    </div>
   );
 }

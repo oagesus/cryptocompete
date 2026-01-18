@@ -44,7 +44,7 @@ export function MobileMenuPublic() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem
-          onClick={() => router.push("/trade")}
+          onClick={() => router.push("/trade/buy")}
           className="cursor-pointer"
         >
           <TrendingUp className="mr-2 h-4 w-4" />

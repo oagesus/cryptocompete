@@ -19,9 +19,10 @@ interface Props {
   isAuthenticated: boolean;
   balance: number | null;
   supportedCurrencies: string[];
+  initialPrice: number | null;
 }
 
-export function TradePanel({
+export function BuyPanel({
   symbol,
   name,
   displayCurrency,
@@ -29,6 +30,7 @@ export function TradePanel({
   isAuthenticated,
   balance,
   supportedCurrencies,
+  initialPrice,
 }: Props) {
   const router = useRouter();
   const [spendAmount, setSpendAmount] = useState("");
@@ -42,7 +44,9 @@ export function TradePanel({
   const { prices } = useCryptoPrices(symbols);
 
   const liveData = prices[symbol];
-  const priceInUserCurrency = liveData ? liveData.price * exchangeRate : null;
+  const priceInUserCurrency = liveData 
+    ? liveData.price * exchangeRate 
+    : initialPrice;
 
   const calculatedCryptoAmount = useMemo(() => {
     if (activeField !== "spend") return null;
@@ -129,11 +133,6 @@ export function TradePanel({
 
     setError(null);
 
-    if (balance !== null && finalSpendValue > balance) {
-      setError("Insufficient balance");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -206,7 +205,7 @@ export function TradePanel({
 
           <Button
             onClick={handleBuy}
-            disabled={isLoading || finalSpendValue <= 0 || finalCryptoValue <= 0}
+            disabled={isLoading || finalSpendValue <= 0 || finalCryptoValue <= 0 || (balance !== null && finalSpendValue > balance)}
             className="w-full"
           >
             {isLoading ? (

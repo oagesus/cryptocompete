@@ -3,7 +3,7 @@ import { getCryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
 import { getUser } from "@/lib/auth/get-user";
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
 import { CryptoDetailCard } from "./crypto-detail-card";
-import { TradePanel } from "@/components/trade-panel";
+import { BuyPanel } from "@/components/buy-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ interface Props {
   params: Promise<{ symbol: string }>;
 }
 
-export default async function TradeDetailPage({ params }: Props) {
+export default async function BuyDetailPage({ params }: Props) {
   const { symbol } = await params;
   const crypto = await getCryptocurrency(symbol);
   const user = await getUser();
@@ -35,6 +35,7 @@ export default async function TradeDetailPage({ params }: Props) {
 
   const displayCurrency = portfolioCurrency ?? crypto.currency;
   const exchangeRate = portfolioExchangeRate ?? crypto.exchangeRate;
+  const initialPrice = crypto.price;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
@@ -49,7 +50,7 @@ export default async function TradeDetailPage({ params }: Props) {
         />
       </div>
       <div className="w-full lg:w-80 shrink-0">
-        <TradePanel
+        <BuyPanel
           symbol={crypto.symbol}
           name={crypto.name}
           displayCurrency={displayCurrency}
@@ -57,6 +58,7 @@ export default async function TradeDetailPage({ params }: Props) {
           isAuthenticated={!!user}
           balance={balance}
           supportedCurrencies={user?.supportedCurrencies ?? []}
+          initialPrice={initialPrice}
         />
       </div>
     </div>

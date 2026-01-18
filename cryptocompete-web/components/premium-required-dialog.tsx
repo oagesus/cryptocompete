@@ -21,7 +21,7 @@ export function PremiumRequiredDialog({ open, onOpenChange }: PremiumRequiredDia
         <DialogHeader>
           <DialogTitle>Premium Required</DialogTitle>
           <DialogDescription>
-            Premium subscription required to create additional profiles.
+            You need a premium subscription to create additional profiles.
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end">

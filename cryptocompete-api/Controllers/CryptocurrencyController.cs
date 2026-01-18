@@ -29,13 +29,34 @@ public class CryptocurrencyController : ControllerBase
     [HttpGet("all")]
     public async Task<IActionResult> GetAllCryptocurrencies()
     {
+        var displayCurrency = "USD";
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user != null)
+            {
+                displayCurrency = user.DisplayCurrency;
+            }
+        }
+
+        var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
+
         var cryptocurrencies = await _db.Cryptocurrencies
             .Where(c => c.IsActive)
             .OrderBy(c => c.Name)
-            .Select(c => new CryptocurrencyDto(c.Symbol, c.Name))
+            .Select(c => new { c.Symbol, c.Name })
             .ToListAsync();
 
-        return Ok(cryptocurrencies);
+        var result = cryptocurrencies.Select(c =>
+        {
+            var priceUsd = _priceService.GetPrice(c.Symbol);
+            var convertedPrice = priceUsd.HasValue ? priceUsd.Value * exchangeRate : (decimal?)null;
+
+            return new CryptocurrencyWithPriceDto(c.Symbol, c.Name, convertedPrice);
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("{symbol}")]
@@ -79,6 +100,7 @@ public class CryptocurrencyController : ControllerBase
 }
 
 public record CryptocurrencyDto(string Symbol, string Name);
+public record CryptocurrencyWithPriceDto(string Symbol, string Name, decimal? Price);
 public record CryptocurrencyDetailDto(
     string Symbol, 
     string Name, 

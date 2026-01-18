@@ -10,20 +10,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Cryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
+import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 
 const PAGE_SIZE = 10;
 
 interface Props {
   cryptocurrencies: Cryptocurrency[];
+  currency: string;
+  exchangeRate: number;
 }
 
-export function CryptocurrencySidebar({ cryptocurrencies }: Props) {
+export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeRate }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const search = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1", 10);
+
+  const symbols = useMemo(() => cryptocurrencies.map((c) => c.symbol), [cryptocurrencies]);
+  const { prices } = useCryptoPrices(symbols);
 
   const updateParams = (newSearch: string, newPage: number) => {
     const params = new URLSearchParams();
@@ -63,6 +69,20 @@ export function CryptocurrencySidebar({ cryptocurrencies }: Props) {
 
   const currentSymbol = pathname.split("/").pop()?.toUpperCase();
 
+  function formatPrice(crypto: Cryptocurrency) {
+    const livePrice = prices[crypto.symbol]?.price;
+    const priceInCurrency = livePrice 
+      ? livePrice * exchangeRate 
+      : crypto.price;
+    if (!priceInCurrency) return "...";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: priceInCurrency >= 10 ? 2 : 6,
+      maximumFractionDigits: priceInCurrency >= 10 ? 2 : 6,
+    }).format(priceInCurrency);
+  }
+
   return (
     <Card className="h-fit">
       <CardContent className="space-y-3">
@@ -91,16 +111,23 @@ export function CryptocurrencySidebar({ cryptocurrencies }: Props) {
             paginatedCryptos.map((crypto) => (
               <Link
                 key={crypto.symbol}
-                href={`/trade/${crypto.symbol.toLowerCase()}${search ? `?search=${encodeURIComponent(search)}` : ""}${validPage > 1 ? `${search ? "&" : "?"}page=${validPage}` : ""}`}
+                href={`/trade/buy/${crypto.symbol.toLowerCase()}${search ? `?search=${encodeURIComponent(search)}` : ""}${validPage > 1 ? `${search ? "&" : "?"}page=${validPage}` : ""}`}
                 className={cn(
-                  "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted min-h-[40px]",
+                  "flex flex-col rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted min-h-[56px]",
                   currentSymbol === crypto.symbol && "bg-muted font-medium"
                 )}
               >
-                <span className="font-medium">{crypto.symbol}</span>
-                <span className="text-muted-foreground truncate ml-2">
-                  {crypto.name}
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{crypto.symbol}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs truncate">
+                    {crypto.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatPrice(crypto)}
+                  </span>
+                </div>
               </Link>
             ))
           )}

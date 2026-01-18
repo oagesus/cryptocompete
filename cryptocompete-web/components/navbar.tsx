@@ -39,7 +39,7 @@ export async function Navbar() {
           ) : (
             <>
               <Button variant="ghost" asChild className="hidden md:inline-flex">
-                <Link href="/trade">Trade</Link>
+                <Link href="/trade/buy">Trade</Link>
               </Button>
               <div className="hidden md:block w-px h-5 bg-border" />
               <Button variant="ghost" asChild className="hidden md:inline-flex">
