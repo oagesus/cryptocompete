@@ -11,6 +11,8 @@ import { SpendCard } from "@/components/spend-card";
 import { BuyCard } from "@/components/buy-card";
 import { AuthRequiredDialog } from "@/components/auth-required-dialog";
 
+const CRYPTO_PRECISION = 8;
+
 interface Props {
   symbol: string;
   name: string;
@@ -48,11 +50,15 @@ export function BuyPanel({
     ? liveData.price * exchangeRate 
     : initialPrice;
 
+  function roundCrypto(value: number): number {
+    return Math.floor(value * Math.pow(10, CRYPTO_PRECISION)) / Math.pow(10, CRYPTO_PRECISION);
+  }
+
   const calculatedCryptoAmount = useMemo(() => {
     if (activeField !== "spend") return null;
     const spend = parseFloat(spendAmount) || 0;
     if (!priceInUserCurrency || spend <= 0) return 0;
-    return spend / priceInUserCurrency;
+    return roundCrypto(spend / priceInUserCurrency);
   }, [activeField, spendAmount, priceInUserCurrency]);
 
   const calculatedSpendAmount = useMemo(() => {
@@ -100,9 +106,7 @@ export function BuyPanel({
 
   function formatCrypto(amount: number) {
     if (amount === 0) return "0";
-    if (amount < 0.000001) return amount.toExponential(4);
-    if (amount < 1) return amount.toFixed(8);
-    return amount.toFixed(6);
+    return amount.toFixed(CRYPTO_PRECISION);
   }
 
   function handleSpendChange(value: string) {
@@ -123,6 +127,10 @@ export function BuyPanel({
     setActiveField("crypto");
   }
 
+  const isAmountTooSmall = 
+    roundCrypto(finalCryptoValue) <= 0 || 
+    Math.round(finalSpendValue * 100) / 100 <= 0;
+
   async function handleBuy() {
     if (!isAuthenticated) {
       setShowAuthDialog(true);
@@ -132,7 +140,6 @@ export function BuyPanel({
     if (finalSpendValue <= 0 || finalCryptoValue <= 0) return;
 
     setError(null);
-
     setIsLoading(true);
 
     try {
@@ -142,7 +149,8 @@ export function BuyPanel({
         credentials: "include",
         body: JSON.stringify({
           symbol,
-          amount: finalSpendValue,
+          amount: activeField === "spend" ? finalSpendValue : finalCryptoValue,
+          mode: activeField,
         }),
       });
 
@@ -153,7 +161,7 @@ export function BuyPanel({
         return;
       }
 
-      toast.success(`Successfully bought ${formatCrypto(data.cryptoAmount)} ${symbol}`);
+      toast.success(`Successfully bought ${formatCrypto(data.cryptoAmount)} ${symbol} for ${new Intl.NumberFormat("en-US", { style: "currency", currency: data.currency }).format(data.value)}`);
       setSpendAmount("");
       setCryptoAmount("");
       router.refresh();
@@ -205,7 +213,7 @@ export function BuyPanel({
 
           <Button
             onClick={handleBuy}
-            disabled={isLoading || finalSpendValue <= 0 || finalCryptoValue <= 0 || (balance !== null && finalSpendValue > balance)}
+            disabled={isLoading || isAmountTooSmall || (balance !== null && finalSpendValue > balance)}
             className="w-full"
           >
             {isLoading ? (

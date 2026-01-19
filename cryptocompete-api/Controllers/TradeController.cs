@@ -13,6 +13,8 @@ namespace CryptoCompete.Api.Controllers;
 [Authorize]
 public class TradeController : ControllerBase
 {
+    private const int CryptoDecimalPrecision = 8;
+    
     private readonly AppDbContext _db;
     private readonly ICurrencyService _currencyService;
     private readonly CryptoPriceBackgroundService _priceService;
@@ -66,21 +68,46 @@ public class TradeController : ControllerBase
         }
 
         var userCurrencyToEur = await _currencyService.GetExchangeRateAsync(user.DisplayCurrency, "EUR");
-        var spendAmountEur = request.Amount * userCurrencyToEur;
+        var eurToUsd = await _currencyService.GetExchangeRateAsync("EUR", "USD");
 
-        if (spendAmountEur <= 0)
+        decimal spendAmountEur;
+        decimal cryptoAmount;
+
+        if (request.Mode == "crypto")
         {
-            return BadRequest(new { message = "Amount must be greater than 0" });
+            cryptoAmount = Math.Round(request.Amount, CryptoDecimalPrecision);
+            
+            if (cryptoAmount <= 0)
+            {
+                return BadRequest(new { message = "Amount must be greater than 0" });
+            }
+            
+            var valueUsd = cryptoAmount * priceUsd.Value;
+            var usdToEur = await _currencyService.GetExchangeRateAsync("USD", "EUR");
+            spendAmountEur = valueUsd * usdToEur;
+        }
+        else
+        {
+            spendAmountEur = request.Amount * userCurrencyToEur;
+            
+            if (spendAmountEur <= 0)
+            {
+                return BadRequest(new { message = "Amount must be greater than 0" });
+            }
+            
+            var spendAmountUsd = spendAmountEur * eurToUsd;
+            cryptoAmount = Math.Round(spendAmountUsd / priceUsd.Value, CryptoDecimalPrecision);
+        }
+
+        if (cryptoAmount <= 0 || Math.Round(spendAmountEur, 2) <= 0)
+        {
+            return BadRequest(new { message = "Amount too small" });
         }
 
         if (spendAmountEur > profile.Balance)
         {
             return BadRequest(new { message = "Insufficient balance" });
         }
-
-        var eurToUsd = await _currencyService.GetExchangeRateAsync("EUR", "USD");
-        var spendAmountUsd = spendAmountEur * eurToUsd;
-        var cryptoAmount = spendAmountUsd / priceUsd.Value;
 
         profile.Balance -= spendAmountEur;
 
@@ -107,8 +134,8 @@ public class TradeController : ControllerBase
             CryptocurrencyId = crypto.Id,
             Type = TransactionType.Buy,
             Amount = cryptoAmount,
-            PricePerUnit = spendAmountEur / cryptoAmount,
-            TotalValue = spendAmountEur
+            PricePerUnit = Math.Round(spendAmountEur / cryptoAmount, CryptoDecimalPrecision),
+            TotalValue = Math.Round(spendAmountEur, 2)
         };
         _db.Transactions.Add(transaction);
 
@@ -121,9 +148,9 @@ public class TradeController : ControllerBase
             crypto.Name,
             TransactionType.Buy.ToString(),
             cryptoAmount,
-            request.Amount,
+            Math.Round(spendAmountEur * eurToUserCurrency, 2),
             user.DisplayCurrency,
-            profile.Balance * eurToUserCurrency
+            Math.Round(profile.Balance * eurToUserCurrency, 2)
         ));
     }
 
@@ -165,27 +192,56 @@ public class TradeController : ControllerBase
             return BadRequest(new { message = $"You don't own any {crypto.Symbol}" });
         }
 
-        if (request.CryptoAmount <= 0)
-        {
-            return BadRequest(new { message = "Amount must be greater than 0" });
-        }
-
-        if (request.CryptoAmount > holding.Amount)
-        {
-            return BadRequest(new { message = $"Insufficient {crypto.Symbol} balance. You have {holding.Amount}" });
-        }
-
         var priceUsd = _priceService.GetPrice(crypto.Symbol);
         if (!priceUsd.HasValue)
         {
             return BadRequest(new { message = $"Price not available for {crypto.Symbol}" });
         }
 
-        var valueUsd = request.CryptoAmount * priceUsd.Value;
         var usdToEur = await _currencyService.GetExchangeRateAsync("USD", "EUR");
-        var valueEur = valueUsd * usdToEur;
+        var userCurrencyToEur = await _currencyService.GetExchangeRateAsync(user.DisplayCurrency, "EUR");
 
-        holding.Amount -= request.CryptoAmount;
+        decimal cryptoAmount;
+        decimal valueEur;
+
+        if (request.Mode == "receive")
+        {
+            var receiveAmountEur = request.Amount * userCurrencyToEur;
+            
+            if (receiveAmountEur <= 0)
+            {
+                return BadRequest(new { message = "Amount must be greater than 0" });
+            }
+            
+            var eurToUsd = await _currencyService.GetExchangeRateAsync("EUR", "USD");
+            var receiveAmountUsd = receiveAmountEur * eurToUsd;
+            cryptoAmount = Math.Round(receiveAmountUsd / priceUsd.Value, CryptoDecimalPrecision);
+            valueEur = receiveAmountEur;
+        }
+        else
+        {
+            cryptoAmount = Math.Round(request.Amount, CryptoDecimalPrecision);
+            
+            if (cryptoAmount <= 0)
+            {
+                return BadRequest(new { message = "Amount must be greater than 0" });
+            }
+            
+            var valueUsd = cryptoAmount * priceUsd.Value;
+            valueEur = valueUsd * usdToEur;
+        }
+
+        if (cryptoAmount <= 0 || Math.Round(valueEur, 2) <= 0)
+        {
+            return BadRequest(new { message = "Amount too small" });
+        }
+
+        if (cryptoAmount > holding.Amount)
+        {
+            return BadRequest(new { message = $"Insufficient {crypto.Symbol} balance" });
+        }
+
+        holding.Amount -= cryptoAmount;
         holding.UpdatedAt = DateTimeOffset.UtcNow;
 
         profile.Balance += valueEur;
@@ -195,9 +251,9 @@ public class TradeController : ControllerBase
             ProfileId = profile.Id,
             CryptocurrencyId = crypto.Id,
             Type = TransactionType.Sell,
-            Amount = request.CryptoAmount,
-            PricePerUnit = valueEur / request.CryptoAmount,
-            TotalValue = valueEur
+            Amount = cryptoAmount,
+            PricePerUnit = Math.Round(valueEur / cryptoAmount, CryptoDecimalPrecision),
+            TotalValue = Math.Round(valueEur, 2)
         };
         _db.Transactions.Add(transaction);
 
@@ -209,16 +265,16 @@ public class TradeController : ControllerBase
             crypto.Symbol,
             crypto.Name,
             TransactionType.Sell.ToString(),
-            request.CryptoAmount,
-            valueEur * eurToUserCurrency,
+            cryptoAmount,
+            Math.Round(valueEur * eurToUserCurrency, 2),
             user.DisplayCurrency,
-            profile.Balance * eurToUserCurrency
+            Math.Round(profile.Balance * eurToUserCurrency, 2)
         ));
     }
 }
 
-public record TradeRequest(string Symbol, decimal Amount);
-public record TradeSellRequest(string Symbol, decimal CryptoAmount);
+public record TradeRequest(string Symbol, decimal Amount, string Mode = "spend");
+public record TradeSellRequest(string Symbol, decimal Amount, string Mode = "sell");
 public record TradeResponse(
     string Symbol,
     string Name,

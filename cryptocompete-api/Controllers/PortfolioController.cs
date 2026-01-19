@@ -94,20 +94,44 @@ public class PortfolioController : ControllerBase
 
     private decimal CalculateInvestedValue(ICollection<Transaction> transactions, int cryptoId, decimal exchangeRate)
     {
-        var buys = transactions
-            .Where(t => t.CryptocurrencyId == cryptoId && t.Type == TransactionType.Buy)
-            .Sum(t => t.TotalValue);
+        var cryptoTransactions = transactions
+            .Where(t => t.CryptocurrencyId == cryptoId)
+            .OrderBy(t => t.CreatedAt)
+            .ToList();
 
-        var sells = transactions
-            .Where(t => t.CryptocurrencyId == cryptoId && t.Type == TransactionType.Sell)
-            .Sum(t => t.TotalValue);
+        decimal totalAmount = 0;
+        decimal investedValue = 0;
 
-        return (buys - sells) * exchangeRate;
+        foreach (var transaction in cryptoTransactions)
+        {
+            if (transaction.Type == TransactionType.Buy)
+            {
+                totalAmount += transaction.Amount;
+                investedValue += transaction.TotalValue;
+            }
+            else if (transaction.Type == TransactionType.Sell)
+            {
+                if (totalAmount > 0)
+                {
+                    var sellRatio = transaction.Amount / totalAmount;
+                    investedValue -= investedValue * sellRatio;
+                    totalAmount -= transaction.Amount;
+                }
+
+                if (totalAmount <= 0)
+                {
+                    totalAmount = 0;
+                    investedValue = 0;
+                }
+            }
+        }
+
+        return investedValue * exchangeRate;
     }
 
     private decimal? CalculateProfitLossPercent(decimal? currentValue, decimal investedValue)
     {
-        if (!currentValue.HasValue || investedValue == 0)
+        if (!currentValue.HasValue || investedValue <= 0)
             return null;
 
         return ((currentValue.Value - investedValue) / investedValue) * 100;

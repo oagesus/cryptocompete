@@ -10,6 +10,8 @@ import { Loader2 } from "lucide-react";
 import { SellCard } from "@/components/sell-card";
 import { ReceiveCard } from "@/components/receive-card";
 
+const CRYPTO_PRECISION = 8;
+
 interface Props {
   symbol: string;
   name: string;
@@ -44,6 +46,10 @@ export function SellPanel({
     ? liveData.price * exchangeRate 
     : initialPrice;
 
+  function roundCrypto(value: number): number {
+    return Math.floor(value * Math.pow(10, CRYPTO_PRECISION)) / Math.pow(10, CRYPTO_PRECISION);
+  }
+
   const calculatedReceiveAmount = useMemo(() => {
     if (activeField !== "sell") return null;
     const sell = parseFloat(sellAmount) || 0;
@@ -55,14 +61,12 @@ export function SellPanel({
     if (activeField !== "receive") return null;
     const receive = parseFloat(receiveAmount) || 0;
     if (!priceInUserCurrency || receive <= 0) return 0;
-    return receive / priceInUserCurrency;
+    return roundCrypto(receive / priceInUserCurrency);
   }, [activeField, receiveAmount, priceInUserCurrency]);
 
   function formatCrypto(amount: number) {
     if (amount === 0) return "0";
-    if (amount < 0.000001) return amount.toExponential(4);
-    if (amount < 1) return amount.toFixed(8);
-    return amount.toFixed(6);
+    return amount.toFixed(CRYPTO_PRECISION);
   }
 
   function formatInputNumber(value: string) {
@@ -97,6 +101,10 @@ export function SellPanel({
     ? parseFloat(parseInputNumber(sellAmount)) || 0
     : calculatedSellAmount ?? 0;
 
+  const finalReceiveValue = activeField === "receive"
+    ? parseFloat(parseInputNumber(receiveAmount)) || 0
+    : calculatedReceiveAmount ?? 0;
+
   function handleSellAmountChange(value: string) {
     const cleanValue = value.replace(/,/g, "");
     if (cleanValue.length > 14) return;
@@ -116,10 +124,18 @@ export function SellPanel({
   }
 
   function handlePercentageClick(percentage: number) {
-    const amount = holdingAmount * (percentage / 100);
-    setSellAmount(amount.toString());
+    if (percentage === 100) {
+      setSellAmount(holdingAmount.toString());
+    } else {
+      const amount = roundCrypto(holdingAmount * (percentage / 100));
+      setSellAmount(amount.toString());
+    }
     setActiveField("sell");
   }
+
+  const isAmountTooSmall = 
+    roundCrypto(finalSellValue) <= 0 || 
+    Math.round(finalReceiveValue * 100) / 100 <= 0;
 
   async function handleSell() {
     if (finalSellValue <= 0) return;
@@ -140,7 +156,8 @@ export function SellPanel({
         credentials: "include",
         body: JSON.stringify({
           symbol,
-          cryptoAmount: finalSellValue,
+          amount: activeField === "sell" ? finalSellValue : finalReceiveValue,
+          mode: activeField,
         }),
       });
 
@@ -151,7 +168,7 @@ export function SellPanel({
         return;
       }
 
-      toast.success(`Successfully sold ${formatCrypto(data.cryptoAmount)} ${symbol}`);
+      toast.success(`Successfully sold ${formatCrypto(data.cryptoAmount)} ${symbol} for ${new Intl.NumberFormat("en-US", { style: "currency", currency: data.currency }).format(data.value)}`);
       setSellAmount("");
       setReceiveAmount("");
       router.refresh();
@@ -231,7 +248,7 @@ export function SellPanel({
 
         <Button
           onClick={handleSell}
-          disabled={isLoading || finalSellValue <= 0 || finalSellValue > holdingAmount}
+          disabled={isLoading || isAmountTooSmall || finalSellValue > holdingAmount}
           className="w-full"
         >
           {isLoading ? (
