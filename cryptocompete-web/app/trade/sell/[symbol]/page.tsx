@@ -40,7 +40,6 @@ export default async function SellDetailPage({ params }: Props) {
 
   const displayCurrency = portfolio.currency;
   const exchangeRate = portfolio.exchangeRate;
-  const initialPrice = crypto.price;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
@@ -48,7 +47,7 @@ export default async function SellDetailPage({ params }: Props) {
         <CryptoDetailCard
           symbol={crypto.symbol}
           name={crypto.name}
-          initialPrice={crypto.price}
+          initialPriceUsd={crypto.priceUsd}
           initialChangePercent={crypto.changePercent24h}
           displayCurrency={displayCurrency}
           exchangeRate={exchangeRate}
@@ -61,7 +60,7 @@ export default async function SellDetailPage({ params }: Props) {
           displayCurrency={displayCurrency}
           exchangeRate={exchangeRate}
           holdingAmount={holding.amount}
-          initialPrice={initialPrice}
+          initialPriceUsd={crypto.priceUsd}
           supportedCurrencies={user.supportedCurrencies}
         />
       </div>

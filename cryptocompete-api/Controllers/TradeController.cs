@@ -242,6 +242,12 @@ public class TradeController : ControllerBase
         }
 
         holding.Amount -= cryptoAmount;
+
+        if (holding.Amount < 0.00000001m)
+        {
+            holding.Amount = 0;
+        }
+
         holding.UpdatedAt = DateTimeOffset.UtcNow;
 
         profile.Balance += valueEur;

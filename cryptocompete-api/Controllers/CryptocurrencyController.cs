@@ -51,12 +51,10 @@ public class CryptocurrencyController : ControllerBase
         var result = cryptocurrencies.Select(c =>
         {
             var priceUsd = _priceService.GetPrice(c.Symbol);
-            var convertedPrice = priceUsd.HasValue ? priceUsd.Value * exchangeRate : (decimal?)null;
-
-            return new CryptocurrencyWithPriceDto(c.Symbol, c.Name, convertedPrice);
+            return new CryptocurrencyWithPriceDto(c.Symbol, c.Name, priceUsd);
         }).ToList();
 
-        return Ok(result);
+        return Ok(new CryptocurrencyListResponse(result, displayCurrency, exchangeRate));
     }
 
     [HttpGet("{symbol}")]
@@ -85,13 +83,12 @@ public class CryptocurrencyController : ControllerBase
 
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
         var priceUsd = _priceService.GetPrice(crypto.Symbol);
-        var convertedPrice = priceUsd.HasValue ? priceUsd.Value * exchangeRate : (decimal?)null;
         var changePercent = _priceService.GetChangePercent24h(crypto.Symbol);
 
         return Ok(new CryptocurrencyDetailDto(
             crypto.Symbol, 
             crypto.Name, 
-            convertedPrice,
+            priceUsd,
             changePercent,
             displayCurrency,
             exchangeRate
@@ -100,11 +97,12 @@ public class CryptocurrencyController : ControllerBase
 }
 
 public record CryptocurrencyDto(string Symbol, string Name);
-public record CryptocurrencyWithPriceDto(string Symbol, string Name, decimal? Price);
+public record CryptocurrencyWithPriceDto(string Symbol, string Name, decimal? PriceUsd);
+public record CryptocurrencyListResponse(List<CryptocurrencyWithPriceDto> Cryptocurrencies, string Currency, decimal ExchangeRate);
 public record CryptocurrencyDetailDto(
     string Symbol, 
     string Name, 
-    decimal? Price, 
+    decimal? PriceUsd, 
     decimal? ChangePercent24h,
     string Currency,
     decimal ExchangeRate

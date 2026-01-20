@@ -8,9 +8,4 @@ public class CryptoPriceHub : Hub
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, symbol.ToUpperInvariant());
     }
-
-    public async Task UnsubscribeFromSymbol(string symbol)
-    {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, symbol.ToUpperInvariant());
-    }
 }

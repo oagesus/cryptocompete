@@ -15,7 +15,6 @@ interface CryptoPriceContextType {
   prices: Record<string, PriceUpdate>;
   isConnected: boolean;
   subscribeToSymbols: (symbols: string[]) => void;
-  unsubscribeFromSymbols: (symbols: string[]) => void;
 }
 
 const CryptoPriceContext = createContext<CryptoPriceContextType | null>(null);
@@ -26,9 +25,19 @@ export function CryptoPriceProvider({ children }: { children: ReactNode }) {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const subscribedSymbolsRef = useRef<Set<string>>(new Set());
   const isMountedRef = useRef(true);
+  const pendingUpdatesRef = useRef<Record<string, PriceUpdate>>({});
+  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
+
+    updateIntervalRef.current = setInterval(() => {
+      const pending = pendingUpdatesRef.current;
+      if (Object.keys(pending).length > 0) {
+        pendingUpdatesRef.current = {};
+        setPrices((prev) => ({ ...prev, ...pending }));
+      }
+    }, 1000);
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${API_URL}/hubs/prices`, {
@@ -40,10 +49,7 @@ export function CryptoPriceProvider({ children }: { children: ReactNode }) {
     connectionRef.current = connection;
 
     connection.on("PriceUpdate", (data: PriceUpdate) => {
-      setPrices((prev) => ({
-        ...prev,
-        [data.symbol]: data,
-      }));
+      pendingUpdatesRef.current[data.symbol] = data;
     });
 
     const resubscribe = async () => {
@@ -93,6 +99,9 @@ export function CryptoPriceProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isMountedRef.current = false;
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+      }
       connection.stop();
     };
   }, []);
@@ -113,26 +122,8 @@ export function CryptoPriceProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const unsubscribeFromSymbols = useCallback(async (symbols: string[]) => {
-    const connection = connectionRef.current;
-    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
-
-    for (const symbol of symbols) {
-      if (subscribedSymbolsRef.current.has(symbol)) {
-        try {
-          await connection.invoke("UnsubscribeFromSymbol", symbol);
-          subscribedSymbolsRef.current.delete(symbol);
-        } catch (err) {
-          console.error(`Error unsubscribing from ${symbol}:`, err);
-        }
-      }
-    }
-  }, []);
-
   return (
-    <CryptoPriceContext.Provider
-      value={{ prices, isConnected, subscribeToSymbols, unsubscribeFromSymbols }}
-    >
+    <CryptoPriceContext.Provider value={{ prices, isConnected, subscribeToSymbols }}>
       {children}
     </CryptoPriceContext.Provider>
   );

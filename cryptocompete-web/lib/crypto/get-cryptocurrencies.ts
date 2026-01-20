@@ -5,19 +5,25 @@ const API_URL = process.env.API_URL;
 export interface Cryptocurrency {
   symbol: string;
   name: string;
-  price: number | null;
+  priceUsd: number | null;
+}
+
+export interface CryptocurrencyListResponse {
+  cryptocurrencies: Cryptocurrency[];
+  currency: string;
+  exchangeRate: number;
 }
 
 export interface CryptocurrencyDetail {
   symbol: string;
   name: string;
-  price: number | null;
+  priceUsd: number | null;
   changePercent24h: number | null;
   currency: string;
   exchangeRate: number;
 }
 
-export async function getAllCryptocurrencies(): Promise<Cryptocurrency[]> {
+export async function getAllCryptocurrencies(): Promise<CryptocurrencyListResponse> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
 
@@ -28,12 +34,12 @@ export async function getAllCryptocurrencies(): Promise<Cryptocurrency[]> {
     });
 
     if (!response.ok) {
-      return [];
+      return { cryptocurrencies: [], currency: "USD", exchangeRate: 1 };
     }
 
     return response.json();
   } catch {
-    return [];
+    return { cryptocurrencies: [], currency: "USD", exchangeRate: 1 };
   }
 }
 

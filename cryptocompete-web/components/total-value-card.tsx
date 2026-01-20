@@ -8,7 +8,7 @@ import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 interface Holding {
   symbol: string;
   amount: number;
-  currentValue: number | null;
+  priceUsd: number | null;
 }
 
 interface TotalValueCardProps {
@@ -24,15 +24,13 @@ export function TotalValueCard({
   currency, 
   exchangeRate 
 }: TotalValueCardProps) {
-  const symbols = useMemo(() => holdings.map((h) => h.symbol), [holdings]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   const holdingsValue = useMemo(() => {
     return holdings.reduce((sum, holding) => {
       const livePrice = prices[holding.symbol];
-      const value = livePrice
-        ? holding.amount * livePrice.price * exchangeRate
-        : holding.currentValue ?? 0;
+      const priceUsd = livePrice?.price ?? holding.priceUsd;
+      const value = priceUsd ? holding.amount * priceUsd * exchangeRate : 0;
       return sum + value;
     }, 0);
   }, [holdings, prices, exchangeRate]);

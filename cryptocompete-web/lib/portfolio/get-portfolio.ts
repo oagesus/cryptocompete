@@ -6,10 +6,8 @@ export interface Holding {
   symbol: string;
   name: string;
   amount: number;
-  price: number | null;
-  currentValue: number | null;
+  priceUsd: number | null;
   investedValue: number;
-  profitLossPercent: number | null;
   updatedAt: string;
 }
 

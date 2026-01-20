@@ -7,7 +7,7 @@ import { ProfitLossBadge } from "@/components/profit-loss-badge";
 interface Holding {
   symbol: string;
   amount: number;
-  currentValue: number | null;
+  priceUsd: number | null;
   investedValue: number;
 }
 
@@ -24,8 +24,7 @@ export function PortfolioHero({
   currency,
   exchangeRate,
 }: PortfolioHeroProps) {
-  const symbols = useMemo(() => holdings.map((h) => h.symbol), [holdings]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   const { holdingsValue, totalInvested } = useMemo(() => {
     let holdingsVal = 0;
@@ -33,9 +32,8 @@ export function PortfolioHero({
 
     holdings.forEach((holding) => {
       const livePrice = prices[holding.symbol];
-      const value = livePrice
-        ? holding.amount * livePrice.price * exchangeRate
-        : holding.currentValue ?? 0;
+      const priceUsd = livePrice?.price ?? holding.priceUsd;
+      const value = priceUsd ? holding.amount * priceUsd * exchangeRate : 0;
       holdingsVal += value;
       invested += holding.investedValue;
     });

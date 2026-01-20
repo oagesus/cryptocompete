@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { HoldingCard } from "@/components/holding-card";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
@@ -9,10 +8,8 @@ interface Holding {
   symbol: string;
   name: string;
   amount: number;
-  price: number | null;
-  currentValue: number | null;
+  priceUsd: number | null;
   investedValue: number;
-  profitLossPercent: number | null;
 }
 
 interface HoldingsListProps {
@@ -22,8 +19,7 @@ interface HoldingsListProps {
 }
 
 export function HoldingsList({ holdings, currency, exchangeRate }: HoldingsListProps) {
-  const symbols = useMemo(() => holdings.map((h) => h.symbol), [holdings]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   if (holdings.length === 0) {
     return (
@@ -41,19 +37,16 @@ export function HoldingsList({ holdings, currency, exchangeRate }: HoldingsListP
     <div className="space-y-2">
       {holdings.map((holding) => {
         const livePrice = prices[holding.symbol];
+        const priceUsd = livePrice?.price ?? holding.priceUsd;
         
         let currentValue: number | undefined;
         let profitLossPercent: number | undefined;
 
-        if (livePrice) {
-          const convertedPrice = livePrice.price * exchangeRate;
-          currentValue = holding.amount * convertedPrice;
+        if (priceUsd) {
+          currentValue = holding.amount * priceUsd * exchangeRate;
           if (holding.investedValue > 0) {
             profitLossPercent = ((currentValue - holding.investedValue) / holding.investedValue) * 100;
           }
-        } else if (holding.currentValue !== null) {
-          currentValue = holding.currentValue;
-          profitLossPercent = holding.profitLossPercent ?? undefined;
         }
 
         return (

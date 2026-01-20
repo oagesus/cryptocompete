@@ -1,6 +1,4 @@
 import { BuyLayoutClient } from "./buy-layout-client";
-import { getUser } from "@/lib/auth/get-user";
-import { getPortfolio } from "@/lib/portfolio/get-portfolio";
 import { getAllCryptocurrencies } from "@/lib/crypto/get-cryptocurrencies";
 
 export default async function BuyLayout({
@@ -8,19 +6,7 @@ export default async function BuyLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cryptocurrencies = await getAllCryptocurrencies();
-  const user = await getUser();
-
-  let currency = "USD";
-  let exchangeRate = 1;
-
-  if (user?.activeProfileId) {
-    const portfolio = await getPortfolio(user.activeProfileId);
-    if (portfolio) {
-      currency = portfolio.currency;
-      exchangeRate = portfolio.exchangeRate;
-    }
-  }
+  const { cryptocurrencies, currency, exchangeRate } = await getAllCryptocurrencies();
 
   return (
     <BuyLayoutClient 

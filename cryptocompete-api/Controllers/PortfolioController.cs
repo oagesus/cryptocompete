@@ -63,20 +63,14 @@ public class PortfolioController : ControllerBase
             .Select(h =>
             {
                 var priceUsd = _priceService.GetPrice(h.Cryptocurrency.Symbol);
-                var convertedPrice = priceUsd.HasValue ? priceUsd.Value * exchangeRate : (decimal?)null;
-                
-                var currentValue = convertedPrice.HasValue ? h.Amount * convertedPrice.Value : (decimal?)null;
                 var investedValue = CalculateInvestedValue(profile.Transactions, h.CryptocurrencyId, balanceExchangeRate);
-                var profitLossPercent = CalculateProfitLossPercent(currentValue, investedValue);
 
                 return new HoldingDto(
                     h.Cryptocurrency.Symbol,
                     h.Cryptocurrency.Name,
                     h.Amount,
-                    convertedPrice,
-                    currentValue,
+                    priceUsd,
                     investedValue,
-                    profitLossPercent,
                     h.UpdatedAt
                 );
             })
@@ -128,24 +122,14 @@ public class PortfolioController : ControllerBase
 
         return investedValue * exchangeRate;
     }
-
-    private decimal? CalculateProfitLossPercent(decimal? currentValue, decimal investedValue)
-    {
-        if (!currentValue.HasValue || investedValue <= 0)
-            return null;
-
-        return ((currentValue.Value - investedValue) / investedValue) * 100;
-    }
 }
 
 public record HoldingDto(
     string Symbol, 
     string Name, 
     decimal Amount, 
-    decimal? Price,
-    decimal? CurrentValue,
+    decimal? PriceUsd,
     decimal InvestedValue,
-    decimal? ProfitLossPercent,
     DateTimeOffset UpdatedAt
 );
 

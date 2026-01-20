@@ -19,8 +19,8 @@ export function CryptoPriceSubscriber() {
         });
 
         if (response.ok) {
-          const cryptos = await response.json();
-          const symbols = cryptos.map((c: { symbol: string }) => c.symbol);
+          const data = await response.json();
+          const symbols = data.cryptocurrencies.map((c: { symbol: string }) => c.symbol);
           subscribeToSymbols(symbols);
           hasSubscribedRef.current = true;
         }

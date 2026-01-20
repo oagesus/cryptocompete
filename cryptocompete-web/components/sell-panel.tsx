@@ -18,7 +18,7 @@ interface Props {
   displayCurrency: string;
   exchangeRate: number;
   holdingAmount: number;
-  initialPrice: number | null;
+  initialPriceUsd: number | null;
   supportedCurrencies: string[];
 }
 
@@ -28,7 +28,7 @@ export function SellPanel({
   displayCurrency,
   exchangeRate,
   holdingAmount,
-  initialPrice,
+  initialPriceUsd,
   supportedCurrencies,
 }: Props) {
   const router = useRouter();
@@ -38,13 +38,11 @@ export function SellPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const symbols = useMemo(() => [symbol], [symbol]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   const liveData = prices[symbol];
-  const priceInUserCurrency = liveData 
-    ? liveData.price * exchangeRate 
-    : initialPrice;
+  const priceUsd = liveData?.price ?? initialPriceUsd;
+  const priceInUserCurrency = priceUsd ? priceUsd * exchangeRate : null;
 
   function roundCrypto(value: number): number {
     return Math.floor(value * Math.pow(10, CRYPTO_PRECISION)) / Math.pow(10, CRYPTO_PRECISION);
@@ -125,10 +123,10 @@ export function SellPanel({
 
   function handlePercentageClick(percentage: number) {
     if (percentage === 100) {
-      setSellAmount(holdingAmount.toString());
+      setSellAmount(holdingAmount.toFixed(CRYPTO_PRECISION));
     } else {
       const amount = roundCrypto(holdingAmount * (percentage / 100));
-      setSellAmount(amount.toString());
+      setSellAmount(amount.toFixed(CRYPTO_PRECISION));
     }
     setActiveField("sell");
   }

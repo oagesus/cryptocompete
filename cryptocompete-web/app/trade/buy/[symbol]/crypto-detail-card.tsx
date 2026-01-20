@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
@@ -9,7 +8,7 @@ import { ProfitLossBadge } from "@/components/profit-loss-badge";
 interface Props {
   symbol: string;
   name: string;
-  initialPrice: number | null;
+  initialPriceUsd: number | null;
   initialChangePercent: number | null;
   displayCurrency: string;
   exchangeRate: number;
@@ -18,18 +17,16 @@ interface Props {
 export function CryptoDetailCard({ 
   symbol, 
   name, 
-  initialPrice, 
+  initialPriceUsd, 
   initialChangePercent,
   displayCurrency,
   exchangeRate,
 }: Props) {
-  const symbols = useMemo(() => [symbol], [symbol]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   const liveData = prices[symbol];
-  const price = liveData 
-    ? liveData.price * exchangeRate 
-    : initialPrice;
+  const priceUsd = liveData?.price ?? initialPriceUsd;
+  const price = priceUsd ? priceUsd * exchangeRate : null;
   const changePercent = liveData?.changePercent24h ?? initialChangePercent;
 
   const decimals = price && price >= 10 ? 2 : 6;

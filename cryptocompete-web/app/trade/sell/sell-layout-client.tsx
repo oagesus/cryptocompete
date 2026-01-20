@@ -7,7 +7,7 @@ export interface HoldingItem {
   symbol: string;
   name: string;
   amount: number;
-  price: number | null;
+  priceUsd: number | null;
 }
 
 interface Props {

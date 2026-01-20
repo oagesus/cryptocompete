@@ -17,7 +17,7 @@ export interface HoldingItem {
   symbol: string;
   name: string;
   amount: number;
-  price: number | null;
+  priceUsd: number | null;
 }
 
 interface Props {
@@ -34,8 +34,7 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
   const search = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1", 10);
 
-  const symbols = useMemo(() => holdings.map((h) => h.symbol), [holdings]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   const updateParams = (newSearch: string, newPage: number) => {
     const params = new URLSearchParams();
@@ -78,21 +77,19 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
 
   function formatCrypto(amount: number) {
     if (amount === 0) return "0";
-    if (amount < 0.000001) return amount.toExponential(4);
     if (amount < 1) return amount.toFixed(8);
     if (amount < 1000) return amount.toFixed(6);
     return amount.toLocaleString("en-US", { maximumFractionDigits: 2 });
   }
 
   function formatValue(holding: HoldingItem) {
-    const livePrice = prices[holding.symbol]?.price;
-    const valueInUserCurrency = livePrice 
-      ? holding.amount * livePrice * exchangeRate
-      : holding.price 
-        ? holding.amount * holding.price 
-        : null;
+    const livePrice = prices[holding.symbol];
+    const priceUsd = livePrice?.price ?? holding.priceUsd;
     
-    if (!valueInUserCurrency) return null;
+    if (!priceUsd) return null;
+    
+    const valueInUserCurrency = holding.amount * priceUsd * exchangeRate;
+    
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency,

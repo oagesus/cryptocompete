@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Cryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
+import { useMemo } from "react";
 
 const PAGE_SIZE = 10;
 
@@ -28,8 +28,7 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
   const search = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1", 10);
 
-  const symbols = useMemo(() => cryptocurrencies.map((c) => c.symbol), [cryptocurrencies]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   const updateParams = (newSearch: string, newPage: number) => {
     const params = new URLSearchParams();
@@ -70,11 +69,13 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
   const currentSymbol = pathname.split("/").pop()?.toUpperCase();
 
   function formatPrice(crypto: Cryptocurrency) {
-    const livePrice = prices[crypto.symbol]?.price;
-    const priceInCurrency = livePrice 
-      ? livePrice * exchangeRate 
-      : crypto.price;
-    if (!priceInCurrency) return "...";
+    const livePrice = prices[crypto.symbol];
+    const priceUsd = livePrice?.price ?? crypto.priceUsd;
+    
+    if (!priceUsd) return "...";
+    
+    const priceInCurrency = priceUsd * exchangeRate;
+    
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency,

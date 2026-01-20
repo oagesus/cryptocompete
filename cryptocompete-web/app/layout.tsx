@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { AuthGuardian } from "@/components/auth-guardian";
 import { ThemedToaster } from "@/components/themed-toaster";
 import { CryptoPriceProvider } from "@/providers/crypto-price-provider";
-import { CryptoPriceSubscriber } from "@/components/crypto-price-subscriber";
+import { CryptoPriceSubscriber } from "@/providers/crypto-price-subscriber";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -21,7 +21,7 @@ interface Props {
   isAuthenticated: boolean;
   balance: number | null;
   supportedCurrencies: string[];
-  initialPrice: number | null;
+  initialPriceUsd: number | null;
 }
 
 export function BuyPanel({
@@ -32,7 +32,7 @@ export function BuyPanel({
   isAuthenticated,
   balance,
   supportedCurrencies,
-  initialPrice,
+  initialPriceUsd,
 }: Props) {
   const router = useRouter();
   const [spendAmount, setSpendAmount] = useState("");
@@ -42,13 +42,11 @@ export function BuyPanel({
   const [error, setError] = useState<string | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
-  const symbols = useMemo(() => [symbol], [symbol]);
-  const { prices } = useCryptoPrices(symbols);
+  const { prices } = useCryptoPrices();
 
   const liveData = prices[symbol];
-  const priceInUserCurrency = liveData 
-    ? liveData.price * exchangeRate 
-    : initialPrice;
+  const priceUsd = liveData?.price ?? initialPriceUsd;
+  const priceInUserCurrency = priceUsd ? priceUsd * exchangeRate : null;
 
   function roundCrypto(value: number): number {
     return Math.floor(value * Math.pow(10, CRYPTO_PRECISION)) / Math.pow(10, CRYPTO_PRECISION);
