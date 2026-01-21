@@ -55,6 +55,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.DecimalPrecision).HasDefaultValue(8);
+            entity.Property(e => e.Rank).IsRequired(false);
+            entity.Property(e => e.PercentChange7d).HasPrecision(18, 8).IsRequired(false);
+            entity.Property(e => e.PercentChange30d).HasPrecision(18, 8).IsRequired(false);
+            entity.Property(e => e.PercentChange60d).HasPrecision(18, 8).IsRequired(false);
+            entity.Property(e => e.PercentChange90d).HasPrecision(18, 8).IsRequired(false);
         });
 
         modelBuilder.Entity<PortfolioHolding>(entity =>

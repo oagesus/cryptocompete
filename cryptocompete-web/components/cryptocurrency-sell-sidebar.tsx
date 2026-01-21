@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 export interface HoldingItem {
   symbol: string;
@@ -31,8 +31,28 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const search = searchParams.get("search") ?? "";
+  const searchFromUrl = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1", 10);
+
+  const [searchInput, setSearchInput] = useState(searchFromUrl);
+
+  const updateUrlSilently = (newSearch: string) => {
+    const params = new URLSearchParams(window.location.search);
+    if (newSearch) {
+      params.set("search", newSearch);
+    } else {
+      params.delete("search");
+    }
+    params.delete("page");
+    const queryString = params.toString();
+    const newUrl = `${pathname}${queryString ? `?${queryString}` : ""}`;
+    window.history.replaceState(null, "", newUrl);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    updateUrlSilently(value);
+  };
 
   const { prices } = useCryptoPrices();
 
@@ -45,32 +65,38 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
     router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
   };
 
-  const filteredHoldings = useMemo(() => {
-    const validHoldings = holdings.filter((h) => h.amount > 0);
-    if (!search) return validHoldings;
-    
-    const searchLower = search.toLowerCase();
-    return validHoldings.filter(
-      (h) =>
-        h.symbol.toLowerCase().includes(searchLower) ||
-        h.name.toLowerCase().includes(searchLower)
-    );
-  }, [holdings, search]);
+  function getValueUsd(holding: HoldingItem) {
+    const livePrice = prices[holding.symbol];
+    const priceUsd = livePrice?.price ?? holding.priceUsd;
+    if (!priceUsd) return 0;
+    return holding.amount * priceUsd;
+  }
 
-  const totalPages = Math.ceil(filteredHoldings.length / PAGE_SIZE);
+  const filteredAndSortedHoldings = useMemo(() => {
+    let filtered = holdings.filter((h) => h.amount > 0);
+    
+    if (searchInput) {
+      const searchLower = searchInput.toLowerCase();
+      filtered = filtered.filter(
+        (h) =>
+          h.symbol.toLowerCase().includes(searchLower) ||
+          h.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return [...filtered].sort((a, b) => getValueUsd(b) - getValueUsd(a));
+  }, [holdings, searchInput, prices]);
+
+  const totalPages = Math.ceil(filteredAndSortedHoldings.length / PAGE_SIZE);
   const validPage = Math.min(Math.max(1, page), totalPages || 1);
   
   const paginatedHoldings = useMemo(() => {
     const start = (validPage - 1) * PAGE_SIZE;
-    return filteredHoldings.slice(start, start + PAGE_SIZE);
-  }, [filteredHoldings, validPage]);
-
-  const handleSearchChange = (value: string) => {
-    updateParams(value, 1);
-  };
+    return filteredAndSortedHoldings.slice(start, start + PAGE_SIZE);
+  }, [filteredAndSortedHoldings, validPage]);
 
   const handlePageChange = (newPage: number) => {
-    updateParams(search, newPage);
+    updateParams(searchInput, newPage);
   };
 
   const currentSymbol = pathname.split("/").pop()?.toUpperCase();
@@ -98,6 +124,14 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
     }).format(valueInUserCurrency);
   }
 
+  function buildQueryString() {
+    const params = new URLSearchParams();
+    if (searchInput) params.set("search", searchInput);
+    if (validPage > 1) params.set("page", validPage.toString());
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : "";
+  }
+
   return (
     <Card className="h-fit">
       <CardContent className="space-y-3">
@@ -111,7 +145,7 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search..."
-            value={search}
+            value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
@@ -129,24 +163,24 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
             paginatedHoldings.map((holding) => (
               <Link
                 key={holding.symbol}
-                href={`/trade/sell/${holding.symbol.toLowerCase()}${search ? `?search=${encodeURIComponent(search)}` : ""}${validPage > 1 ? `${search ? "&" : "?"}page=${validPage}` : ""}`}
+                href={`/trade/sell/${holding.symbol.toLowerCase()}${buildQueryString()}`}
                 className={cn(
                   "flex flex-col rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted min-h-[56px]",
                   currentSymbol === holding.symbol && "bg-muted font-medium"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{holding.symbol}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {formatCrypto(holding.amount)}
+                  <span className="font-medium truncate">{holding.name}</span>
+                  <span className="font-medium">
+                    {formatValue(holding) ?? "..."}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-xs truncate">
-                    {holding.name}
+                    {holding.symbol}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatValue(holding) ?? "..."}
+                  <span className="text-muted-foreground text-xs">
+                    {formatCrypto(holding.amount)}
                   </span>
                 </div>
               </Link>

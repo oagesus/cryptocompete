@@ -6,6 +6,11 @@ public class Cryptocurrency
     public string Symbol { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public int DecimalPrecision { get; set; } = 8;
+    public int? Rank { get; set; }
+    public decimal? PercentChange7d { get; set; }
+    public decimal? PercentChange30d { get; set; }
+    public decimal? PercentChange60d { get; set; }
+    public decimal? PercentChange90d { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;
     

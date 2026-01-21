@@ -3,6 +3,7 @@ using System;
 using CryptoCompete.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace cryptocompete_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260121120333_AddCryptocurrencyRank")]
+    partial class AddCryptocurrencyRank
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,26 +55,6 @@ namespace cryptocompete_api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
-
-                    b.Property<decimal?>("PercentChange30d")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("numeric(18,8)")
-                        .HasColumnName("percent_change30d");
-
-                    b.Property<decimal?>("PercentChange60d")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("numeric(18,8)")
-                        .HasColumnName("percent_change60d");
-
-                    b.Property<decimal?>("PercentChange7d")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("numeric(18,8)")
-                        .HasColumnName("percent_change7d");
-
-                    b.Property<decimal?>("PercentChange90d")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("numeric(18,8)")
-                        .HasColumnName("percent_change90d");
 
                     b.Property<int?>("Rank")
                         .HasColumnType("integer")

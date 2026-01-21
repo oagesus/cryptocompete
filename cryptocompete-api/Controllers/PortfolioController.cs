@@ -63,6 +63,7 @@ public class PortfolioController : ControllerBase
             .Select(h =>
             {
                 var priceUsd = _priceService.GetPrice(h.Cryptocurrency.Symbol);
+                var changePercent = _priceService.GetChangePercent24h(h.Cryptocurrency.Symbol);
                 var investedValue = CalculateInvestedValue(profile.Transactions, h.CryptocurrencyId, balanceExchangeRate);
 
                 return new HoldingDto(
@@ -70,6 +71,8 @@ public class PortfolioController : ControllerBase
                     h.Cryptocurrency.Name,
                     h.Amount,
                     priceUsd,
+                    changePercent,
+                    h.Cryptocurrency.Rank,
                     investedValue,
                     h.UpdatedAt
                 );
@@ -129,6 +132,8 @@ public record HoldingDto(
     string Name, 
     decimal Amount, 
     decimal? PriceUsd,
+    decimal? ChangePercent24h,
+    int? Rank,
     decimal InvestedValue,
     DateTimeOffset UpdatedAt
 );

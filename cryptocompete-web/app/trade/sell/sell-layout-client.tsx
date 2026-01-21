@@ -8,6 +8,8 @@ export interface HoldingItem {
   name: string;
   amount: number;
   priceUsd: number | null;
+  changePercent24h: number | null;
+  rank: number | null;
 }
 
 interface Props {

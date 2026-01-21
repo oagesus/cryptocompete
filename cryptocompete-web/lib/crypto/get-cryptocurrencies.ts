@@ -6,6 +6,12 @@ export interface Cryptocurrency {
   symbol: string;
   name: string;
   priceUsd: number | null;
+  changePercent24h: number | null;
+  rank: number | null;
+  percentChange7d: number | null;
+  percentChange30d: number | null;
+  percentChange60d: number | null;
+  percentChange90d: number | null;
 }
 
 export interface CryptocurrencyListResponse {
@@ -21,6 +27,10 @@ export interface CryptocurrencyDetail {
   changePercent24h: number | null;
   currency: string;
   exchangeRate: number;
+  percentChange7d: number | null;
+  percentChange30d: number | null;
+  percentChange60d: number | null;
+  percentChange90d: number | null;
 }
 
 export async function getAllCryptocurrencies(): Promise<CryptocurrencyListResponse> {

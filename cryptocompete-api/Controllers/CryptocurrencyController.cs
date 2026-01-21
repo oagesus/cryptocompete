@@ -45,13 +45,32 @@ public class CryptocurrencyController : ControllerBase
         var cryptocurrencies = await _db.Cryptocurrencies
             .Where(c => c.IsActive)
             .OrderBy(c => c.Name)
-            .Select(c => new { c.Symbol, c.Name })
+            .Select(c => new { 
+                c.Symbol, 
+                c.Name, 
+                c.Rank,
+                c.PercentChange7d,
+                c.PercentChange30d,
+                c.PercentChange60d,
+                c.PercentChange90d
+            })
             .ToListAsync();
 
         var result = cryptocurrencies.Select(c =>
         {
             var priceUsd = _priceService.GetPrice(c.Symbol);
-            return new CryptocurrencyWithPriceDto(c.Symbol, c.Name, priceUsd);
+            var changePercent24h = _priceService.GetChangePercent24h(c.Symbol);
+            return new CryptocurrencyWithPriceDto(
+                c.Symbol, 
+                c.Name, 
+                priceUsd, 
+                changePercent24h, 
+                c.Rank,
+                c.PercentChange7d,
+                c.PercentChange30d,
+                c.PercentChange60d,
+                c.PercentChange90d
+            );
         }).ToList();
 
         return Ok(new CryptocurrencyListResponse(result, displayCurrency, exchangeRate));
@@ -62,7 +81,14 @@ public class CryptocurrencyController : ControllerBase
     {
         var crypto = await _db.Cryptocurrencies
             .Where(c => c.Symbol.ToLower() == symbol.ToLower() && c.IsActive)
-            .Select(c => new CryptocurrencyDto(c.Symbol, c.Name))
+            .Select(c => new { 
+                c.Symbol, 
+                c.Name,
+                c.PercentChange7d,
+                c.PercentChange30d,
+                c.PercentChange60d,
+                c.PercentChange90d
+            })
             .FirstOrDefaultAsync();
 
         if (crypto == null)
@@ -83,27 +109,52 @@ public class CryptocurrencyController : ControllerBase
 
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
         var priceUsd = _priceService.GetPrice(crypto.Symbol);
-        var changePercent = _priceService.GetChangePercent24h(crypto.Symbol);
+        var changePercent24h = _priceService.GetChangePercent24h(crypto.Symbol);
 
         return Ok(new CryptocurrencyDetailDto(
             crypto.Symbol, 
             crypto.Name, 
             priceUsd,
-            changePercent,
+            changePercent24h,
             displayCurrency,
-            exchangeRate
+            exchangeRate,
+            crypto.PercentChange7d,
+            crypto.PercentChange30d,
+            crypto.PercentChange60d,
+            crypto.PercentChange90d
         ));
     }
 }
 
 public record CryptocurrencyDto(string Symbol, string Name);
-public record CryptocurrencyWithPriceDto(string Symbol, string Name, decimal? PriceUsd);
-public record CryptocurrencyListResponse(List<CryptocurrencyWithPriceDto> Cryptocurrencies, string Currency, decimal ExchangeRate);
+
+public record CryptocurrencyWithPriceDto(
+    string Symbol, 
+    string Name, 
+    decimal? PriceUsd, 
+    decimal? ChangePercent24h, 
+    int? Rank,
+    decimal? PercentChange7d,
+    decimal? PercentChange30d,
+    decimal? PercentChange60d,
+    decimal? PercentChange90d
+);
+
+public record CryptocurrencyListResponse(
+    List<CryptocurrencyWithPriceDto> Cryptocurrencies, 
+    string Currency, 
+    decimal ExchangeRate
+);
+
 public record CryptocurrencyDetailDto(
     string Symbol, 
     string Name, 
     decimal? PriceUsd, 
     decimal? ChangePercent24h,
     string Currency,
-    decimal ExchangeRate
+    decimal ExchangeRate,
+    decimal? PercentChange7d,
+    decimal? PercentChange30d,
+    decimal? PercentChange60d,
+    decimal? PercentChange90d
 );

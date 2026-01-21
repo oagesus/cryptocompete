@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json.Serialization;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Models;
@@ -13,7 +12,16 @@ public class CryptocurrencyListService : ICryptocurrencyListService
     private readonly ILogger<CryptocurrencyListService> _logger;
     private readonly string? _coinMarketCapApiKey;
 
-    private static readonly HashSet<string> ExcludedSymbols = new() { "EUR" };
+    private static readonly HashSet<string> ExcludedSymbols = new() { "EUR", "1MBABYDOGE", "1000SATS", "1000CHEEMS", "1000CAT" };
+
+    private static readonly Dictionary<string, string> BinanceToCmcSymbolMapping = new()
+    {
+        { "RONIN", "RON" },
+        { "BEAMX", "BEAM" },
+        { "BTTC", "BTT" },
+        { "VELODROME", "VELO" },
+        { "BROCCOLI714", "BROCCOLI" }
+    };
 
     public CryptocurrencyListService(
         IServiceScopeFactory scopeFactory,
@@ -36,6 +44,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
                 return;
 
             var binanceSymbols = binanceData.Select(b => b.Symbol).ToHashSet();
+            var cmcData = await GetCoinMarketCapDataAsync(cancellationToken);
 
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -49,41 +58,60 @@ public class CryptocurrencyListService : ICryptocurrencyListService
 
             if (newBinanceData.Count > 0)
             {
-                var cmcNames = await GetCoinMarketCapNamesAsync(cancellationToken);
-
                 var newCryptos = newBinanceData
-                    .Select(b => new Cryptocurrency
+                    .Select(b =>
                     {
-                        Symbol = b.Symbol,
-                        Name = cmcNames.GetValueOrDefault(b.Symbol, b.Symbol),
-                        DecimalPrecision = b.Precision,
-                        IsActive = true
+                        var cmc = GetCmcDataForSymbol(b.Symbol, cmcData);
+                        return new Cryptocurrency
+                        {
+                            Symbol = b.Symbol,
+                            Name = cmc?.Name ?? b.Symbol,
+                            DecimalPrecision = b.Precision,
+                            Rank = cmc?.Rank,
+                            PercentChange7d = cmc?.PercentChange7d,
+                            PercentChange30d = cmc?.PercentChange30d,
+                            PercentChange60d = cmc?.PercentChange60d,
+                            PercentChange90d = cmc?.PercentChange90d,
+                            IsActive = true
+                        };
                     })
                     .ToList();
 
-                await BulkInsertAsync(db, newCryptos, cancellationToken);
+                db.Cryptocurrencies.AddRange(newCryptos);
+                await db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Added {Count} new cryptocurrencies", newCryptos.Count);
+            }
+
+            if (cmcData.Count > 0)
+            {
+                await UpdateFromCmcAsync(db, existingCryptos, cmcData, cancellationToken);
             }
 
             var toDeactivate = existingCryptos
                 .Where(c => c.IsActive && !binanceSymbols.Contains(c.Symbol))
-                .Select(c => c.Symbol)
                 .ToList();
 
             if (toDeactivate.Count > 0)
             {
-                await BulkUpdateIsActiveAsync(db, toDeactivate, false, cancellationToken);
+                foreach (var crypto in toDeactivate)
+                {
+                    crypto.IsActive = false;
+                }
+                await db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Deactivated {Count} cryptocurrencies", toDeactivate.Count);
             }
 
             var toActivate = existingCryptos
                 .Where(c => !c.IsActive && binanceSymbols.Contains(c.Symbol))
-                .Select(c => c.Symbol)
                 .ToList();
 
             if (toActivate.Count > 0)
             {
-                await BulkUpdateIsActiveAsync(db, toActivate, true, cancellationToken);
+                foreach (var crypto in toActivate)
+                {
+                    crypto.IsActive = true;
+                }
+                await db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Reactivated {Count} cryptocurrencies", toActivate.Count);
             }
         }
@@ -93,37 +121,48 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         }
     }
 
-    private async Task BulkInsertAsync(AppDbContext db, List<Cryptocurrency> cryptos, CancellationToken cancellationToken)
+    private static CoinMarketCapData? GetCmcDataForSymbol(string binanceSymbol, Dictionary<string, CoinMarketCapData> cmcData)
     {
-        var sb = new StringBuilder();
-        sb.Append("INSERT INTO cryptocurrencies (symbol, name, decimal_precision, is_active, added_at) VALUES ");
+        var upperSymbol = binanceSymbol.ToUpperInvariant();
+        
+        if (cmcData.TryGetValue(upperSymbol, out var data))
+            return data;
 
-        var parameters = new List<object>();
-        for (int i = 0; i < cryptos.Count; i++)
-        {
-            if (i > 0) sb.Append(", ");
-            var paramIndex = i * 5;
-            sb.Append($"(@p{paramIndex}, @p{paramIndex + 1}, @p{paramIndex + 2}, @p{paramIndex + 3}, @p{paramIndex + 4})");
-            
-            parameters.Add(cryptos[i].Symbol);
-            parameters.Add(cryptos[i].Name);
-            parameters.Add(cryptos[i].DecimalPrecision);
-            parameters.Add(cryptos[i].IsActive);
-            parameters.Add(DateTimeOffset.UtcNow);
-        }
+        if (BinanceToCmcSymbolMapping.TryGetValue(binanceSymbol, out var cmcSymbol) && 
+            cmcData.TryGetValue(cmcSymbol.ToUpperInvariant(), out var mappedData))
+            return mappedData;
 
-        await db.Database.ExecuteSqlRawAsync(sb.ToString(), parameters, cancellationToken);
+        return null;
     }
 
-    private async Task BulkUpdateIsActiveAsync(AppDbContext db, List<string> symbols, bool isActive, CancellationToken cancellationToken)
+    private async Task UpdateFromCmcAsync(
+        AppDbContext db, 
+        List<Cryptocurrency> existingCryptos, 
+        Dictionary<string, CoinMarketCapData> cmcData, 
+        CancellationToken cancellationToken)
     {
-        var symbolParams = string.Join(", ", symbols.Select((_, i) => $"@p{i + 1}"));
-        var sql = $"UPDATE cryptocurrencies SET is_active = @p0 WHERE symbol IN ({symbolParams})";
+        var updated = 0;
         
-        var parameters = new List<object> { isActive };
-        parameters.AddRange(symbols);
-
-        await db.Database.ExecuteSqlRawAsync(sql, parameters, cancellationToken);
+        foreach (var crypto in existingCryptos)
+        {
+            var cmc = GetCmcDataForSymbol(crypto.Symbol, cmcData);
+            if (cmc != null)
+            {
+                crypto.Name = cmc.Name;
+                crypto.Rank = cmc.Rank;
+                crypto.PercentChange7d = cmc.PercentChange7d;
+                crypto.PercentChange30d = cmc.PercentChange30d;
+                crypto.PercentChange60d = cmc.PercentChange60d;
+                crypto.PercentChange90d = cmc.PercentChange90d;
+                updated++;
+            }
+        }
+        
+        if (updated > 0)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Updated ranks and percent changes for {Count} cryptocurrencies", updated);
+        }
     }
 
     private async Task<List<BinanceCryptoData>> GetBinanceDataAsync(CancellationToken cancellationToken)
@@ -155,42 +194,73 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         }
     }
 
-    private async Task<Dictionary<string, string>> GetCoinMarketCapNamesAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<string, CoinMarketCapData>> GetCoinMarketCapDataAsync(CancellationToken cancellationToken)
     {
         try
         {
             if (string.IsNullOrEmpty(_coinMarketCapApiKey))
             {
                 _logger.LogWarning("CoinMarketCap API key not configured");
-                return new Dictionary<string, string>();
+                return new Dictionary<string, CoinMarketCapData>();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, 
-                "https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?limit=5000");
-            request.Headers.Add("X-CMC_PRO_API_KEY", _coinMarketCapApiKey);
+            var allData = new List<CoinMarketCapListing>();
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            var firstBatch = await FetchCmcListingsAsync(1, 5000, cancellationToken);
+            allData.AddRange(firstBatch);
 
-            var result = await response.Content.ReadFromJsonAsync<CoinMarketCapResponse>(cancellationToken);
+            var secondBatch = await FetchCmcListingsAsync(5001, 5000, cancellationToken);
+            allData.AddRange(secondBatch);
 
-            if (result?.Data == null)
-                return new Dictionary<string, string>();
+            _logger.LogInformation("Fetched {Count} cryptocurrencies from CoinMarketCap", allData.Count);
 
-            return result.Data
-                .Where(c => c.IsActive == 1)
-                .GroupBy(c => c.Symbol)
+            return allData
+                .GroupBy(c => c.Symbol.ToUpperInvariant())
                 .ToDictionary(
                     g => g.Key,
-                    g => g.OrderBy(c => c.Rank ?? int.MaxValue).First().Name
+                    g =>
+                    {
+                        var best = g.OrderBy(c => c.CmcRank ?? int.MaxValue).First();
+                        var quote = best.Quote?.GetValueOrDefault("USD");
+                        return new CoinMarketCapData(
+                            best.Name, 
+                            best.CmcRank,
+                            quote?.PercentChange7d,
+                            quote?.PercentChange30d,
+                            quote?.PercentChange60d,
+                            quote?.PercentChange90d
+                        );
+                    }
                 );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to fetch CoinMarketCap names");
-            return new Dictionary<string, string>();
+            _logger.LogError(ex, "Failed to fetch CoinMarketCap data");
+            return new Dictionary<string, CoinMarketCapData>();
         }
     }
+
+    private async Task<List<CoinMarketCapListing>> FetchCmcListingsAsync(int start, int limit, CancellationToken cancellationToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, 
+            $"https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start={start}&limit={limit}");
+        request.Headers.Add("X-CMC_PRO_API_KEY", _coinMarketCapApiKey);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<CoinMarketCapListingsResponse>(cancellationToken);
+        return result?.Data ?? new List<CoinMarketCapListing>();
+    }
+
+    private record CoinMarketCapData(
+        string Name, 
+        int? Rank, 
+        decimal? PercentChange7d,
+        decimal? PercentChange30d,
+        decimal? PercentChange60d,
+        decimal? PercentChange90d
+    );
 
     private class BinanceCryptoData
     {
@@ -222,13 +292,13 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         public int BaseAssetPrecision { get; set; }
     }
 
-    private class CoinMarketCapResponse
+    private class CoinMarketCapListingsResponse
     {
         [JsonPropertyName("data")]
-        public List<CoinMarketCapName> Data { get; set; } = new();
+        public List<CoinMarketCapListing> Data { get; set; } = new();
     }
 
-    private class CoinMarketCapName
+    private class CoinMarketCapListing
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }
@@ -239,10 +309,31 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
         
-        [JsonPropertyName("is_active")]
-        public int IsActive { get; set; }
+        [JsonPropertyName("cmc_rank")]
+        public int? CmcRank { get; set; }
         
-        [JsonPropertyName("rank")]
-        public int? Rank { get; set; }
+        [JsonPropertyName("quote")]
+        public Dictionary<string, CoinMarketCapQuote>? Quote { get; set; }
+    }
+
+    private class CoinMarketCapQuote
+    {
+        [JsonPropertyName("price")]
+        public decimal? Price { get; set; }
+        
+        [JsonPropertyName("percent_change_24h")]
+        public decimal? PercentChange24h { get; set; }
+        
+        [JsonPropertyName("percent_change_7d")]
+        public decimal? PercentChange7d { get; set; }
+        
+        [JsonPropertyName("percent_change_30d")]
+        public decimal? PercentChange30d { get; set; }
+        
+        [JsonPropertyName("percent_change_60d")]
+        public decimal? PercentChange60d { get; set; }
+        
+        [JsonPropertyName("percent_change_90d")]
+        public decimal? PercentChange90d { get; set; }
     }
 }

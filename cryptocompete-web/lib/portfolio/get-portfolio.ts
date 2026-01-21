@@ -7,6 +7,8 @@ export interface Holding {
   name: string;
   amount: number;
   priceUsd: number | null;
+  changePercent24h: number | null;
+  rank: number | null;
   investedValue: number;
   updatedAt: string;
 }
