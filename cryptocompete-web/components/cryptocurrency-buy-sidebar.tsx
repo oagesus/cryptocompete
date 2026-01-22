@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
@@ -35,7 +35,7 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
     ? sortParam 
     : "mcap-high";
   const timeframeParam = searchParams.get("tf") as Timeframe | null;
-  const timeframe: Timeframe = timeframeParam && ["1d", "7d", "30d", "60d", "90d"].includes(timeframeParam)
+  const timeframe: Timeframe = timeframeParam && ["1d", "7d", "1m", "3m"].includes(timeframeParam)
     ? timeframeParam
     : "1d";
 
@@ -80,11 +80,9 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
       }
       case "7d":
         return crypto.percentChange7d;
-      case "30d":
+      case "1m":
         return crypto.percentChange30d;
-      case "60d":
-        return crypto.percentChange60d;
-      case "90d":
+      case "3m":
         return crypto.percentChange90d;
       default:
         return crypto.changePercent24h;

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2 } from "lucide-react";
@@ -174,10 +174,9 @@ export function BuyPanel({
     <>
       <Card>
         {isAuthenticated && balance !== null && (
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Balance</CardTitle>
-            <span className="text-2xl font-bold">
-              {new Intl.NumberFormat("en-US", {
+          <CardHeader className="pb-2">
+            <span className="text-lg font-semibold">
+              Balance = {new Intl.NumberFormat("en-US", {
                 style: "currency",
                 currency: displayCurrency,
               }).format(balance)}

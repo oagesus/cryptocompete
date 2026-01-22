@@ -10,19 +10,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export type Timeframe = "1d" | "7d" | "30d" | "60d" | "90d";
+export type Timeframe = "1d" | "7d" | "1m" | "3m";
 
 interface TimeframeOption {
   value: Timeframe;
   label: string;
+  shortLabel: string;
 }
 
 const timeframeOptions: TimeframeOption[] = [
-  { value: "1d", label: "1 Day" },
-  { value: "7d", label: "7 Days" },
-  { value: "30d", label: "30 Days" },
-  { value: "60d", label: "60 Days" },
-  { value: "90d", label: "90 Days" },
+  { value: "1d", label: "1 Day", shortLabel: "1D" },
+  { value: "7d", label: "7 Days", shortLabel: "7D" },
+  { value: "1m", label: "1 Month", shortLabel: "1M" },
+  { value: "3m", label: "3 Months", shortLabel: "3M" },
 ];
 
 interface Props {
@@ -31,11 +31,13 @@ interface Props {
 }
 
 export function TimeframeDropdown({ timeframe, onTimeframeChange }: Props) {
+  const currentOption = timeframeOptions.find((o) => o.value === timeframe);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="text-xs gap-1">
-          {timeframe.toUpperCase()}
+          {currentOption?.shortLabel ?? timeframe.toUpperCase()}
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>

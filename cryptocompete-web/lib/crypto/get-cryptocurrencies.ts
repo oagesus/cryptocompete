@@ -10,7 +10,6 @@ export interface Cryptocurrency {
   rank: number | null;
   percentChange7d: number | null;
   percentChange30d: number | null;
-  percentChange60d: number | null;
   percentChange90d: number | null;
 }
 
@@ -29,7 +28,6 @@ export interface CryptocurrencyDetail {
   exchangeRate: number;
   percentChange7d: number | null;
   percentChange30d: number | null;
-  percentChange60d: number | null;
   percentChange90d: number | null;
 }
 

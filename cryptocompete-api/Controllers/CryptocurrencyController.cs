@@ -15,15 +15,18 @@ public class CryptocurrencyController : ControllerBase
     private readonly AppDbContext _db;
     private readonly CryptoPriceBackgroundService _priceService;
     private readonly ICurrencyService _currencyService;
+    private readonly IKlineService _klineService;
 
     public CryptocurrencyController(
         AppDbContext db, 
         CryptoPriceBackgroundService priceService,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        IKlineService klineService)
     {
         _db = db;
         _priceService = priceService;
         _currencyService = currencyService;
+        _klineService = klineService;
     }
 
     [HttpGet("all")]
@@ -124,6 +127,66 @@ public class CryptocurrencyController : ControllerBase
             crypto.PercentChange90d
         ));
     }
+
+    [HttpGet("{symbol}/klines")]
+    public async Task<IActionResult> GetKlines(string symbol, [FromQuery] string timeframe = "1D", CancellationToken cancellationToken = default)
+    {
+        var crypto = await _db.Cryptocurrencies
+            .Where(c => c.Symbol.ToLower() == symbol.ToLower() && c.IsActive)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (crypto == null)
+        {
+            return NotFound(new { message = $"Cryptocurrency {symbol} not found" });
+        }
+
+        if (!TryParseTimeframe(timeframe, out var klineTimeframe))
+        {
+            return BadRequest(new { message = "Invalid timeframe. Valid values: 1D, 7D, 1M, 3M, 1Y, YTD" });
+        }
+
+        try
+        {
+            var klineData = await _klineService.GetKlinesAsync(crypto.Symbol, klineTimeframe, cancellationToken);
+
+            return Ok(new KlineResponse(
+                klineData.Symbol,
+                timeframe.ToUpperInvariant(),
+                klineData.Interval,
+                klineData.Klines.Select(k => new KlineDto(
+                    k.OpenTime,
+                    k.Open,
+                    k.High,
+                    k.Low,
+                    k.Close,
+                    k.Volume,
+                    k.CloseTime
+                )).ToList(),
+                klineData.FromCache,
+                klineData.FetchedAt
+            ));
+        }
+        catch (Exception)
+        {
+            return StatusCode(503, new { message = "Unable to fetch price data. Please try again later." });
+        }
+    }
+
+    private static bool TryParseTimeframe(string input, out KlineTimeframe timeframe)
+    {
+        timeframe = input.ToUpperInvariant() switch
+        {
+            "1D" => KlineTimeframe.Day1,
+            "7D" => KlineTimeframe.Day7,
+            "1M" => KlineTimeframe.Month1,
+            "3M" => KlineTimeframe.Month3,
+            "1Y" => KlineTimeframe.Year1,
+            "YTD" => KlineTimeframe.YearToDate,
+            _ => default
+        };
+
+        return input.ToUpperInvariant() is "1D" or "7D" or "1M" or "3M" or "1Y" or "YTD";
+    }
 }
 
 public record CryptocurrencyDto(string Symbol, string Name);
@@ -157,4 +220,23 @@ public record CryptocurrencyDetailDto(
     decimal? PercentChange30d,
     decimal? PercentChange60d,
     decimal? PercentChange90d
+);
+
+public record KlineDto(
+    long OpenTime,
+    decimal Open,
+    decimal High,
+    decimal Low,
+    decimal Close,
+    decimal Volume,
+    long CloseTime
+);
+
+public record KlineResponse(
+    string Symbol,
+    string Timeframe,
+    string Interval,
+    List<KlineDto> Klines,
+    bool FromCache,
+    DateTimeOffset FetchedAt
 );

@@ -92,6 +92,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
 builder.Services.AddHttpClient<ICryptocurrencyListService, CryptocurrencyListService>();
+builder.Services.AddHttpClient<IKlineService, KlineService>();
 builder.Services.AddHostedService<CryptocurrencyListBackgroundService>();
 builder.Services.AddSingleton<CryptoPriceBackgroundService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<CryptoPriceBackgroundService>());

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2 } from "lucide-react";
@@ -179,10 +179,9 @@ export function SellPanel({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">Holdings</CardTitle>
-        <span className="text-2xl font-bold">
-          {formatCrypto(holdingAmount)} {symbol}
+      <CardHeader className="pb-2">
+        <span className="text-lg font-semibold">
+          Holdings = {formatCrypto(holdingAmount)} {symbol}
         </span>
       </CardHeader>
       <CardContent className="space-y-4">
