@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getCryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
-import { getAllKlines } from "@/lib/crypto/get-klines";
+import { getKlines } from "@/lib/crypto/get-klines";
 import { getUser } from "@/lib/auth/get-user";
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
 import { SellPanel } from "@/components/sell-panel";
@@ -14,9 +14,9 @@ interface Props {
 
 export default async function SellDetailPage({ params }: Props) {
   const { symbol } = await params;
-  const [crypto, allKlines, user] = await Promise.all([
+  const [crypto, klineData, user] = await Promise.all([
     getCryptocurrency(symbol),
-    getAllKlines(symbol),
+    getKlines(symbol, "1D"),
     getUser(),
   ]);
 
@@ -50,7 +50,8 @@ export default async function SellDetailPage({ params }: Props) {
       <PriceChart
         symbol={crypto.symbol}
         name={crypto.name}
-        allKlines={allKlines}
+        initialKlines={klineData?.klines}
+        initialTimeframe="1D"
         initialPriceUsd={crypto.priceUsd}
         displayCurrency={displayCurrency}
         exchangeRate={exchangeRate}

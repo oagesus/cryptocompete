@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
-import { type KlineTimeframe, type AllKlinesData } from "@/lib/crypto/get-klines";
+import { type Kline, type KlineTimeframe } from "@/lib/crypto/get-klines";
 
 interface Props {
   symbol: string;
   name: string;
-  allKlines: AllKlinesData;
+  initialKlines?: Kline[];
+  initialTimeframe?: KlineTimeframe;
   initialPriceUsd: number | null;
   displayCurrency: string;
   exchangeRate: number;
@@ -39,7 +41,8 @@ const chartConfig = {
 export function PriceChart({
   symbol,
   name,
-  allKlines,
+  initialKlines,
+  initialTimeframe = "1D",
   initialPriceUsd,
   displayCurrency,
   exchangeRate,
@@ -47,7 +50,25 @@ export function PriceChart({
   percentChange30d,
   percentChange90d,
 }: Props) {
-  const [timeframe, setTimeframe] = useState<KlineTimeframe>("1D");
+  const [timeframe, setTimeframe] = useState<KlineTimeframe>(initialTimeframe);
+  const [klinesCache, setKlinesCache] = useState<Record<KlineTimeframe, Kline[]>>(() => {
+    const initial: Record<KlineTimeframe, Kline[]> = {
+      "1D": [],
+      "7D": [],
+      "1M": [],
+      "3M": [],
+      "1Y": [],
+      "YTD": [],
+    };
+    if (initialKlines && initialKlines.length > 0) {
+      initial[initialTimeframe] = initialKlines;
+    }
+    return initial;
+  });
+  const [loading, setLoading] = useState(!initialKlines);
+  const [error, setError] = useState<string | null>(null);
+  
+  const prefetchStarted = useRef(false);
 
   const { prices } = useCryptoPrices();
 
@@ -56,7 +77,80 @@ export function PriceChart({
   const livePrice = priceUsd ? priceUsd * exchangeRate : null;
   const liveChangePercent24h = liveData?.changePercent24h;
 
-  const klines = allKlines[timeframe];
+  const klines = klinesCache[timeframe];
+
+  useEffect(() => {
+    if (prefetchStarted.current) return;
+    prefetchStarted.current = true;
+
+    const prefetchTimeframes = async () => {
+      const otherTimeframes = TIMEFRAMES
+        .map(tf => tf.value)
+        .filter(tf => tf !== initialTimeframe);
+
+      const results = await Promise.all(
+        otherTimeframes.map(async (tf) => {
+          try {
+            const response = await fetch(
+              `/api/cryptocurrencies/${symbol}/klines?timeframe=${tf}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              return { tf, klines: data.klines as Kline[] };
+            }
+          } catch {
+            // Silently fail
+          }
+          return { tf, klines: null };
+        })
+      );
+
+      setKlinesCache(prev => {
+        const updated = { ...prev };
+        for (const { tf, klines } of results) {
+          if (klines) {
+            updated[tf] = klines;
+          }
+        }
+        return updated;
+      });
+    };
+
+    prefetchTimeframes();
+  }, [symbol, initialTimeframe]);
+
+  useEffect(() => {
+    if (klines.length > 0) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchKlines = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `/api/cryptocurrencies/${symbol}/klines?timeframe=${timeframe}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setKlinesCache(prev => ({
+            ...prev,
+            [timeframe]: data.klines,
+          }));
+        } else {
+          setError("Unable to load chart data");
+        }
+      } catch {
+        setError("Unable to load chart data");
+      }
+
+      setLoading(false);
+    };
+
+    fetchKlines();
+  }, [symbol, timeframe, klines.length]);
 
   const chartData = useMemo(() => {
     return klines.map((k) => ({
@@ -91,8 +185,6 @@ export function PriceChart({
     return ticks;
   }, [chartData, timeframe]);
 
-  const yAxisWidth = 90;
-
   const formatYAxisPrice = (value: number) => {
     const decimals = value >= 10 ? 2 : 6;
     return new Intl.NumberFormat("en-US", {
@@ -100,6 +192,8 @@ export function PriceChart({
       maximumFractionDigits: decimals,
     }).format(value);
   };
+
+  const yAxisWidth = 90;
 
   const calculatedChangePercent = useMemo(() => {
     if (chartData.length < 2) {
@@ -171,6 +265,8 @@ export function PriceChart({
     });
   };
 
+  const showSkeleton = loading && chartData.length === 0;
+
   const livePriceDecimals = livePrice && livePrice >= 10 ? 2 : 6;
   const formattedLivePrice = livePrice
     ? new Intl.NumberFormat("en-US", {
@@ -218,7 +314,13 @@ export function PriceChart({
         </div>
       </CardHeader>
       <CardContent>
-        {chartData.length === 0 ? (
+        {showSkeleton ? (
+          <div className="h-[300px] w-full" />
+        ) : error ? (
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+            {error}
+          </div>
+        ) : chartData.length === 0 ? (
           <div className="flex h-[300px] items-center justify-center text-muted-foreground">
             No data available
           </div>
