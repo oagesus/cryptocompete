@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +49,13 @@ export function MobileMenuPublic() {
         >
           <TrendingUp className="mr-2 h-4 w-4" />
           Trade
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push("/leaderboard")}
+          className="cursor-pointer"
+        >
+          <Trophy className="mr-2 h-4 w-4" />
+          Leaderboard
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="flex items-center">

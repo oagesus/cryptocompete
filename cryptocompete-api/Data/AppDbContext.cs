@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<Cryptocurrency> Cryptocurrencies => Set<Cryptocurrency>();
     public DbSet<PortfolioHolding> PortfolioHoldings => Set<PortfolioHolding>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<LeaderboardSnapshot> LeaderboardSnapshots => Set<LeaderboardSnapshot>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -178,6 +179,17 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.User)
                 .WithMany(u => u.ExternalLogins)
                 .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LeaderboardSnapshot>(entity =>
+        {
+            entity.HasIndex(e => e.ProfileId).IsUnique();
+            entity.Property(e => e.TotalValue).HasPrecision(18, 2);
+
+            entity.HasOne(e => e.Profile)
+                .WithMany()
+                .HasForeignKey(e => e.ProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

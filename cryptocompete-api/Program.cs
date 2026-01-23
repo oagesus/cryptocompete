@@ -96,6 +96,8 @@ builder.Services.AddHttpClient<IKlineService, KlineService>();
 builder.Services.AddHostedService<CryptocurrencyListBackgroundService>();
 builder.Services.AddSingleton<CryptoPriceBackgroundService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<CryptoPriceBackgroundService>());
+builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>();
+builder.Services.AddHostedService<LeaderboardBackgroundService>();
 
 builder.Services.AddOpenApi();
 

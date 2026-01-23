@@ -29,6 +29,9 @@ export async function Navbar() {
               <Button variant="ghost" asChild className="hidden md:inline-flex">
                 <Link href="/trade">Trade</Link>
               </Button>
+              <Button variant="ghost" asChild className="hidden md:inline-flex">
+                <Link href="/leaderboard">Leaderboard</Link>
+              </Button>
               <div className="hidden md:block">
                 <UserMenu user={user} />
               </div>
@@ -40,6 +43,9 @@ export async function Navbar() {
             <>
               <Button variant="ghost" asChild className="hidden md:inline-flex">
                 <Link href="/trade/buy">Trade</Link>
+              </Button>
+              <Button variant="ghost" asChild className="hidden md:inline-flex">
+                <Link href="/leaderboard">Leaderboard</Link>
               </Button>
               <div className="hidden md:block w-px h-5 bg-border" />
               <Button variant="ghost" asChild className="hidden md:inline-flex">

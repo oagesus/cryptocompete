@@ -58,7 +58,7 @@ export function PortfolioHero({
 
   return (
     <div className="flex flex-col items-center py-6 px-6">
-      <span className="text-sm text-muted-foreground mb-1">Total Value</span>
+      <span className="text-sm text-muted-foreground mb-1">Portfolio Value</span>
       <span className="text-4xl font-bold tracking-tight">{formattedTotal}</span>
       {holdings.length > 0 && (
         <div className="flex items-center gap-2 mt-2">
