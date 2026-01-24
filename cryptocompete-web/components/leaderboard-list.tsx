@@ -43,7 +43,7 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
 
   return (
     <div className="space-y-1">
-      <span className="text-sm text-muted-foreground">Ranked by portfolio value</span>
+      <span className="text-sm text-muted-foreground block mb-3">Ranked by portfolio value</span>
       {entries.map((entry) => {
         const isTopThree = entry.rank <= 3;
         const formattedValue = new Intl.NumberFormat("en-US", {
@@ -54,7 +54,7 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
         return (
           <div
             key={entry.profilePublicId}
-            className="flex flex-col md:flex-row md:items-center md:justify-between py-2 px-3 rounded-xl border bg-card hover:bg-muted transition-colors"
+            className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-3 rounded-xl hover:bg-muted transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div
