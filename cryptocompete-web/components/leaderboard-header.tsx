@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trophy } from "lucide-react";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -59,10 +58,10 @@ export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
   const lastUpdated = calculatedAt
     ? roundToNearestHour(new Date(calculatedAt)).toLocaleString("en-US", {
         year: "numeric",
-        month: "numeric",
+        month: "short",
         day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       })
     : null;
 
@@ -72,10 +71,7 @@ export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
   return (
     <CardHeader className="pb-3">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-6 w-6" />
-          <CardTitle className="text-2xl font-bold">Leaderboard</CardTitle>
-        </div>
+        <CardTitle className="text-2xl font-bold">Leaderboard</CardTitle>
         {lastUpdated && (
           <div className="flex flex-col text-sm text-muted-foreground md:text-right">
             {isHydrated ? (

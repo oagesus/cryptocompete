@@ -13,4 +13,5 @@ public class Profile
     
     public ICollection<PortfolioHolding> Holdings { get; set; } = new List<PortfolioHolding>();
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+    public ICollection<UsernameHistory> UsernameHistories { get; set; } = new List<UsernameHistory>();
 }

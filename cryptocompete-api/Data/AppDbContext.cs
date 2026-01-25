@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<PortfolioHolding> PortfolioHoldings => Set<PortfolioHolding>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<LeaderboardSnapshot> LeaderboardSnapshots => Set<LeaderboardSnapshot>();
+    public DbSet<UsernameHistory> UsernameHistories => Set<UsernameHistory>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,16 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.User)
                 .WithMany(u => u.Profiles)
                 .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UsernameHistory>(entity =>
+        {
+            entity.Property(e => e.Username).HasMaxLength(50);
+            
+            entity.HasOne(e => e.Profile)
+                .WithMany(p => p.UsernameHistories)
+                .HasForeignKey(e => e.ProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

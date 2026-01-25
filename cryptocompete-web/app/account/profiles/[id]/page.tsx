@@ -79,7 +79,7 @@ export default function ProfilePage() {
       <Separator />
       <CardContent className="pt-6 space-y-3">
         <h3 className="text-lg font-semibold">Details</h3>
-        <UsernameCard username={profile.username} />
+        <UsernameCard username={profile.username} profileId={profile.publicId} />
       </CardContent>
     </Card>
   );
