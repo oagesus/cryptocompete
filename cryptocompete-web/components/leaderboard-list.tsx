@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -17,12 +18,15 @@ interface LeaderboardListProps {
 }
 
 export function LeaderboardList({ entries, currency, exchangeRate }: LeaderboardListProps) {
+  const t = useTranslations("leaderboard");
+  const locale = useLocale();
+
   if (entries.length === 0) {
     return (
       <Card>
         <CardContent className="px-4">
           <p className="text-sm text-muted-foreground">
-            No leaderboard data available yet. Check back soon!
+            {t("noDataYet")}
           </p>
         </CardContent>
       </Card>
@@ -43,10 +47,10 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
 
   return (
     <div className="space-y-1">
-      <span className="text-sm text-muted-foreground block mb-3">Ranked by portfolio value</span>
+      <span className="text-sm text-muted-foreground block mb-3">{t("rankedByPortfolioValue")}</span>
       {entries.map((entry) => {
         const isTopThree = entry.rank <= 3;
-        const formattedValue = new Intl.NumberFormat("en-US", {
+        const formattedValue = new Intl.NumberFormat(locale, {
           style: "currency",
           currency: currency,
         }).format(entry.totalValue * exchangeRate);

@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,8 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("trade");
+  const locale = useLocale();
 
   const searchFromUrl = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1", 10);
@@ -105,7 +108,7 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
     if (amount === 0) return "0";
     if (amount < 1) return amount.toFixed(8);
     if (amount < 1000) return amount.toFixed(6);
-    return amount.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    return amount.toLocaleString(locale, { maximumFractionDigits: 2 });
   }
 
   function formatValue(holding: HoldingItem) {
@@ -116,7 +119,7 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
     
     const valueInUserCurrency = holding.amount * priceUsd * exchangeRate;
     
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currency,
       minimumFractionDigits: 2,
@@ -137,14 +140,14 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
       <CardContent className="space-y-3">
         <div className="pb-2">
           <span className="px-3 text-xs font-semibold uppercase text-muted-foreground">
-            Holdings
+            {t("holdings")}
           </span>
         </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search..."
+            placeholder={t("search")}
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
@@ -155,8 +158,8 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
           {paginatedHoldings.length === 0 ? (
             <p className="text-sm text-muted-foreground px-3 py-2">
               {holdings.filter((h) => h.amount > 0).length === 0 
-                ? "You don't have any holdings to sell"
-                : "No holdings found"
+                ? t("noHoldings")
+                : t("noHoldingsFound")
               }
             </p>
           ) : (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,25 +13,21 @@ import { cn } from "@/lib/utils";
 
 export type Timeframe = "1d" | "7d" | "1m" | "3m";
 
-interface TimeframeOption {
-  value: Timeframe;
-  label: string;
-  shortLabel: string;
-}
-
-const timeframeOptions: TimeframeOption[] = [
-  { value: "1d", label: "1 Day", shortLabel: "1D" },
-  { value: "7d", label: "7 Days", shortLabel: "7D" },
-  { value: "1m", label: "1 Month", shortLabel: "1M" },
-  { value: "3m", label: "3 Months", shortLabel: "3M" },
-];
-
 interface Props {
   timeframe: Timeframe;
   onTimeframeChange: (timeframe: Timeframe) => void;
 }
 
 export function TimeframeDropdown({ timeframe, onTimeframeChange }: Props) {
+  const t = useTranslations("trade.timeframe");
+
+  const timeframeOptions: { value: Timeframe; shortLabel: string }[] = [
+    { value: "1d", shortLabel: "1D" },
+    { value: "7d", shortLabel: "7D" },
+    { value: "1m", shortLabel: "1M" },
+    { value: "3m", shortLabel: "3M" },
+  ];
+
   const currentOption = timeframeOptions.find((o) => o.value === timeframe);
 
   return (
@@ -53,7 +50,7 @@ export function TimeframeDropdown({ timeframe, onTimeframeChange }: Props) {
                 isSelected && "bg-muted font-medium"
               )}
             >
-              <span className="flex-1">{option.label}</span>
+              <span className="flex-1">{t(option.value)}</span>
               {isSelected && <Check className="h-4 w-4 ml-2" />}
             </DropdownMenuItem>
           );

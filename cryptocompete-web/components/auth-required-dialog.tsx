@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ interface AuthRequiredDialogProps {
 
 export function AuthRequiredDialog({ open, onOpenChange }: AuthRequiredDialogProps) {
   const router = useRouter();
+  const t = useTranslations("auth.authRequired");
 
   function handleSignUp() {
     onOpenChange(false);
@@ -27,17 +29,17 @@ export function AuthRequiredDialog({ open, onOpenChange }: AuthRequiredDialogPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Account Required</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            You need an account to start trading.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={handleSignUp}>
-            Sign Up
+            {t("signUp")}
           </Button>
         </div>
       </DialogContent>

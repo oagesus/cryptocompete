@@ -1,5 +1,10 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 
 export function ActiveBadge() {
-  return <Badge>Active</Badge>;
+  const t = useTranslations("account");
+  
+  return <Badge>{t("active")}</Badge>;
 }

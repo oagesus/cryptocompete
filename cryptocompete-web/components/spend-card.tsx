@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,15 +14,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-function getCurrencySymbol(code: string): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: code })
+function getCurrencySymbol(code: string, locale: string): string {
+  return new Intl.NumberFormat(locale, { style: "currency", currency: code })
     .format(0)
     .replace(/[\d.,]/g, "")
     .trim();
 }
 
-function getCurrencyName(code: string): string {
-  return new Intl.DisplayNames(["en"], { type: "currency" }).of(code) ?? code;
+function getCurrencyName(code: string, locale: string): string {
+  return new Intl.DisplayNames([locale], { type: "currency" }).of(code) ?? code;
 }
 
 interface SpendCardProps {
@@ -34,6 +35,8 @@ interface SpendCardProps {
 
 export function SpendCard({ value, currency, supportedCurrencies, onChange, disabled }: SpendCardProps) {
   const router = useRouter();
+  const t = useTranslations("trade");
+  const locale = useLocale();
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -67,7 +70,7 @@ export function SpendCard({ value, currency, supportedCurrencies, onChange, disa
 
   return (
     <div className="space-y-2">
-      <span className="text-sm text-muted-foreground">You Spend</span>
+      <span className="text-sm text-muted-foreground">{t("youSpend")}</span>
       <div className="relative">
         <Input
           type="text"
@@ -108,10 +111,10 @@ export function SpendCard({ value, currency, supportedCurrencies, onChange, disa
                           ? "bg-primary text-primary-foreground" 
                           : "bg-muted group-hover:bg-primary group-hover:text-primary-foreground"
                       )}>
-                        {getCurrencySymbol(code)}
+                        {getCurrencySymbol(code, locale)}
                       </div>
                       <div className="flex flex-col flex-1 ml-2">
-                        <span>{getCurrencyName(code)}</span>
+                        <span>{getCurrencyName(code, locale)}</span>
                         <span className="text-sm text-muted-foreground">{code}</span>
                       </div>
                       <div className="w-6 ml-2 flex justify-center shrink-0">

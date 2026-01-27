@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
 import { BalanceCardPortfolio } from "@/components/balance-card-portfolio";
@@ -16,6 +17,7 @@ export default async function PortfolioPage({
 }) {
   const { id: publicId } = await params;
   const portfolio = await getPortfolio(publicId);
+  const t = await getTranslations("account");
 
   if (!portfolio) {
     redirect("/account");
@@ -25,7 +27,7 @@ export default async function PortfolioPage({
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-2xl font-bold">Portfolio</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("portfolio")}</CardTitle>
         </CardHeader>
         <Separator />
         <PortfolioHero
@@ -37,12 +39,12 @@ export default async function PortfolioPage({
         <Separator />
         <CardContent className="pt-6 space-y-6">
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Balance</h3>
+            <h3 className="text-lg font-semibold">{t("balance")}</h3>
             <BalanceCardPortfolio balance={portfolio.balance} currency={portfolio.currency} />
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Holdings</h3>
+            <h3 className="text-lg font-semibold">{t("holdings")}</h3>
             <HoldingsList
               holdings={portfolio.holdings}
               currency={portfolio.currency}

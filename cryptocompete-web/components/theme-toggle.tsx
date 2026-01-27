@@ -3,12 +3,14 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const t = useTranslations("nav");
 
   React.useEffect(() => {
     setMounted(true);
@@ -58,7 +60,7 @@ export function ThemeToggle() {
             }}
           />
         </div>
-        <span className="sr-only">Toggle theme</span>
+        <span className="sr-only">{t("toggleTheme")}</span>
       </Button>
     </>
   );

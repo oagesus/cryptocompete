@@ -1,0 +1,15 @@
+{
+  "leaderboard": {
+    "title": "Rangliste",
+    "rank": "Rang",
+    "username": "Benutzername",
+    "totalValue": "Gesamtwert",
+    "empty": "Noch keine Einträge",
+    "updated": "Aktualisiert: {date}",
+    "nextUpdateIn": "Nächste Aktualisierung in {minutes} {unit}",
+    "minute": "Minute",
+    "minutes": "Minuten",
+    "rankedByPortfolioValue": "Sortiert nach Portfolio-Wert",
+    "noDataYet": "Noch keine Ranglisten-Daten verfügbar. Schau bald wieder vorbei!"
+  }
+}

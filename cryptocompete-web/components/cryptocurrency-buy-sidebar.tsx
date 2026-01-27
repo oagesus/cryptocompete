@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +28,8 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("trade");
+  const locale = useLocale();
 
   const searchFromUrl = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1", 10);
@@ -151,7 +154,7 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
     
     const priceInCurrency = priceUsd * exchangeRate;
     
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currency,
       minimumFractionDigits: priceInCurrency >= 10 ? 2 : 6,
@@ -174,14 +177,14 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
       <CardContent className="space-y-3">
         <div className="pb-2">
           <span className="px-3 text-xs font-semibold uppercase text-muted-foreground">
-            Cryptocurrencies
+            {t("cryptocurrencies")}
           </span>
         </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search..."
+            placeholder={t("search")}
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
@@ -201,7 +204,7 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
         <div className="space-y-1 min-h-[440px]">
           {paginatedCryptos.length === 0 ? (
             <p className="text-sm text-muted-foreground px-3 py-2">
-              No cryptocurrencies found
+              {t("noCryptosFound")}
             </p>
           ) : (
             paginatedCryptos.map((crypto) => {

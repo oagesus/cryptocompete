@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,28 +29,30 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    confirmNewPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Passwords do not match",
-    path: ["confirmNewPassword"],
-  });
-
-type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
-
 export function ChangePasswordForm() {
   const router = useRouter();
+  const t = useTranslations("auth.changePassword");
+  const tApi = useTranslations("api");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const changePasswordSchema = z
+    .object({
+      currentPassword: z.string().min(1, t("currentPasswordRequired")),
+      newPassword: z
+        .string()
+        .min(8, t("passwordMinLength"))
+        .regex(/[A-Z]/, t("passwordUppercase"))
+        .regex(/[a-z]/, t("passwordLowercase"))
+        .regex(/[0-9]/, t("passwordNumber")),
+      confirmNewPassword: z.string(),
+    })
+    .refine((data) => data.newPassword === data.confirmNewPassword, {
+      message: t("passwordsDoNotMatch"),
+      path: ["confirmNewPassword"],
+    });
+
+  type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
   const form = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -62,7 +65,6 @@ export function ChangePasswordForm() {
 
   async function onSubmit(data: ChangePasswordFormValues) {
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await fetch("/api/auth/change-password", {
@@ -84,13 +86,16 @@ export function ChangePasswordForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to change password");
+        if (errorData.message?.includes("incorrect") || errorData.message?.includes("wrong")) {
+          throw new Error(tApi("errors.currentPasswordIncorrect"));
+        }
+        throw new Error(tApi("errors.generic"));
       }
 
-      toast.success("Password changed successfully");
+      toast.success(tApi("success.passwordChanged"));
       router.push("/account/settings");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : tApi("errors.generic"));
     } finally {
       setIsLoading(false);
     }
@@ -99,8 +104,8 @@ export function ChangePasswordForm() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Change password</CardTitle>
-        <CardDescription>Update your account password</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -116,7 +121,7 @@ export function ChangePasswordForm() {
               name="currentPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Password</FormLabel>
+                  <FormLabel>{t("currentPassword")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -136,7 +141,7 @@ export function ChangePasswordForm() {
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password</FormLabel>
+                  <FormLabel>{t("newPassword")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -156,7 +161,7 @@ export function ChangePasswordForm() {
               name="confirmNewPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm New Password</FormLabel>
+                  <FormLabel>{t("confirmNewPassword")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -173,7 +178,7 @@ export function ChangePasswordForm() {
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Change password
+              {t("submit")}
             </Button>
           </form>
         </Form>
@@ -183,7 +188,7 @@ export function ChangePasswordForm() {
           href="/account/settings"
           className="text-sm font-medium text-primary hover:underline"
         >
-          Back to settings
+          {t("backToSettings")}
         </Link>
       </CardFooter>
     </Card>

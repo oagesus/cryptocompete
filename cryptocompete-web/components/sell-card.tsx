@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 
 interface SellCardProps {
@@ -9,9 +10,11 @@ interface SellCardProps {
 }
 
 export function SellCard({ value, symbol, onChange }: SellCardProps) {
+  const t = useTranslations("trade");
+
   return (
     <div className="space-y-2">
-      <span className="text-sm text-muted-foreground">You Sell</span>
+      <span className="text-sm text-muted-foreground">{t("youSell")}</span>
       <div className="relative">
         <Input
           type="text"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface UsernameHistoryCardProps {
@@ -8,7 +9,9 @@ interface UsernameHistoryCardProps {
 }
 
 export function UsernameHistoryCard({ username, changedAt }: UsernameHistoryCardProps) {
-  const formattedDate = new Date(changedAt).toLocaleString("en-US", {
+  const locale = useLocale();
+
+  const formattedDate = new Date(changedAt).toLocaleString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",

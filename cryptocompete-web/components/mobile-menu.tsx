@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { LayoutDashboard, Settings, User, LogOut, Wallet, TrendingUp, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
 import { CurrencyToggleIcon } from "@/components/currency-toggle-icon";
+import { LanguageToggleIcon } from "@/components/language-toggle-icon";
 import { User as UserType } from "@/lib/auth/get-user";
 
 interface MobileMenuProps {
@@ -22,6 +24,9 @@ interface MobileMenuProps {
 
 export function MobileMenu({ user }: MobileMenuProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("nav");
+  const tAccount = useTranslations("account");
   const [isOpen, setIsOpen] = useState(false);
 
   const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
@@ -70,28 +75,28 @@ export function MobileMenu({ user }: MobileMenuProps) {
           className="cursor-pointer"
         >
           <LayoutDashboard className="mr-2 h-4 w-4" />
-          Dashboard
+          {t("dashboard")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push(`/account/profiles/${activeProfile.publicId}/portfolio`)}
           className="cursor-pointer"
         >
           <Wallet className="mr-2 h-4 w-4" />
-          Portfolio
+          {t("portfolio")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/trade")}
           className="cursor-pointer"
         >
           <TrendingUp className="mr-2 h-4 w-4" />
-          Trade
+          {t("trade")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/leaderboard")}
           className="cursor-pointer"
         >
           <Trophy className="mr-2 h-4 w-4" />
-          Leaderboard
+          {t("leaderboard")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -99,14 +104,14 @@ export function MobileMenu({ user }: MobileMenuProps) {
           className="cursor-pointer"
         >
           <User className="mr-2 h-4 w-4" />
-          Profile
+          {tAccount("profile")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/account/settings")}
           className="cursor-pointer"
         >
           <Settings className="mr-2 h-4 w-4" />
-          Account Settings
+          {tAccount("title")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -114,7 +119,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
           className="cursor-pointer focus:bg-destructive/10 focus:text-destructive"
         >
           <LogOut className="mr-2 h-4 w-4 text-destructive" />
-          Sign Out
+          {t("logout")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="flex items-center">
@@ -124,6 +129,8 @@ export function MobileMenu({ user }: MobileMenuProps) {
             currentCurrency={user.displayCurrency}
             supportedCurrencies={user.supportedCurrencies}
           />
+          <div className="w-px h-5 bg-border" />
+          <LanguageToggleIcon currentLocale={locale} />
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

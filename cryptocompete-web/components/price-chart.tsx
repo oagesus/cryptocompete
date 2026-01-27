@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { type Kline, type KlineTimeframe } from "@/lib/crypto/get-klines";
@@ -15,6 +15,7 @@ interface Props {
   initialKlines?: Kline[];
   initialTimeframe?: KlineTimeframe;
   initialPriceUsd: number | null;
+  initialChangePercent24h?: number | null;
   displayCurrency: string;
   exchangeRate: number;
   percentChange7d?: number | null;
@@ -44,12 +45,15 @@ export function PriceChart({
   initialKlines,
   initialTimeframe = "1D",
   initialPriceUsd,
+  initialChangePercent24h,
   displayCurrency,
   exchangeRate,
   percentChange7d,
   percentChange30d,
   percentChange90d,
 }: Props) {
+  const t = useTranslations("trade");
+  const locale = useLocale();
   const [timeframe, setTimeframe] = useState<KlineTimeframe>(initialTimeframe);
   const [klinesCache, setKlinesCache] = useState<Record<KlineTimeframe, Kline[]>>(() => {
     const initial: Record<KlineTimeframe, Kline[]> = {
@@ -140,17 +144,17 @@ export function PriceChart({
             [timeframe]: data.klines,
           }));
         } else {
-          setError("Unable to load chart data");
+          setError(t("unableToLoadChart"));
         }
       } catch {
-        setError("Unable to load chart data");
+        setError(t("unableToLoadChart"));
       }
 
       setLoading(false);
     };
 
     fetchKlines();
-  }, [symbol, timeframe, klines.length]);
+  }, [symbol, timeframe, klines.length, t]);
 
   const chartData = useMemo(() => {
     return klines.map((k) => ({
@@ -187,7 +191,7 @@ export function PriceChart({
 
   const formatYAxisPrice = (value: number) => {
     const decimals = value >= 10 ? 2 : 6;
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(value);
@@ -209,43 +213,70 @@ export function PriceChart({
   const priceChangePercent = useMemo(() => {
     switch (timeframe) {
       case "1D":
-        return liveChangePercent24h ?? calculatedChangePercent;
+        if (liveChangePercent24h !== null && liveChangePercent24h !== undefined) {
+          return liveChangePercent24h;
+        }
+        if (initialChangePercent24h !== null && initialChangePercent24h !== undefined) {
+          return initialChangePercent24h;
+        }
+        return calculatedChangePercent;
       case "7D":
-        return percentChange7d ?? calculatedChangePercent;
+        if (percentChange7d !== null && percentChange7d !== undefined) {
+          return percentChange7d;
+        }
+        return calculatedChangePercent;
       case "1M":
-        return percentChange30d ?? calculatedChangePercent;
+        if (percentChange30d !== null && percentChange30d !== undefined) {
+          return percentChange30d;
+        }
+        return calculatedChangePercent;
       case "3M":
-        return percentChange90d ?? calculatedChangePercent;
+        if (percentChange90d !== null && percentChange90d !== undefined) {
+          return percentChange90d;
+        }
+        return calculatedChangePercent;
       case "1Y":
       case "YTD":
       default:
         return calculatedChangePercent;
     }
-  }, [timeframe, liveChangePercent24h, percentChange7d, percentChange30d, percentChange90d, calculatedChangePercent]);
+  }, [timeframe, liveChangePercent24h, initialChangePercent24h, percentChange7d, percentChange30d, percentChange90d, calculatedChangePercent]);
 
   const isPositive = priceChangePercent >= 0;
+
+  const getTimeframeLabel = (tf: KlineTimeframe) => {
+    switch (tf) {
+      case "1D": return t("today");
+      case "7D": return t("past7Days");
+      case "1M": return t("pastMonth");
+      case "3M": return t("past3Months");
+      case "1Y": return t("pastYear");
+      case "YTD": return t("yearToDate");
+      default: return "";
+    }
+  };
 
   const formatXAxis = (timestamp: number) => {
     const date = new Date(timestamp);
 
     switch (timeframe) {
       case "1D":
-        return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+        return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
       case "7D":
       case "1M":
       case "3M":
       case "YTD":
-        return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+        return date.toLocaleDateString(locale, { day: "numeric", month: "short" });
       case "1Y":
-        return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+        return date.toLocaleDateString(locale, { month: "short", year: "2-digit" });
       default:
-        return date.toLocaleDateString("en-US");
+        return date.toLocaleDateString(locale);
     }
   };
 
   const formatPrice = (value: number) => {
     const decimals = value >= 10 ? 2 : 6;
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: displayCurrency,
       minimumFractionDigits: decimals,
@@ -256,7 +287,7 @@ export function PriceChart({
   const formatTooltipDate = (timestamp: number) => {
     const date = new Date(timestamp);
 
-    return date.toLocaleString("en-US", {
+    return date.toLocaleString(locale, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -269,7 +300,7 @@ export function PriceChart({
 
   const livePriceDecimals = livePrice && livePrice >= 10 ? 2 : 6;
   const formattedLivePrice = livePrice
-    ? new Intl.NumberFormat("en-US", {
+    ? new Intl.NumberFormat(locale, {
         style: "currency",
         currency: displayCurrency,
         minimumFractionDigits: livePriceDecimals,
@@ -291,7 +322,7 @@ export function PriceChart({
               <div className="flex items-center gap-2">
                 <ProfitLossBadge percent={priceChangePercent} />
                 <span className="text-sm text-muted-foreground">
-                  {timeframe === "1D" ? "Today" : timeframe === "7D" ? "Past 7 days" : timeframe === "1M" ? "Past month" : timeframe === "3M" ? "Past 3 months" : timeframe === "1Y" ? "Past year" : "Year to date"}
+                  {getTimeframeLabel(timeframe)}
                 </span>
               </div>
             )}
@@ -322,7 +353,7 @@ export function PriceChart({
           </div>
         ) : chartData.length === 0 ? (
           <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-            No data available
+            {t("noDataAvailable")}
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">

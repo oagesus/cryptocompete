@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -15,18 +16,20 @@ interface PremiumRequiredDialogProps {
 }
 
 export function PremiumRequiredDialog({ open, onOpenChange }: PremiumRequiredDialogProps) {
+  const t = useTranslations("account");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Premium Required</DialogTitle>
+          <DialogTitle>{t("premiumRequired")}</DialogTitle>
           <DialogDescription>
-            You need a premium subscription to create additional profiles.
+            {t("premiumRequiredDescription")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end">
           <Button onClick={() => onOpenChange(false)}>
-            OK
+            {t("ok")}
           </Button>
         </div>
       </DialogContent>

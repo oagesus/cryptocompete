@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { AuthGuardian } from "@/components/auth-guardian";
@@ -23,34 +25,39 @@ export const metadata: Metadata = {
   description: "Cryptocurrency portfolio competition",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <CryptoPriceProvider>
-            <CryptoPriceSubscriber />
-            <AuthGuardian />
-            <Navbar />
-            <div className="flex flex-1 flex-col px-6 py-12">
-              <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">
-                {children}
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <CryptoPriceProvider>
+              <CryptoPriceSubscriber />
+              <AuthGuardian />
+              <Navbar />
+              <div className="flex flex-1 flex-col px-6 py-12">
+                <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">
+                  {children}
+                </div>
               </div>
-            </div>
-            <ThemedToaster />
-          </CryptoPriceProvider>
-        </ThemeProvider>
+              <ThemedToaster />
+            </CryptoPriceProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

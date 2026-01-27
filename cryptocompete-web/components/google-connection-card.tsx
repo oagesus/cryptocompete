@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { GoogleLinkButton } from "@/components/google-link-button";
@@ -41,6 +42,8 @@ export function GoogleConnectionCard({
   hasPassword,
   onConnectionChange,
 }: GoogleConnectionCardProps) {
+  const t = useTranslations("account");
+  const tApi = useTranslations("api");
   const [error, setError] = useState<string | null>(null);
 
   function handleSuccess() {
@@ -60,15 +63,19 @@ export function GoogleConnectionCard({
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to disconnect Google account");
+        if (res.status === 400) {
+          if (!hasPassword) {
+            throw new Error(tApi("errors.mustSetPasswordBeforeDisconnectingGoogle"));
+          }
+          throw new Error(tApi("errors.noGoogleAccountConnected"));
+        }
+        throw new Error(tApi("errors.generic"));
       }
 
-      const data = await res.json();
-      toast.success(data.message);
+      toast.success(tApi("success.googleAccountDisconnected"));
       onConnectionChange();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : tApi("errors.generic"));
     }
   }
 
@@ -87,12 +94,12 @@ export function GoogleConnectionCard({
           <CardContent className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
               <GoogleIcon className="h-4 w-4 shrink-0" />
-              <span className="text-sm text-muted-foreground">Google</span>
+              <span className="text-sm text-muted-foreground">{t("google")}</span>
             </div>
             <span className="text-sm font-medium truncate">{googleConnection.email}</span>
             <span className="text-sm font-medium text-green-600 dark:text-green-400 group-hover:text-red-600 dark:group-hover:text-red-400 md:ml-auto">
-              <span className="group-hover:hidden">Connected</span>
-              <span className="hidden group-hover:inline">Disconnect</span>
+              <span className="group-hover:hidden">{t("connected")}</span>
+              <span className="hidden group-hover:inline">{t("disconnect")}</span>
             </span>
           </CardContent>
         </Card>

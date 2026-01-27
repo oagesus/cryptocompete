@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,13 +26,15 @@ function clearVerificationCookies() {
 function VerifyContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const t = useTranslations("auth.verify");
+  const tApi = useTranslations("api");
   const [status, setStatus] = useState<VerificationStatus>("loading");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("No verification token provided");
+      setMessage(t("noToken"));
       return;
     }
 
@@ -42,29 +45,37 @@ function VerifyContent() {
 
         if (response.ok) {
           setStatus("success");
-          setMessage(data.message || "Email verified successfully");
+          setMessage(tApi("success.emailVerified"));
           clearVerificationCookies();
         } else {
           setStatus("error");
-          setMessage(data.message || "Verification failed");
+          if (data.message?.includes("Invalid verification token")) {
+            setMessage(tApi("errors.invalidVerificationToken"));
+          } else if (data.message?.includes("already been used")) {
+            setMessage(tApi("errors.tokenAlreadyUsed"));
+          } else if (data.message?.includes("expired")) {
+            setMessage(tApi("errors.tokenExpired"));
+          } else {
+            setMessage(tApi("errors.generic"));
+          }
         }
       } catch {
         setStatus("error");
-        setMessage("An error occurred during verification");
+        setMessage(tApi("errors.generic"));
       }
     }
 
     verifyEmail();
-  }, [token]);
+  }, [token, t, tApi]);
 
   return (
     <Card className="text-center">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Email Verification</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         <CardDescription>
-          {status === "loading" && "Verifying your email address..."}
-          {status === "success" && "Your email has been verified"}
-          {status === "error" && "Verification failed"}
+          {status === "loading" && t("verifying")}
+          {status === "success" && t("success")}
+          {status === "error" && t("error")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
@@ -80,12 +91,12 @@ function VerifyContent() {
       <CardFooter className="flex justify-center">
         {status === "success" && (
           <Button asChild>
-            <Link href="/auth/login">Continue to Sign in</Link>
+            <Link href="/auth/login">{t("continueToSignIn")}</Link>
           </Button>
         )}
         {status === "error" && (
           <Button asChild>
-            <Link href="/auth/register">Back to Sign up</Link>
+            <Link href="/auth/register">{t("backToSignUp")}</Link>
           </Button>
         )}
       </CardFooter>
@@ -93,23 +104,25 @@ function VerifyContent() {
   );
 }
 
+function VerifyFallback() {
+  const t = useTranslations("auth.verify");
+
+  return (
+    <Card className="text-center">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
+        <CardDescription>{t("verifying")}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-4">
+        <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function VerifyPage() {
   return (
-    <Suspense
-      fallback={
-        <Card className="text-center">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              Email Verification
-            </CardTitle>
-            <CardDescription>Verifying your email address...</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
-          </CardContent>
-        </Card>
-      }
-    >
+    <Suspense fallback={<VerifyFallback />}>
       <VerifyContent />
     </Suspense>
   );

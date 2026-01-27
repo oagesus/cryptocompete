@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,16 +27,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const changeEmailSchema = z.object({
-  newEmail: z.string().email("Please enter a valid email address"),
-});
-
-type ChangeEmailFormValues = z.infer<typeof changeEmailSchema>;
-
 export function ChangeEmailForm() {
+  const t = useTranslations("auth.changeEmail");
+  const tApi = useTranslations("api");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const changeEmailSchema = z.object({
+    newEmail: z.string().email(t("emailInvalid")),
+  });
+
+  type ChangeEmailFormValues = z.infer<typeof changeEmailSchema>;
 
   const form = useForm<ChangeEmailFormValues>({
     resolver: zodResolver(changeEmailSchema),
@@ -46,7 +49,6 @@ export function ChangeEmailForm() {
 
   async function onSubmit(data: ChangeEmailFormValues) {
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await fetch("/api/auth/change-email", {
@@ -65,12 +67,23 @@ export function ChangeEmailForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send verification email");
+        if (errorData.message?.includes("already in use") || errorData.message?.includes("already registered")) {
+          throw new Error(tApi("errors.emailAlreadyInUse"));
+        }
+        if (errorData.message?.includes("must be different")) {
+          throw new Error(tApi("errors.newEmailMustBeDifferent"));
+        }
+        if (errorData.message?.includes("wait") && errorData.message?.includes("seconds")) {
+          const match = errorData.message.match(/(\d+)\s*seconds/);
+          const seconds = match ? match[1] : "60";
+          throw new Error(tApi("errors.pleaseWaitSeconds", { seconds }));
+        }
+        throw new Error(tApi("errors.generic"));
       }
 
       setIsSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : tApi("errors.generic"));
     } finally {
       setIsLoading(false);
     }
@@ -80,9 +93,9 @@ export function ChangeEmailForm() {
     return (
       <Card>
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("successTitle")}</CardTitle>
           <CardDescription>
-            We've sent a verification link to your new email address. Click the link to confirm the change.
+            {t("successDescription")}
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex justify-center">
@@ -90,7 +103,7 @@ export function ChangeEmailForm() {
             href="/account/settings"
             className="text-sm font-medium text-primary hover:underline"
           >
-            Back to settings
+            {t("backToSettings")}
           </Link>
         </CardFooter>
       </Card>
@@ -100,9 +113,9 @@ export function ChangeEmailForm() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Change email</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         <CardDescription>
-          Enter your new email address and we'll send you a verification link
+          {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -119,7 +132,7 @@ export function ChangeEmailForm() {
               name="newEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Email</FormLabel>
+                  <FormLabel>{t("newEmail")}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -136,7 +149,7 @@ export function ChangeEmailForm() {
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Change email
+              {t("submit")}
             </Button>
           </form>
         </Form>
@@ -146,7 +159,7 @@ export function ChangeEmailForm() {
           href="/account/settings"
           className="text-sm font-medium text-primary hover:underline"
         >
-          Back to settings
+          {t("backToSettings")}
         </Link>
       </CardFooter>
     </Card>

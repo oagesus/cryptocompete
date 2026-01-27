@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "portfolio": "Portfolio",
+    "trade": "Handeln",
+    "leaderboard": "Rangliste",
+    "account": "Konto",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden",
+    "toggleTheme": "Design wechseln"
+  }
+}

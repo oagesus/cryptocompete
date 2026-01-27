@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,19 +26,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-
-const changeUsernameSchema = z.object({
-  username: z
-    .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be at most 20 characters")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers and underscores"
-    ),
-});
-
-type ChangeUsernameFormValues = z.infer<typeof changeUsernameSchema>;
 
 interface UsernameHistoryEntry {
   username: string;
@@ -75,8 +63,24 @@ function getNextChangeDate(history: UsernameHistoryResponse | null): Date | null
 export function ChangeUsernameForm({ profile, initialHistory }: ChangeUsernameFormProps) {
   const router = useRouter();
   const { refetch } = useAccount();
+  const t = useTranslations("account");
+  const tApi = useTranslations("api");
+  const locale = useLocale();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const changeUsernameSchema = z.object({
+    username: z
+      .string()
+      .min(3, t("usernameMinLength"))
+      .max(20, t("usernameMaxLength"))
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        t("usernameInvalidChars")
+      ),
+  });
+
+  type ChangeUsernameFormValues = z.infer<typeof changeUsernameSchema>;
 
   const form = useForm<ChangeUsernameFormValues>({
     resolver: zodResolver(changeUsernameSchema),
@@ -84,6 +88,16 @@ export function ChangeUsernameForm({ profile, initialHistory }: ChangeUsernameFo
       username: "",
     },
   });
+
+  function formatDate(date: Date): string {
+    return date.toLocaleString(locale, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 
   async function onSubmit(data: ChangeUsernameFormValues) {
     setIsLoading(true);
@@ -104,24 +118,23 @@ export function ChangeUsernameForm({ profile, initialHistory }: ChangeUsernameFo
         const errorData = await response.json();
         if (errorData.message === "USERNAME_CHANGE_COOLDOWN" && errorData.nextChangeDate) {
           const date = new Date(errorData.nextChangeDate);
-          const formattedDate = date.toLocaleString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-          throw new Error(`Username cannot be changed yet. Please wait until ${formattedDate}.`);
+          throw new Error(t("usernameCooldown", { date: formatDate(date) }));
         }
-        throw new Error(errorData.message || "Failed to change username");
+        if (errorData.message?.includes("already taken") || errorData.message?.includes("already exists")) {
+          throw new Error(tApi("errors.usernameAlreadyTaken"));
+        }
+        if (errorData.message?.includes("same as current") || errorData.message?.includes("must be different")) {
+          throw new Error(tApi("errors.usernameSameAsCurrent"));
+        }
+        throw new Error(t("failedToChangeUsername"));
       }
 
       await refetch();
-      toast.success("Username changed successfully");
+      toast.success(t("usernameChanged"));
       router.push(`/account/profiles/${profile.publicId}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("failedToChangeUsername"));
     } finally {
       setIsLoading(false);
     }
@@ -130,36 +143,28 @@ export function ChangeUsernameForm({ profile, initialHistory }: ChangeUsernameFo
   const nextChangeDate = getNextChangeDate(initialHistory);
   const canChangeNow = !nextChangeDate || nextChangeDate <= new Date();
 
-  const formattedNextChange = nextChangeDate
-    ? nextChangeDate.toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const formattedNextChange = nextChangeDate ? formatDate(nextChangeDate) : null;
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-            <CardTitle className="text-2xl font-bold">Change Username</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t("changeUsername")}</CardTitle>
             <div className="flex flex-col text-sm text-muted-foreground md:text-right">
               {formattedNextChange && !canChangeNow ? (
-                <span>Change available: {formattedNextChange}</span>
+                <span>{t("changeAvailableAt", { date: formattedNextChange })}</span>
               ) : (
-                <span>Change available</span>
+                <span>{t("changeAvailable")}</span>
               )}
-              <span>Usernames can be changed once every 30 days</span>
+              <span>{t("usernameChangeInfo")}</span>
             </div>
           </div>
         </CardHeader>
         <Separator />
         <CardContent className="pt-6">
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Username: {profile.username}</h3>
+            <h3 className="text-lg font-semibold">{t("username")}: {profile.username}</h3>
           <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {error && (
@@ -183,7 +188,7 @@ export function ChangeUsernameForm({ profile, initialHistory }: ChangeUsernameFo
                           />
                         </FormControl>
                         <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
-                          Change Username
+                          {t("changeUsername")}
                         </Button>
                       </div>
                       <FormMessage />
@@ -198,7 +203,7 @@ export function ChangeUsernameForm({ profile, initialHistory }: ChangeUsernameFo
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-2xl font-bold">Previous Usernames</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("previousUsernames")}</CardTitle>
         </CardHeader>
         <Separator />
         <CardContent className="pt-6">
@@ -213,7 +218,7 @@ export function ChangeUsernameForm({ profile, initialHistory }: ChangeUsernameFo
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">You don't have any previous usernames.</p>
+            <p className="text-sm text-muted-foreground">{t("noPreviousUsernames")}</p>
           )}
         </CardContent>
       </Card>

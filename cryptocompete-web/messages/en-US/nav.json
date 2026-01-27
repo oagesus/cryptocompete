@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "portfolio": "Portfolio",
+    "trade": "Trade",
+    "leaderboard": "Leaderboard",
+    "account": "Account",
+    "login": "Sign In",
+    "register": "Sign Up",
+    "logout": "Sign Out",
+    "toggleTheme": "Toggle theme"
+  }
+}

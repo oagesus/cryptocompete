@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import Script from "next/script";
 
@@ -69,6 +70,8 @@ export function GoogleSignInButton({
   tabIndex,
 }: GoogleSignInButtonProps) {
   const router = useRouter();
+  const t = useTranslations("auth.google");
+  const tApi = useTranslations("api");
   const [isLoading, setIsLoading] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
 
@@ -98,18 +101,30 @@ export function GoogleSignInButton({
 
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.message || "Google sign in failed");
+          if (errorData.message?.includes("blocked")) {
+            throw new Error(tApi("errors.accountBlocked"));
+          }
+          if (errorData.message?.includes("different Google")) {
+            throw new Error(tApi("errors.accountHasDifferentGoogleLinked"));
+          }
+          if (errorData.message?.includes("Invalid Google token")) {
+            throw new Error(tApi("errors.invalidGoogleToken"));
+          }
+          if (errorData.message?.includes("not verified")) {
+            throw new Error(tApi("errors.googleEmailNotVerified"));
+          }
+          throw new Error(t("signInFailed"));
         }
 
         router.push("/dashboard");
         router.refresh();
       } catch (err) {
-        onError?.(err instanceof Error ? err.message : "An error occurred");
+        onError?.(err instanceof Error ? err.message : tApi("errors.generic"));
       } finally {
         setLoadingState(false);
       }
     },
-    [router, onError, setLoadingState]
+    [router, onError, setLoadingState, t, tApi]
   );
 
   useEffect(() => {
@@ -162,7 +177,7 @@ export function GoogleSignInButton({
         ) : (
           <GoogleIcon className="mr-2 h-4 w-4" />
         )}
-        Continue with Google
+        {t("continueWithGoogle")}
       </Button>
     </>
   );

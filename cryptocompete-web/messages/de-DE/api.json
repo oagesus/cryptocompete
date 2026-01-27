@@ -1,0 +1,52 @@
+{
+  "api": {
+    "errors": {
+      "generic": "Ein Fehler ist aufgetreten",
+      "invalidToken": "Ungültiger Token",
+      "invalidCredentials": "Ungültige Anmeldedaten",
+      "userNotFound": "Benutzer nicht gefunden",
+      "accountBlocked": "Dein Konto wurde gesperrt",
+      "emailAlreadyRegistered": "E-Mail ist bereits registriert",
+      "usernameAlreadyTaken": "Benutzername ist bereits vergeben",
+      "usernameSameAsCurrent": "Der neue Benutzername muss sich vom aktuellen unterscheiden",
+      "emailNotVerified": "Bitte bestätige deine E-Mail, bevor du dich anmeldest",
+      "emailAlreadyVerified": "E-Mail ist bereits bestätigt",
+      "emailAlreadyInUse": "E-Mail wird bereits verwendet",
+      "newEmailMustBeDifferent": "Die neue E-Mail muss sich von der aktuellen unterscheiden",
+      "invalidVerificationToken": "Ungültiger Bestätigungstoken",
+      "invalidResetToken": "Ungültiger Zurücksetzungstoken",
+      "tokenAlreadyUsed": "Token wurde bereits verwendet",
+      "tokenExpired": "Token ist abgelaufen",
+      "invalidGoogleToken": "Ungültiger Google-Token",
+      "googleEmailNotVerified": "Google-E-Mail ist nicht verifiziert",
+      "googleAccountAlreadyLinked": "Google-Konto ist bereits verknüpft",
+      "googleAccountLinkedToAnotherUser": "Dieses Google-Konto ist bereits mit einem anderen Benutzer verknüpft",
+      "googleAccountAlreadyLinkedToYourAccount": "Ein Google-Konto ist bereits mit deinem Konto verknüpft",
+      "noGoogleAccountConnected": "Kein Google-Konto verbunden",
+      "mustSetPasswordBeforeDisconnectingGoogle": "Du musst ein Passwort festlegen, bevor du dein Google-Konto trennen kannst",
+      "passwordAlreadySet": "Passwort ist bereits festgelegt. Verwende stattdessen Passwort ändern.",
+      "noPasswordSet": "Kein Passwort festgelegt. Verwende stattdessen Passwort festlegen.",
+      "currentPasswordIncorrect": "Aktuelles Passwort ist falsch",
+      "unsupportedCurrency": "Nicht unterstützte Währung",
+      "refreshTokenRequired": "Refresh-Token erforderlich",
+      "invalidRefreshToken": "Ungültiger Refresh-Token",
+      "refreshTokenExpired": "Refresh-Token ist abgelaufen",
+      "pleaseWaitSeconds": "Bitte warte {seconds} Sekunden, bevor du eine weitere E-Mail anforderst",
+      "pleaseSignInWithProvider": "Bitte melde dich mit {provider} an",
+      "accountHasDifferentGoogleLinked": "Dein Konto hat bereits ein anderes Google-Konto verknüpft"
+    },
+    "success": {
+      "verificationEmailSent": "Bestätigungs-E-Mail gesendet",
+      "emailVerified": "E-Mail erfolgreich verifiziert",
+      "googleAccountConnected": "Google-Konto erfolgreich verbunden",
+      "googleAccountDisconnected": "Google-Konto erfolgreich getrennt",
+      "loggedOut": "Erfolgreich abgemeldet",
+      "passwordResetEmailSent": "Falls ein Konto mit dieser E-Mail existiert, erhältst du einen Link zum Zurücksetzen des Passworts.",
+      "passwordReset": "Passwort erfolgreich zurückgesetzt",
+      "passwordSet": "Passwort erfolgreich festgelegt",
+      "passwordChanged": "Passwort erfolgreich geändert",
+      "emailChangeVerificationSent": "Bestätigungs-E-Mail an deine neue E-Mail-Adresse gesendet",
+      "emailChanged": "E-Mail erfolgreich geändert"
+    }
+  }
+}

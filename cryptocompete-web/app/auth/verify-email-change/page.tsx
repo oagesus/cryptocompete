@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,13 +21,15 @@ type VerificationStatus = "loading" | "success" | "error";
 function VerifyEmailChangeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const t = useTranslations("auth.verifyEmailChange");
+  const tApi = useTranslations("api");
   const [status, setStatus] = useState<VerificationStatus>("loading");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("No verification token provided");
+      setMessage(t("noToken"));
       return;
     }
 
@@ -39,28 +42,38 @@ function VerifyEmailChangeContent() {
 
         if (response.ok) {
           setStatus("success");
-          setMessage(data.message || "Email changed successfully");
+          setMessage(tApi("success.emailChanged"));
         } else {
           setStatus("error");
-          setMessage(data.message || "Verification failed");
+          if (data.message?.includes("Invalid")) {
+            setMessage(tApi("errors.invalidVerificationToken"));
+          } else if (data.message?.includes("already been used")) {
+            setMessage(tApi("errors.tokenAlreadyUsed"));
+          } else if (data.message?.includes("expired")) {
+            setMessage(tApi("errors.tokenExpired"));
+          } else if (data.message?.includes("already in use")) {
+            setMessage(tApi("errors.emailAlreadyInUse"));
+          } else {
+            setMessage(tApi("errors.generic"));
+          }
         }
       } catch {
         setStatus("error");
-        setMessage("An error occurred during verification");
+        setMessage(tApi("errors.generic"));
       }
     }
 
     verifyEmailChange();
-  }, [token]);
+  }, [token, t, tApi]);
 
   return (
     <Card className="text-center">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Email Change</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         <CardDescription>
-          {status === "loading" && "Verifying your new email address..."}
-          {status === "success" && "Your email has been changed"}
-          {status === "error" && "Verification failed"}
+          {status === "loading" && t("verifying")}
+          {status === "success" && t("success")}
+          {status === "error" && t("error")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
@@ -76,12 +89,12 @@ function VerifyEmailChangeContent() {
       <CardFooter className="flex justify-center">
         {status === "success" && (
           <Button onClick={() => window.location.href = "/account/settings"}>
-            Back to Settings
+            {t("backToSettings")}
           </Button>
         )}
         {status === "error" && (
-          <Button variant="outline" asChild>
-            <Link href="/auth/change-email">Try Again</Link>
+          <Button asChild>
+            <Link href="/auth/change-email">{t("tryAgain")}</Link>
           </Button>
         )}
       </CardFooter>
@@ -89,23 +102,27 @@ function VerifyEmailChangeContent() {
   );
 }
 
+function VerifyEmailChangeFallback() {
+  const t = useTranslations("auth.verifyEmailChange");
+
+  return (
+    <Card className="text-center">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
+        <CardDescription>
+          {t("verifying")}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-4">
+        <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function VerifyEmailChangePage() {
   return (
-    <Suspense
-      fallback={
-        <Card className="text-center">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Email Change</CardTitle>
-            <CardDescription>
-              Verifying your new email address...
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
-          </CardContent>
-        </Card>
-      }
-    >
+    <Suspense fallback={<VerifyEmailChangeFallback />}>
       <VerifyEmailChangeContent />
     </Suspense>
   );

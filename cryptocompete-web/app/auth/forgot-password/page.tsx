@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,16 +27,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
-
-type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
-
 export default function ForgotPasswordPage() {
+  const t = useTranslations("auth.forgotPassword");
+  const tApi = useTranslations("api");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const forgotPasswordSchema = z.object({
+    email: z.string().email(t("emailInvalid")),
+  });
+
+  type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -46,7 +49,6 @@ export default function ForgotPasswordPage() {
 
   async function onSubmit(data: ForgotPasswordFormValues) {
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await fetch("/api/auth/forgot-password", {
@@ -59,12 +61,17 @@ export default function ForgotPasswordPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send reset email");
+        if (errorData.message?.includes("wait") && errorData.message?.includes("seconds")) {
+          const match = errorData.message.match(/(\d+)\s*seconds/);
+          const seconds = match ? match[1] : "60";
+          throw new Error(tApi("errors.pleaseWaitSeconds", { seconds }));
+        }
+        throw new Error(tApi("errors.generic"));
       }
 
       setIsSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : tApi("errors.generic"));
     } finally {
       setIsLoading(false);
     }
@@ -74,9 +81,9 @@ export default function ForgotPasswordPage() {
     return (
       <Card>
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("successTitle")}</CardTitle>
           <CardDescription>
-            If an account with this email exists, you will receive a password reset link.
+            {t("successDescription")}
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex justify-center">
@@ -84,7 +91,7 @@ export default function ForgotPasswordPage() {
             href="/auth/login"
             className="text-sm font-medium text-primary hover:underline"
           >
-            Back to Sign in
+            {t("backToSignIn")}
           </Link>
         </CardFooter>
       </Card>
@@ -94,9 +101,9 @@ export default function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Forgot password</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         <CardDescription>
-          Enter your email address and we'll send you a link to reset your password
+          {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -113,7 +120,7 @@ export default function ForgotPasswordPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -130,19 +137,19 @@ export default function ForgotPasswordPage() {
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send reset link
+              {t("submit")}
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          Remember your password?{" "}
+          {t("rememberPassword")}{" "}
           <Link
             href="/auth/login"
             className="font-medium text-primary hover:underline"
           >
-            Sign in
+            {t("signIn")}
           </Link>
         </p>
       </CardFooter>

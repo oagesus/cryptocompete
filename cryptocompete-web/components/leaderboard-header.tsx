@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,6 +28,8 @@ function roundToNearestHour(date: Date): Date {
 }
 
 export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
+  const t = useTranslations("leaderboard");
+  const locale = useLocale();
   const [minutesUntilUpdate, setMinutesUntilUpdate] = useState<number | null>(null);
 
   useEffect(() => {
@@ -56,7 +59,7 @@ export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
   }, []);
 
   const lastUpdated = calculatedAt
-    ? roundToNearestHour(new Date(calculatedAt)).toLocaleString("en-US", {
+    ? roundToNearestHour(new Date(calculatedAt)).toLocaleString(locale, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -66,18 +69,18 @@ export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
     : null;
 
   const isHydrated = minutesUntilUpdate !== null;
-  const minutesText = minutesUntilUpdate === 1 ? "minute" : "minutes";
+  const minutesUnit = minutesUntilUpdate === 1 ? t("minute") : t("minutes");
 
   return (
     <CardHeader className="pb-3">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-        <CardTitle className="text-2xl font-bold">Leaderboard</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         {lastUpdated && (
           <div className="flex flex-col text-sm text-muted-foreground md:text-right">
             {isHydrated ? (
               <>
-                <span>Updated: {lastUpdated}</span>
-                <span>Next update in {minutesUntilUpdate} {minutesText}</span>
+                <span>{t("updated", { date: lastUpdated })}</span>
+                <span>{t("nextUpdateIn", { minutes: minutesUntilUpdate, unit: minutesUnit })}</span>
               </>
             ) : (
               <>

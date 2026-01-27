@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
 
@@ -20,8 +21,11 @@ export function HoldingCard({
   profitLossPercent,
   currency,
 }: HoldingCardProps) {
+  const t = useTranslations("account");
+  const locale = useLocale();
+
   const formattedValue = currentValue
-    ? new Intl.NumberFormat("en-US", {
+    ? new Intl.NumberFormat(locale, {
         style: "currency",
         currency: currency,
       }).format(currentValue)
@@ -34,7 +38,7 @@ export function HoldingCard({
           <span className="font-medium">{name}</span>
           <span className="text-sm text-muted-foreground">
             {symbol}{" "}
-            {amount.toLocaleString("en-US", {
+            {amount.toLocaleString(locale, {
               maximumFractionDigits: 8,
             })}
           </span>
@@ -49,7 +53,7 @@ export function HoldingCard({
               <span className="font-semibold">{formattedValue}</span>
             </>
           ) : (
-            <span className="text-sm text-muted-foreground">Loading...</span>
+            <span className="text-sm text-muted-foreground">{t("loading")}</span>
           )}
         </div>
       </CardContent>

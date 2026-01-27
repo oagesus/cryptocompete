@@ -1,0 +1,52 @@
+{
+  "api": {
+    "errors": {
+      "generic": "An error occurred",
+      "invalidToken": "Invalid token",
+      "invalidCredentials": "Invalid credentials",
+      "userNotFound": "User not found",
+      "accountBlocked": "Your account has been blocked",
+      "emailAlreadyRegistered": "Email is already registered",
+      "usernameAlreadyTaken": "Username is already taken",
+      "usernameSameAsCurrent": "New username must be different from current username",
+      "emailNotVerified": "Please verify your email before logging in",
+      "emailAlreadyVerified": "Email is already verified",
+      "emailAlreadyInUse": "Email is already in use",
+      "newEmailMustBeDifferent": "New email must be different from current email",
+      "invalidVerificationToken": "Invalid verification token",
+      "invalidResetToken": "Invalid reset token",
+      "tokenAlreadyUsed": "Token has already been used",
+      "tokenExpired": "Token has expired",
+      "invalidGoogleToken": "Invalid Google token",
+      "googleEmailNotVerified": "Google email is not verified",
+      "googleAccountAlreadyLinked": "Google account is already linked",
+      "googleAccountLinkedToAnotherUser": "This Google account is already linked to another user",
+      "googleAccountAlreadyLinkedToYourAccount": "A Google account is already linked to your account",
+      "noGoogleAccountConnected": "No Google account connected",
+      "mustSetPasswordBeforeDisconnectingGoogle": "You must set a password before disconnecting your Google account",
+      "passwordAlreadySet": "Password is already set. Use change password instead.",
+      "noPasswordSet": "No password set. Use set password instead.",
+      "currentPasswordIncorrect": "Current password is incorrect",
+      "unsupportedCurrency": "Unsupported currency",
+      "refreshTokenRequired": "Refresh token is required",
+      "invalidRefreshToken": "Invalid refresh token",
+      "refreshTokenExpired": "Refresh token has expired",
+      "pleaseWaitSeconds": "Please wait {seconds} seconds before requesting another email",
+      "pleaseSignInWithProvider": "Please sign in with {provider}",
+      "accountHasDifferentGoogleLinked": "Your account already has a different Google account linked"
+    },
+    "success": {
+      "verificationEmailSent": "Verification email sent",
+      "emailVerified": "Email verified successfully",
+      "googleAccountConnected": "Google account connected successfully",
+      "googleAccountDisconnected": "Google account disconnected successfully",
+      "loggedOut": "Logged out successfully",
+      "passwordResetEmailSent": "If an account with this email exists, you will receive a password reset link.",
+      "passwordReset": "Password reset successfully",
+      "passwordSet": "Password set successfully",
+      "passwordChanged": "Password changed successfully",
+      "emailChangeVerificationSent": "Verification email sent to your new email address",
+      "emailChanged": "Email changed successfully"
+    }
+  }
+}

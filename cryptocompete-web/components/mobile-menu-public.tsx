@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { TrendingUp, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,9 +14,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
+import { LanguageToggleIcon } from "@/components/language-toggle-icon";
 
 export function MobileMenuPublic() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("nav");
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -48,14 +52,14 @@ export function MobileMenuPublic() {
           className="cursor-pointer"
         >
           <TrendingUp className="mr-2 h-4 w-4" />
-          Trade
+          {t("trade")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/leaderboard")}
           className="cursor-pointer"
         >
           <Trophy className="mr-2 h-4 w-4" />
-          Leaderboard
+          {t("leaderboard")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="flex items-center">
@@ -63,18 +67,20 @@ export function MobileMenuPublic() {
             onClick={() => router.push("/auth/login")}
             className="flex flex-1 items-center justify-center py-1.5 rounded-sm cursor-pointer hover:bg-accent active:bg-accent"
           >
-            <span className="text-sm">Sign In</span>
+            <span className="text-sm">{t("login")}</span>
           </div>
           <div
             onClick={() => router.push("/auth/register")}
             className="flex flex-1 items-center justify-center py-1.5 rounded-sm cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/90"
           >
-            <span className="text-sm">Sign Up</span>
+            <span className="text-sm">{t("register")}</span>
           </div>
         </div>
         <DropdownMenuSeparator />
         <div className="flex items-center justify-center">
           <ThemeToggleIcon />
+          <div className="w-px h-5 bg-border" />
+          <LanguageToggleIcon currentLocale={locale} />
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
 
@@ -25,6 +26,8 @@ export function PortfolioHero({
   exchangeRate,
 }: PortfolioHeroProps) {
   const { prices } = useCryptoPrices();
+  const t = useTranslations("account");
+  const locale = useLocale();
 
   const { holdingsValue, totalInvested } = useMemo(() => {
     let holdingsVal = 0;
@@ -45,12 +48,12 @@ export function PortfolioHero({
   const profitLoss = totalValue - (balance + totalInvested);
   const profitLossPercent = totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
 
-  const formattedTotal = new Intl.NumberFormat("en-US", {
+  const formattedTotal = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency,
   }).format(totalValue);
 
-  const formattedProfitLoss = new Intl.NumberFormat("en-US", {
+  const formattedProfitLoss = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency,
     signDisplay: "always",
@@ -58,7 +61,7 @@ export function PortfolioHero({
 
   return (
     <div className="flex flex-col items-center py-6 px-6">
-      <span className="text-sm text-muted-foreground mb-1">Portfolio Value</span>
+      <span className="text-sm text-muted-foreground mb-1">{t("portfolioValue")}</span>
       <span className="text-4xl font-bold tracking-tight">{formattedTotal}</span>
       {holdings.length > 0 && (
         <div className="flex items-center gap-2 mt-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { User, Settings, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
 import { CurrencyToggleIcon } from "@/components/currency-toggle-icon";
+import { LanguageToggleIcon } from "@/components/language-toggle-icon";
 import { User as UserType } from "@/lib/auth/get-user";
 
 interface UserMenuProps {
@@ -21,6 +23,9 @@ interface UserMenuProps {
 
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("nav");
+  const tAccount = useTranslations("account");
 
   const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
 
@@ -55,14 +60,14 @@ export function UserMenu({ user }: UserMenuProps) {
           className="cursor-pointer"
         >
           <User className="mr-2 h-4 w-4" />
-          Profile
+          {tAccount("profile")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/account/settings")}
           className="cursor-pointer"
         >
           <Settings className="mr-2 h-4 w-4" />
-          Account Settings
+          {tAccount("title")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -70,7 +75,7 @@ export function UserMenu({ user }: UserMenuProps) {
           className="cursor-pointer focus:bg-destructive/10 focus:text-destructive"
         >
           <LogOut className="mr-2 h-4 w-4 text-destructive" />
-          Sign Out
+          {t("logout")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="flex items-center">
@@ -80,6 +85,8 @@ export function UserMenu({ user }: UserMenuProps) {
             currentCurrency={user.displayCurrency}
             supportedCurrencies={user.supportedCurrencies}
           />
+          <div className="w-px h-5 bg-border" />
+          <LanguageToggleIcon currentLocale={locale} />
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

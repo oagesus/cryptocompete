@@ -1,0 +1,15 @@
+{
+  "leaderboard": {
+    "title": "Leaderboard",
+    "rank": "Rank",
+    "username": "Username",
+    "totalValue": "Total Value",
+    "empty": "No entries yet",
+    "updated": "Updated: {date}",
+    "nextUpdateIn": "Next update in {minutes} {unit}",
+    "minute": "minute",
+    "minutes": "minutes",
+    "rankedByPortfolioValue": "Ranked by portfolio value",
+    "noDataYet": "No leaderboard data available yet. Check back soon!"
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,6 +27,8 @@ interface CheckEmailFormProps {
 }
 
 export function CheckEmailForm({ email, initialCooldown }: CheckEmailFormProps) {
+  const t = useTranslations("auth.checkEmail");
+  const tApi = useTranslations("api");
   const [resendCooldown, setResendCooldown] = useState(initialCooldown);
   const [isResending, setIsResending] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
@@ -63,25 +66,28 @@ export function CheckEmailForm({ email, initialCooldown }: CheckEmailFormProps) 
           setCookie(COOKIE_NAME_LAST_SENT, correctedTimestamp.toString(), RESEND_COOLDOWN);
           setResendCooldown(data.secondsRemaining);
         }
-        throw new Error(data.message || "Failed to resend verification email");
+        if (data.message?.includes("wait") && data.message?.includes("seconds")) {
+          throw new Error(tApi("errors.pleaseWaitSeconds", { seconds: data.secondsRemaining || "60" }));
+        }
+        throw new Error(tApi("errors.generic"));
       }
 
       setCookie(COOKIE_NAME_LAST_SENT, Date.now().toString(), RESEND_COOLDOWN);
       setResendCooldown(RESEND_COOLDOWN);
-      toast.success("Verification email sent");
+      toast.success(t("resendSuccess"));
     } catch (err) {
-      setResendError(err instanceof Error ? err.message : "An error occurred");
+      setResendError(err instanceof Error ? err.message : tApi("errors.generic"));
     } finally {
       setIsResending(false);
     }
-  }, [email, resendCooldown, isResending]);
+  }, [email, resendCooldown, isResending, t, tApi]);
 
   return (
     <Card className="text-center">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         <CardDescription>
-          We&apos;ve sent a verification link to {email}
+          {t("description", { email })}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
@@ -94,7 +100,7 @@ export function CheckEmailForm({ email, initialCooldown }: CheckEmailFormProps) 
         )}
 
         <p className="text-sm text-muted-foreground">
-          Didn&apos;t receive an email?
+          {t("didntReceive")}
         </p>
 
         <Button
@@ -103,8 +109,8 @@ export function CheckEmailForm({ email, initialCooldown }: CheckEmailFormProps) 
         >
           {isResending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {resendCooldown > 0
-            ? `Resend in ${resendCooldown}s`
-            : "Resend verification email"}
+            ? t("resendIn", { seconds: resendCooldown })
+            : t("resend")}
         </Button>
       </CardContent>
     </Card>

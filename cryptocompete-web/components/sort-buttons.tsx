@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ArrowUpNarrowWide, ArrowDownNarrowWide } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function SortButtons({ sortMode, onSortChange }: Props) {
+  const t = useTranslations("trade");
+
   const handlePopularityClick = () => {
     onSortChange(sortMode === "mcap-high" ? "mcap-low" : "mcap-high");
   };
@@ -30,7 +33,7 @@ export function SortButtons({ sortMode, onSortChange }: Props) {
         className="text-xs"
         onClick={handlePopularityClick}
       >
-        Market Cap
+        {t("marketCap")}
         {isPopularityActive && (
           sortMode === "mcap-high" ? (
             <ArrowDownNarrowWide className="h-3 w-3 ml-1" />
@@ -45,7 +48,7 @@ export function SortButtons({ sortMode, onSortChange }: Props) {
         className="text-xs"
         onClick={handlePerformanceClick}
       >
-        Performance
+        {t("performance")}
         {isPerformanceActive && (
           sortMode === "perf-high" ? (
             <ArrowDownNarrowWide className="h-3 w-3 ml-1" />

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ export default function ProfilePage() {
   const params = useParams();
   const publicId = params.id as string;
   const { user, refetch } = useAccount();
+  const t = useTranslations("account");
   const [isLoading, setIsLoading] = useState(false);
 
   const profile = user.profiles.find((p) => p.publicId === publicId);
@@ -39,9 +41,9 @@ export default function ProfilePage() {
 
       await refetch();
       router.refresh();
-      toast.success("Profile switched successfully");
+      toast.success(t("profileSwitched"));
     } catch {
-      toast.error("Failed to switch profile");
+      toast.error(t("failedToSwitchProfile"));
     } finally {
       setIsLoading(false);
     }
@@ -51,11 +53,11 @@ export default function ProfilePage() {
     return (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-2xl font-bold">Profile</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("profile")}</CardTitle>
         </CardHeader>
         <Separator />
         <CardContent className="pt-6">
-          <p className="text-muted-foreground">Profile not found</p>
+          <p className="text-muted-foreground">{t("profileNotFound")}</p>
         </CardContent>
       </Card>
     );
@@ -65,20 +67,20 @@ export default function ProfilePage() {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold">Profile</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("profile")}</CardTitle>
           {isActive ? (
             <ActiveBadge />
           ) : (
             <Button onClick={handleSwitchProfile} disabled={isLoading} size="sm">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Switch to this profile
+              {t("switchToThisProfile")}
             </Button>
           )}
         </div>
       </CardHeader>
       <Separator />
       <CardContent className="pt-6 space-y-3">
-        <h3 className="text-lg font-semibold">Details</h3>
+        <h3 className="text-lg font-semibold">{t("details")}</h3>
         <UsernameCard username={profile.username} profileId={profile.publicId} />
       </CardContent>
     </Card>

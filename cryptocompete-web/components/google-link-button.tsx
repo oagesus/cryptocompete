@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import Script from "next/script";
 import { toast } from "sonner";
@@ -63,6 +64,8 @@ interface GoogleLinkButtonProps {
 
 export function GoogleLinkButton({ onSuccess, onError }: GoogleLinkButtonProps) {
   const router = useRouter();
+  const t = useTranslations("account");
+  const tApi = useTranslations("api");
   const [isLoading, setIsLoading] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
 
@@ -83,21 +86,29 @@ export function GoogleLinkButton({ onSuccess, onError }: GoogleLinkButtonProps) 
         });
 
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || "Failed to link Google account");
+          if (res.status === 400) {
+            const errorData = await res.json();
+            // Determine error type based on response or use generic
+            if (errorData.message?.includes("already linked to another")) {
+              throw new Error(tApi("errors.googleAccountLinkedToAnotherUser"));
+            } else if (errorData.message?.includes("already linked")) {
+              throw new Error(tApi("errors.googleAccountAlreadyLinked"));
+            }
+            throw new Error(tApi("errors.googleAccountAlreadyLinkedToYourAccount"));
+          }
+          throw new Error(tApi("errors.generic"));
         }
 
-        const data = await res.json();
-        toast.success(data.message);
+        toast.success(tApi("success.googleAccountConnected"));
         onSuccess?.();
         router.refresh();
       } catch (err) {
-        onError?.(err instanceof Error ? err.message : "An error occurred");
+        onError?.(err instanceof Error ? err.message : tApi("errors.generic"));
       } finally {
         setIsLoading(false);
       }
     },
-    [router, onSuccess, onError]
+    [router, onSuccess, onError, tApi]
   );
 
   useEffect(() => {
@@ -152,10 +163,10 @@ export function GoogleLinkButton({ onSuccess, onError }: GoogleLinkButtonProps) 
             ) : (
               <GoogleIcon className="h-4 w-4" />
             )}
-            <span className="text-sm font-medium">Google</span>
+            <span className="text-sm font-medium">{t("google")}</span>
           </div>
           <span className="text-sm font-medium text-muted-foreground">
-            Connect
+            {t("connect")}
           </span>
         </CardContent>
       </Card>

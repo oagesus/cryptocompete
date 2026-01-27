@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,8 @@ export function SellPanel({
   supportedCurrencies,
 }: Props) {
   const router = useRouter();
+  const t = useTranslations("trade");
+  const locale = useLocale();
   const [sellAmount, setSellAmount] = useState("");
   const [receiveAmount, setReceiveAmount] = useState("");
   const [activeField, setActiveField] = useState<"sell" | "receive">("sell");
@@ -141,7 +144,7 @@ export function SellPanel({
     setError(null);
 
     if (finalSellValue > holdingAmount) {
-      setError(`Insufficient ${symbol} balance`);
+      setError(t("insufficientBalance", { symbol }));
       return;
     }
 
@@ -162,16 +165,25 @@ export function SellPanel({
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Failed to sell");
+        setError(data.message || t("somethingWentWrong"));
         return;
       }
 
-      toast.success(`Successfully sold ${formatCrypto(data.cryptoAmount)} ${symbol} for ${new Intl.NumberFormat("en-US", { style: "currency", currency: data.currency }).format(data.value)}`);
+      const formattedValue = new Intl.NumberFormat(locale, { 
+        style: "currency", 
+        currency: data.currency 
+      }).format(data.value);
+
+      toast.success(t("successSold", { 
+        amount: formatCrypto(data.cryptoAmount), 
+        symbol, 
+        value: formattedValue 
+      }));
       setSellAmount("");
       setReceiveAmount("");
       router.refresh();
     } catch {
-      setError("Something went wrong");
+      setError(t("somethingWentWrong"));
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +193,7 @@ export function SellPanel({
     <Card>
       <CardHeader className="pb-2">
         <span className="text-lg font-semibold">
-          Holdings = {formatCrypto(holdingAmount)} {symbol}
+          {t("holdings")} = {formatCrypto(holdingAmount)} {symbol}
         </span>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -251,10 +263,10 @@ export function SellPanel({
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              {t("processing")}
             </>
           ) : (
-            `Sell ${symbol}`
+            `${t("sell")} ${symbol}`
           )}
         </Button>
       </CardContent>

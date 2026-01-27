@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,28 +28,29 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-const createProfileSchema = z.object({
-  username: z
-    .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be at most 20 characters")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers and underscores"
-    ),
-});
-
-type CreateProfileFormValues = z.infer<typeof createProfileSchema>;
-
 export default function CreateProfilePage() {
   const router = useRouter();
   const { user, refetch } = useAccount();
+  const t = useTranslations("account");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const justCreated = useRef(false);
 
   const userIsPremium = isPremium(user);
   const canAddProfile = user.profiles.length < user.maxProfiles;
+
+  const createProfileSchema = z.object({
+    username: z
+      .string()
+      .min(3, t("usernameMinLength"))
+      .max(20, t("usernameMaxLength"))
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        t("usernameInvalidChars")
+      ),
+  });
+
+  type CreateProfileFormValues = z.infer<typeof createProfileSchema>;
 
   useEffect(() => {
     if (justCreated.current) return;
@@ -89,22 +91,21 @@ export default function CreateProfilePage() {
       });
 
       if (response.status === 403) {
-        setError("Premium subscription required to create additional profiles");
+        setError(t("premiumRequiredForProfiles"));
         return;
       }
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create profile");
+        throw new Error(t("failedToCreateProfile"));
       }
 
       const profile = await response.json();
       justCreated.current = true;
       await refetch();
-      toast.success("Profile created successfully");
+      toast.success(t("profileCreated"));
       router.push(`/account/profiles/${profile.publicId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("failedToCreateProfile"));
     } finally {
       setIsLoading(false);
     }
@@ -117,14 +118,14 @@ export default function CreateProfilePage() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold">Create Profile</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("createProfile")}</CardTitle>
       </CardHeader>
       <Separator />
       <CardContent className="pt-6">
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Username</h3>
+          <h3 className="text-lg font-semibold">{t("username")}</h3>
           <p className="text-sm text-muted-foreground">
-            Enter a username to create your profile
+            {t("enterUsernameToCreate")}
           </p>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -150,7 +151,7 @@ export default function CreateProfilePage() {
                       </FormControl>
                       <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Create Profile
+                        {t("createProfile")}
                       </Button>
                     </div>
                     <FormMessage />

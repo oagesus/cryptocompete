@@ -53,6 +53,7 @@ export default async function SellDetailPage({ params }: Props) {
         initialKlines={klineData?.klines}
         initialTimeframe="1D"
         initialPriceUsd={crypto.priceUsd}
+        initialChangePercent24h={crypto.changePercent24h}
         displayCurrency={displayCurrency}
         exchangeRate={exchangeRate}
         percentChange7d={crypto.percentChange7d}

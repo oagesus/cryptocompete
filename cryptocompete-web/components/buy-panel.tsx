@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,8 @@ export function BuyPanel({
   initialPriceUsd,
 }: Props) {
   const router = useRouter();
+  const t = useTranslations("trade");
+  const locale = useLocale();
   const [spendAmount, setSpendAmount] = useState("");
   const [cryptoAmount, setCryptoAmount] = useState("");
   const [activeField, setActiveField] = useState<"spend" | "crypto">("spend");
@@ -155,16 +158,25 @@ export function BuyPanel({
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Failed to buy");
+        setError(data.message || t("somethingWentWrong"));
         return;
       }
 
-      toast.success(`Successfully bought ${formatCrypto(data.cryptoAmount)} ${symbol} for ${new Intl.NumberFormat("en-US", { style: "currency", currency: data.currency }).format(data.value)}`);
+      const formattedValue = new Intl.NumberFormat(locale, { 
+        style: "currency", 
+        currency: data.currency 
+      }).format(data.value);
+      
+      toast.success(t("successBought", { 
+        amount: formatCrypto(data.cryptoAmount), 
+        symbol, 
+        value: formattedValue 
+      }));
       setSpendAmount("");
       setCryptoAmount("");
       router.refresh();
     } catch {
-      setError("Something went wrong");
+      setError(t("somethingWentWrong"));
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +188,7 @@ export function BuyPanel({
         {isAuthenticated && balance !== null && (
           <CardHeader className="pb-2">
             <span className="text-lg font-semibold">
-              Balance = {new Intl.NumberFormat("en-US", {
+              {t("balance")} = {new Intl.NumberFormat(locale, {
                 style: "currency",
                 currency: displayCurrency,
               }).format(balance)}
@@ -216,10 +228,10 @@ export function BuyPanel({
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
+                {t("processing")}
               </>
             ) : (
-              `Buy ${symbol}`
+              `${t("buy")} ${symbol}`
             )}
           </Button>
         </CardContent>

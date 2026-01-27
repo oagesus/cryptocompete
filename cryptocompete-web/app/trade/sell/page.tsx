@@ -1,11 +1,14 @@
+import { getTranslations } from "next-intl/server";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function SellPage() {
+export default async function SellPage() {
+  const t = await getTranslations("trade");
+
   return (
     <Card>
       <CardContent>
         <p className="text-muted-foreground">
-          Select a cryptocurrency from your holdings to sell.
+          {t("selectHolding")}
         </p>
       </CardContent>
     </Card>

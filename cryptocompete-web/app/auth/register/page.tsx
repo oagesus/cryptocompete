@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,37 +29,39 @@ import {
 import { Input } from "@/components/ui/input";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
-const registerSchema = z
-  .object({
-    username: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .max(20, "Username must be at most 20 characters")
-      .regex(
-        /^[a-zA-Z0-9_]+$/,
-        "Username can only contain letters, numbers and underscores"
-      ),
-    email: z.string().email("Please enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
-
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations("auth.register");
+  const tApi = useTranslations("api");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const registerSchema = z
+    .object({
+      username: z
+        .string()
+        .min(3, t("usernameMinLength"))
+        .max(20, t("usernameMaxLength"))
+        .regex(
+          /^[a-zA-Z0-9_]+$/,
+          t("usernameInvalidChars")
+        ),
+      email: z.string().email(t("emailInvalid")),
+      password: z
+        .string()
+        .min(8, t("passwordMinLength"))
+        .regex(/[A-Z]/, t("passwordUppercase"))
+        .regex(/[a-z]/, t("passwordLowercase"))
+        .regex(/[0-9]/, t("passwordNumber")),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwordsDoNotMatch"),
+      path: ["confirmPassword"],
+    });
+
+  type RegisterFormValues = z.infer<typeof registerSchema>;
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -72,7 +75,6 @@ export default function RegisterPage() {
 
   async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await fetch(`/api/auth/register`, {
@@ -89,7 +91,18 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Registration failed");
+        if (errorData.message?.includes("already registered") || errorData.message?.includes("already exists")) {
+          throw new Error(tApi("errors.emailAlreadyRegistered"));
+        }
+        if (errorData.message?.includes("already taken")) {
+          throw new Error(tApi("errors.usernameAlreadyTaken"));
+        }
+        if (errorData.message?.includes("wait") && errorData.message?.includes("seconds")) {
+          const match = errorData.message.match(/(\d+)\s*seconds/);
+          const seconds = match ? match[1] : "60";
+          throw new Error(tApi("errors.pleaseWaitSeconds", { seconds }));
+        }
+        throw new Error(tApi("errors.generic"));
       }
 
       const maxAge = 60 * 60 * 24;
@@ -97,7 +110,7 @@ export default function RegisterPage() {
       document.cookie = `verificationLastSentAt=${Date.now()}; path=/; max-age=60; samesite=lax`;
       router.push("/auth/check-email");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : tApi("errors.generic"));
     } finally {
       setIsLoading(false);
     }
@@ -106,9 +119,9 @@ export default function RegisterPage() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         <CardDescription>
-          Enter your details below to create your account
+          {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -125,7 +138,7 @@ export default function RegisterPage() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>{t("username")}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="your_username"
@@ -144,7 +157,7 @@ export default function RegisterPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -164,7 +177,7 @@ export default function RegisterPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t("password")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -184,7 +197,7 @@ export default function RegisterPage() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel>{t("confirmPassword")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -205,7 +218,7 @@ export default function RegisterPage() {
               disabled={isLoading || isGoogleLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create account
+              {t("submit")}
             </Button>
           </form>
         </Form>
@@ -215,7 +228,7 @@ export default function RegisterPage() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-card px-2 text-muted-foreground">or</span>
+            <span className="bg-card px-2 text-muted-foreground">{t("or")}</span>
           </div>
         </div>
 
@@ -227,12 +240,12 @@ export default function RegisterPage() {
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
+          {t("hasAccount")}{" "}
           <Link
             href="/auth/login"
             className="font-medium text-primary hover:underline"
           >
-            Sign in
+            {t("login")}
           </Link>
         </p>
       </CardFooter>

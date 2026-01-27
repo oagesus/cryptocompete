@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Settings, User, Plus, Wallet } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ const MAX_PROFILES_PREMIUM = 5;
 export function AccountSidebar() {
   const pathname = usePathname();
   const { user } = useAccount();
+  const t = useTranslations("account");
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
 
   const profiles = user.profiles;
@@ -36,7 +38,7 @@ export function AccountSidebar() {
         <CardContent className="space-y-1">
           <div className="pb-2">
             <span className="px-3 text-xs font-semibold uppercase text-muted-foreground">
-              Account
+              {t("account")}
             </span>
           </div>
           <Link
@@ -47,11 +49,11 @@ export function AccountSidebar() {
             )}
           >
             <Settings className="h-4 w-4" />
-            Settings
+            {t("settings")}
           </Link>
           <div className="py-2">
             <span className="px-3 text-xs font-semibold uppercase text-muted-foreground">
-              Profiles ({profiles.length}/{maxProfiles})
+              {t("profiles")} ({profiles.length}/{maxProfiles})
             </span>
           </div>
           {profiles.map((profile) => {
@@ -87,7 +89,7 @@ export function AccountSidebar() {
                     )}
                   >
                     <Wallet className="h-4 w-4 shrink-0" />
-                    <span>Portfolio</span>
+                    <span>{t("portfolio")}</span>
                   </Link>
                 )}
               </div>
@@ -103,7 +105,7 @@ export function AccountSidebar() {
                 )}
               >
                 <Plus className="h-4 w-4" />
-                Add Profile
+                {t("addProfile")}
               </Button>
             </Link>
           )}
@@ -114,7 +116,7 @@ export function AccountSidebar() {
               onClick={() => setShowPremiumDialog(true)}
             >
               <Plus className="h-4 w-4" />
-              Add Profile
+              {t("addProfile")}
             </Button>
           )}
         </CardContent>

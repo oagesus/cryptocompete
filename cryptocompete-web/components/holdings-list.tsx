@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { HoldingCard } from "@/components/holding-card";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
@@ -20,13 +21,14 @@ interface HoldingsListProps {
 
 export function HoldingsList({ holdings, currency, exchangeRate }: HoldingsListProps) {
   const { prices } = useCryptoPrices();
+  const t = useTranslations("account");
 
   if (holdings.length === 0) {
     return (
       <Card>
         <CardContent className="px-4">
           <p className="text-sm text-muted-foreground">
-            No holdings yet. Start trading to build your portfolio!
+            {t("noHoldingsYet")}
           </p>
         </CardContent>
       </Card>
