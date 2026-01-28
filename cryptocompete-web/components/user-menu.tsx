@@ -16,12 +16,14 @@ import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
 import { CurrencyToggleIcon } from "@/components/currency-toggle-icon";
 import { LanguageToggleIcon } from "@/components/language-toggle-icon";
 import { User as UserType } from "@/lib/auth/get-user";
+import { CurrencyInfo } from "@/lib/currency/get-currency";
 
 interface UserMenuProps {
   user: UserType;
+  currencyInfo: CurrencyInfo;
 }
 
-export function UserMenu({ user }: UserMenuProps) {
+export function UserMenu({ user, currencyInfo }: UserMenuProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("nav");
@@ -43,7 +45,7 @@ export function UserMenu({ user }: UserMenuProps) {
       <DropdownMenuTrigger asChild>
         <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
           <Avatar className="h-9 w-9">
-            <AvatarFallback>
+            <AvatarFallback className="hover:bg-accent">
               <User className="h-5 w-5" />
             </AvatarFallback>
           </Avatar>
@@ -82,8 +84,8 @@ export function UserMenu({ user }: UserMenuProps) {
           <ThemeToggleIcon />
           <div className="w-px h-5 bg-border" />
           <CurrencyToggleIcon
-            currentCurrency={user.displayCurrency}
-            supportedCurrencies={user.supportedCurrencies}
+            currentCurrency={currencyInfo.currency}
+            supportedCurrencies={currencyInfo.supportedCurrencies}
           />
           <div className="w-px h-5 bg-border" />
           <LanguageToggleIcon currentLocale={locale} />

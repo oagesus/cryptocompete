@@ -58,7 +58,7 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
         return (
           <div
             key={entry.profilePublicId}
-            className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-3 rounded-xl hover:bg-muted transition-colors"
+            className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-3 rounded-xl hover:bg-muted"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div

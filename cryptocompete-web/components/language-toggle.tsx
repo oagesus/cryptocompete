@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Globe, Check } from "lucide-react";
+import { Globe, Check, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,7 @@ export function LanguageToggle() {
   const router = useRouter();
   const currentLocale = useLocale();
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   async function handleLocaleChange(newLocale: Locale) {
     if (newLocale === currentLocale) return;
@@ -40,11 +41,15 @@ export function LanguageToggle() {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" disabled={isLoading} className="cursor-pointer gap-1">
           <Globe className="h-[1.2rem] w-[1.2rem]" />
           <span>{getLocaleShort(currentLocale)}</span>
+          <ChevronDown className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            isOpen && "rotate-180"
+          )} />
           <span className="sr-only">Toggle language</span>
         </Button>
       </DropdownMenuTrigger>

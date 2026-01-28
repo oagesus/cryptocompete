@@ -14,9 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
+import { CurrencyToggleIcon } from "@/components/currency-toggle-icon";
 import { LanguageToggleIcon } from "@/components/language-toggle-icon";
+import { CurrencyInfo } from "@/lib/currency/get-currency";
 
-export function MobileMenuPublic() {
+interface MobileMenuPublicProps {
+  currencyInfo: CurrencyInfo;
+}
+
+export function MobileMenuPublic({ currencyInfo }: MobileMenuPublicProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("nav");
@@ -79,6 +85,11 @@ export function MobileMenuPublic() {
         <DropdownMenuSeparator />
         <div className="flex items-center justify-center">
           <ThemeToggleIcon />
+          <div className="w-px h-5 bg-border" />
+          <CurrencyToggleIcon
+            currentCurrency={currencyInfo.currency}
+            supportedCurrencies={currencyInfo.supportedCurrencies}
+          />
           <div className="w-px h-5 bg-border" />
           <LanguageToggleIcon currentLocale={locale} />
         </div>

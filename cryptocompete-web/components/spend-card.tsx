@@ -49,13 +49,13 @@ export function SpendCard({ value, currency, supportedCurrencies, onChange, disa
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/me", {
-        method: "PATCH",
+      const response = await fetch("/api/currency", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ displayCurrency: newCurrency }),
+        body: JSON.stringify({ currency: newCurrency }),
       });
 
       if (response.ok) {
@@ -80,7 +80,7 @@ export function SpendCard({ value, currency, supportedCurrencies, onChange, disa
           onChange={(e) => onChange(e.target.value)}
           className="pr-16"
         />
-        {disabled ? (
+        {disabled && supportedCurrencies.length === 0 ? (
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
             {currency}
           </span>

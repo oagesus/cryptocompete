@@ -34,11 +34,16 @@ export interface CryptocurrencyDetail {
 export async function getAllCryptocurrencies(): Promise<CryptocurrencyListResponse> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
+  const displayCurrency = cookieStore.get("display_currency")?.value;
+
+  const cookieHeader: string[] = [];
+  if (accessToken) cookieHeader.push(`access_token=${accessToken}`);
+  if (displayCurrency) cookieHeader.push(`display_currency=${displayCurrency}`);
 
   try {
     const response = await fetch(`${API_URL}/api/cryptocurrencies/all`, {
       cache: "no-store",
-      headers: accessToken ? { Cookie: `access_token=${accessToken}` } : {},
+      headers: cookieHeader.length > 0 ? { Cookie: cookieHeader.join("; ") } : {},
     });
 
     if (!response.ok) {
@@ -54,11 +59,16 @@ export async function getAllCryptocurrencies(): Promise<CryptocurrencyListRespon
 export async function getCryptocurrency(symbol: string): Promise<CryptocurrencyDetail | null> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
+  const displayCurrency = cookieStore.get("display_currency")?.value;
+
+  const cookieHeader: string[] = [];
+  if (accessToken) cookieHeader.push(`access_token=${accessToken}`);
+  if (displayCurrency) cookieHeader.push(`display_currency=${displayCurrency}`);
 
   try {
     const response = await fetch(`${API_URL}/api/cryptocurrencies/${symbol}`, {
       cache: "no-store",
-      headers: accessToken ? { Cookie: `access_token=${accessToken}` } : {},
+      headers: cookieHeader.length > 0 ? { Cookie: cookieHeader.join("; ") } : {},
     });
 
     if (!response.ok) {

@@ -168,7 +168,7 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
                 key={holding.symbol}
                 href={`/trade/sell/${holding.symbol.toLowerCase()}${buildQueryString()}`}
                 className={cn(
-                  "flex flex-col rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted min-h-[56px]",
+                  "flex flex-col rounded-md px-3 py-2 text-sm hover:bg-muted min-h-[56px]",
                   currentSymbol === holding.symbol && "bg-muted font-medium"
                 )}
               >

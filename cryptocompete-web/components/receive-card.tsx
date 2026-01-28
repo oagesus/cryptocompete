@@ -48,13 +48,13 @@ export function ReceiveCard({ value, currency, supportedCurrencies, onChange }: 
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/me", {
-        method: "PATCH",
+      const response = await fetch("/api/currency", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ displayCurrency: newCurrency }),
+        body: JSON.stringify({ currency: newCurrency }),
       });
 
       if (response.ok) {

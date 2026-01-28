@@ -1,9 +1,6 @@
-using System.Security.Claims;
-using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CryptoCompete.Api.Controllers;
 
@@ -12,16 +9,13 @@ namespace CryptoCompete.Api.Controllers;
 [AllowAnonymous]
 public class LeaderboardController : ControllerBase
 {
-    private readonly AppDbContext _db;
     private readonly ILeaderboardService _leaderboardService;
     private readonly ICurrencyService _currencyService;
 
     public LeaderboardController(
-        AppDbContext db,
         ILeaderboardService leaderboardService,
         ICurrencyService currencyService)
     {
-        _db = db;
         _leaderboardService = leaderboardService;
         _currencyService = currencyService;
     }
@@ -32,17 +26,7 @@ public class LeaderboardController : ControllerBase
         if (limit < 1) limit = 1;
         if (limit > 500) limit = 500;
 
-        var displayCurrency = "EUR";
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
-        {
-            var user = await _db.Users.FindAsync(userId);
-            if (user != null)
-            {
-                displayCurrency = user.DisplayCurrency;
-            }
-        }
-
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var exchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
         var entries = await _leaderboardService.GetLeaderboardAsync(limit, cancellationToken);
 

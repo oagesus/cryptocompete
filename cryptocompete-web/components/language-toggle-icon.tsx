@@ -52,9 +52,9 @@ export function LanguageToggleIcon({ currentLocale }: LanguageToggleIconProps) {
     <DropdownMenuSub open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuSubTrigger
         disabled={isLoading}
-        className="flex-1 justify-center cursor-pointer [&>svg.lucide-chevron-right]:hidden"
+        className="flex-1 justify-center cursor-pointer [&>svg.lucide-chevron-right]:hidden gap-1 text-foreground"
       >
-        <Globe className="h-4 w-4 mr-1" />
+        <Globe className="h-4 w-4 text-foreground" />
         <span>{getLocaleShort(locale as Locale)}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent>

@@ -3,16 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { CurrencyInfo } from "@/lib/currency/get-currency";
 
 function getCurrencySymbol(code: string, locale: string): string {
   return new Intl.NumberFormat(locale, { style: "currency", currency: code })
@@ -25,23 +27,18 @@ function getCurrencyName(code: string, locale: string): string {
   return new Intl.DisplayNames([locale], { type: "currency" }).of(code) ?? code;
 }
 
-interface CurrencyToggleIconProps {
-  currentCurrency: string;
-  supportedCurrencies: string[];
+interface CurrencyToggleProps {
+  currencyInfo: CurrencyInfo;
 }
 
-export function CurrencyToggleIcon({ currentCurrency, supportedCurrencies }: CurrencyToggleIconProps) {
+export function CurrencyToggle({ currencyInfo }: CurrencyToggleProps) {
   const router = useRouter();
   const locale = useLocale();
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  async function handleCurrencyChange(e: Event, newCurrency: string) {
-    e.preventDefault();
-    if (newCurrency === currentCurrency) {
-      setIsOpen(false);
-      return;
-    }
+  async function handleCurrencyChange(newCurrency: string) {
+    if (newCurrency === currencyInfo.currency) return;
 
     setIsLoading(true);
 
@@ -56,7 +53,6 @@ export function CurrencyToggleIcon({ currentCurrency, supportedCurrencies }: Cur
       });
 
       if (response.ok) {
-        setIsOpen(false);
         router.refresh();
       }
     } catch {
@@ -66,21 +62,25 @@ export function CurrencyToggleIcon({ currentCurrency, supportedCurrencies }: Cur
   }
 
   return (
-    <DropdownMenuSub open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuSubTrigger 
-        disabled={isLoading} 
-        className="flex-1 justify-center cursor-pointer [&>svg]:hidden"
-      >
-        <span>{currentCurrency}</span>
-      </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto">
-        {supportedCurrencies.map((code, index) => {
-          const isSelected = code === currentCurrency;
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" disabled={isLoading} className="cursor-pointer gap-1">
+          <span>{currencyInfo.currency}</span>
+          <ChevronDown className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            isOpen && "rotate-180"
+          )} />
+          <span className="sr-only">Toggle currency</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto">
+        {currencyInfo.supportedCurrencies.map((code, index) => {
+          const isSelected = code === currencyInfo.currency;
           return (
             <div key={code}>
               {index > 0 && <DropdownMenuSeparator />}
               <DropdownMenuItem
-                onSelect={(e) => handleCurrencyChange(e, code)}
+                onClick={() => handleCurrencyChange(code)}
                 className={cn(
                   "cursor-pointer group",
                   isSelected && "bg-muted font-medium"
@@ -105,7 +105,7 @@ export function CurrencyToggleIcon({ currentCurrency, supportedCurrencies }: Cur
             </div>
           );
         })}
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

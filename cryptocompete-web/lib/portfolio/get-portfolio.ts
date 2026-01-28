@@ -25,15 +25,19 @@ export interface Portfolio {
 export async function getPortfolio(publicId: string): Promise<Portfolio | null> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
+  const displayCurrency = cookieStore.get("display_currency")?.value;
 
   if (!accessToken) {
     return null;
   }
 
+  const cookieHeader: string[] = [`access_token=${accessToken}`];
+  if (displayCurrency) cookieHeader.push(`display_currency=${displayCurrency}`);
+
   try {
     const response = await fetch(`${API_URL}/api/portfolios/${publicId}`, {
       headers: {
-        Cookie: `access_token=${accessToken}`,
+        Cookie: cookieHeader.join("; "),
       },
       cache: "no-store",
     });

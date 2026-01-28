@@ -67,7 +67,8 @@ public class TradeController : ControllerBase
             return BadRequest(new { message = $"Price not available for {crypto.Symbol}" });
         }
 
-        var userCurrencyToEur = await _currencyService.GetExchangeRateAsync(user.DisplayCurrency, "EUR");
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
+        var userCurrencyToEur = await _currencyService.GetExchangeRateAsync(displayCurrency, "EUR");
         var eurToUsd = await _currencyService.GetExchangeRateAsync("EUR", "USD");
 
         decimal spendAmountEur;
@@ -141,7 +142,7 @@ public class TradeController : ControllerBase
 
         await _db.SaveChangesAsync();
 
-        var eurToUserCurrency = await _currencyService.GetExchangeRateAsync("EUR", user.DisplayCurrency);
+        var eurToUserCurrency = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
 
         return Ok(new TradeResponse(
             crypto.Symbol,
@@ -149,7 +150,7 @@ public class TradeController : ControllerBase
             TransactionType.Buy.ToString(),
             cryptoAmount,
             Math.Round(spendAmountEur * eurToUserCurrency, 2),
-            user.DisplayCurrency,
+            displayCurrency,
             Math.Round(profile.Balance * eurToUserCurrency, 2)
         ));
     }
@@ -198,8 +199,9 @@ public class TradeController : ControllerBase
             return BadRequest(new { message = $"Price not available for {crypto.Symbol}" });
         }
 
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var usdToEur = await _currencyService.GetExchangeRateAsync("USD", "EUR");
-        var userCurrencyToEur = await _currencyService.GetExchangeRateAsync(user.DisplayCurrency, "EUR");
+        var userCurrencyToEur = await _currencyService.GetExchangeRateAsync(displayCurrency, "EUR");
 
         decimal cryptoAmount;
         decimal valueEur;
@@ -265,7 +267,7 @@ public class TradeController : ControllerBase
 
         await _db.SaveChangesAsync();
 
-        var eurToUserCurrency = await _currencyService.GetExchangeRateAsync("EUR", user.DisplayCurrency);
+        var eurToUserCurrency = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
 
         return Ok(new TradeResponse(
             crypto.Symbol,
@@ -273,7 +275,7 @@ public class TradeController : ControllerBase
             TransactionType.Sell.ToString(),
             cryptoAmount,
             Math.Round(valueEur * eurToUserCurrency, 2),
-            user.DisplayCurrency,
+            displayCurrency,
             Math.Round(profile.Balance * eurToUserCurrency, 2)
         ));
     }

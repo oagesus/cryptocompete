@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getCryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
 import { getKlines } from "@/lib/crypto/get-klines";
 import { getUser } from "@/lib/auth/get-user";
+import { getCurrency } from "@/lib/currency/get-currency";
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
 import { BuyPanel } from "@/components/buy-panel";
 import { PriceChart } from "@/components/price-chart";
@@ -14,10 +15,11 @@ interface Props {
 
 export default async function BuyDetailPage({ params }: Props) {
   const { symbol } = await params;
-  const [crypto, klineData, user] = await Promise.all([
+  const [crypto, klineData, user, currencyInfo] = await Promise.all([
     getCryptocurrency(symbol),
     getKlines(symbol, "1D"),
     getUser(),
+    getCurrency(),
   ]);
 
   let balance: number | null = null;
@@ -62,7 +64,7 @@ export default async function BuyDetailPage({ params }: Props) {
         exchangeRate={exchangeRate}
         isAuthenticated={!!user}
         balance={balance}
-        supportedCurrencies={user?.supportedCurrencies ?? []}
+        supportedCurrencies={currencyInfo.supportedCurrencies}
         initialPriceUsd={crypto.priceUsd}
       />
     </div>

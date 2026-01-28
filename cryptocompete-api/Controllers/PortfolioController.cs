@@ -36,12 +36,6 @@ public class PortfolioController : ControllerBase
             return Unauthorized();
         }
 
-        var user = await _db.Users.FindAsync(userId);
-        if (user == null)
-        {
-            return Unauthorized();
-        }
-
         var profile = await _db.Profiles
             .Include(p => p.Holdings)
                 .ThenInclude(h => h.Cryptocurrency)
@@ -53,7 +47,7 @@ public class PortfolioController : ControllerBase
             return NotFound(new { message = "Profile not found" });
         }
 
-        var displayCurrency = user.DisplayCurrency;
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
         var balanceExchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
         var convertedBalance = profile.Balance * balanceExchangeRate;

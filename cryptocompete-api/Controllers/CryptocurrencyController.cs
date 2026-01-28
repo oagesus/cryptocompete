@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -32,17 +31,7 @@ public class CryptocurrencyController : ControllerBase
     [HttpGet("all")]
     public async Task<IActionResult> GetAllCryptocurrencies()
     {
-        var displayCurrency = "USD";
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
-        {
-            var user = await _db.Users.FindAsync(userId);
-            if (user != null)
-            {
-                displayCurrency = user.DisplayCurrency;
-            }
-        }
-
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
 
         var cryptocurrencies = await _db.Cryptocurrencies
@@ -99,17 +88,7 @@ public class CryptocurrencyController : ControllerBase
             return NotFound(new { message = $"Cryptocurrency {symbol} not found" });
         }
 
-        var displayCurrency = "USD";
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
-        {
-            var user = await _db.Users.FindAsync(userId);
-            if (user != null)
-            {
-                displayCurrency = user.DisplayCurrency;
-            }
-        }
-
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
         var priceUsd = _priceService.GetPrice(crypto.Symbol);
         var changePercent24h = _priceService.GetChangePercent24h(crypto.Symbol);

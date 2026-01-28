@@ -22,8 +22,6 @@ export interface User {
   activeProfileId: string | null;
   roles: string[];
   maxProfiles: number;
-  displayCurrency: string;
-  supportedCurrencies: string[];
 }
 
 export async function getUser(): Promise<User | null> {

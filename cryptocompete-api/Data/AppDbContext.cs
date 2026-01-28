@@ -29,7 +29,6 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.IsBlocked).HasDefaultValue(false);
             entity.Property(e => e.PasswordHash).IsRequired(false);
-            entity.Property(e => e.DisplayCurrency).HasMaxLength(10).HasDefaultValue("EUR");
 
             entity.HasOne(e => e.ActiveProfile)
                 .WithMany()

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { getUser } from "@/lib/auth/get-user";
+import { getCurrency } from "@/lib/currency/get-currency";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CurrencyToggle } from "@/components/currency-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
@@ -9,7 +11,10 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { MobileMenuPublic } from "@/components/mobile-menu-public";
 
 export async function Navbar() {
-  const user = await getUser();
+  const [user, currencyInfo] = await Promise.all([
+    getUser(),
+    getCurrency(),
+  ]);
   const t = await getTranslations("nav");
 
   const activeProfile = user?.profiles.find((p) => p.publicId === user.activeProfileId);
@@ -36,10 +41,10 @@ export async function Navbar() {
                 <Link href="/leaderboard">{t("leaderboard")}</Link>
               </Button>
               <div className="hidden md:block">
-                <UserMenu user={user} />
+                <UserMenu user={user} currencyInfo={currencyInfo} />
               </div>
               <div className="md:hidden">
-                <MobileMenu user={user} />
+                <MobileMenu user={user} currencyInfo={currencyInfo} />
               </div>
             </>
           ) : (
@@ -59,10 +64,11 @@ export async function Navbar() {
               </Button>
               <div className="hidden md:flex items-center gap-1">
                 <ThemeToggle />
+                <CurrencyToggle currencyInfo={currencyInfo} />
                 <LanguageToggle />
               </div>
               <div className="md:hidden">
-                <MobileMenuPublic />
+                <MobileMenuPublic currencyInfo={currencyInfo} />
               </div>
             </>
           )}

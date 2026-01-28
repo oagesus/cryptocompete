@@ -32,9 +32,9 @@ export function ThemeToggle() {
         }
       `}</style>
       <Button variant="ghost" size="icon" onClick={handleToggle}>
-        <div className="relative h-[1.2rem] w-[1.2rem]">
+        <div className="relative h-5 w-5">
           <Sun
-            className={`theme-toggle-icon absolute top-1/2 left-1/2 h-[1.2rem] w-[1.2rem] ${
+            className={`theme-toggle-icon absolute top-1/2 left-1/2 h-5 w-5 ${
               isDark === undefined ? "dark:opacity-0 dark:-rotate-90" : ""
             }`}
             style={isDark !== undefined ? {
@@ -47,7 +47,7 @@ export function ThemeToggle() {
             }}
           />
           <Moon
-            className={`theme-toggle-icon absolute top-1/2 left-1/2 h-[1.2rem] w-[1.2rem] ${
+            className={`theme-toggle-icon absolute top-1/2 left-1/2 h-5 w-5 ${
               isDark === undefined ? "opacity-0 rotate-90 dark:opacity-100 dark:rotate-0" : ""
             }`}
             style={isDark !== undefined ? {

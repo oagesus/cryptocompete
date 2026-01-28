@@ -332,7 +332,7 @@ export function PriceChart({
               <button
                 key={tf.value}
                 onClick={() => setTimeframe(tf.value)}
-                className={`text-xs px-2 py-1 cursor-pointer transition-colors ${
+                className={`text-xs px-2 py-1 cursor-pointer ${
                   timeframe === tf.value
                     ? "text-foreground font-medium"
                     : "text-muted-foreground hover:text-foreground"

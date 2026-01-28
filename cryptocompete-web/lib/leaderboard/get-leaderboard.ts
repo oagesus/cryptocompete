@@ -19,11 +19,16 @@ export interface LeaderboardResponse {
 export async function getLeaderboard(limit: number = 100): Promise<LeaderboardResponse> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
+  const displayCurrency = cookieStore.get("display_currency")?.value;
+
+  const cookieHeader: string[] = [];
+  if (accessToken) cookieHeader.push(`access_token=${accessToken}`);
+  if (displayCurrency) cookieHeader.push(`display_currency=${displayCurrency}`);
 
   try {
     const response = await fetch(`${API_URL}/api/leaderboard?limit=${limit}`, {
       cache: "no-store",
-      headers: accessToken ? { Cookie: `access_token=${accessToken}` } : {},
+      headers: cookieHeader.length > 0 ? { Cookie: cookieHeader.join("; ") } : {},
     });
 
     if (!response.ok) {

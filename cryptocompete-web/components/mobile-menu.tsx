@@ -17,12 +17,14 @@ import { ThemeToggleIcon } from "@/components/theme-toggle-icon";
 import { CurrencyToggleIcon } from "@/components/currency-toggle-icon";
 import { LanguageToggleIcon } from "@/components/language-toggle-icon";
 import { User as UserType } from "@/lib/auth/get-user";
+import { CurrencyInfo } from "@/lib/currency/get-currency";
 
 interface MobileMenuProps {
   user: UserType;
+  currencyInfo: CurrencyInfo;
 }
 
-export function MobileMenu({ user }: MobileMenuProps) {
+export function MobileMenu({ user, currencyInfo }: MobileMenuProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("nav");
@@ -126,8 +128,8 @@ export function MobileMenu({ user }: MobileMenuProps) {
           <ThemeToggleIcon />
           <div className="w-px h-5 bg-border" />
           <CurrencyToggleIcon
-            currentCurrency={user.displayCurrency}
-            supportedCurrencies={user.supportedCurrencies}
+            currentCurrency={currencyInfo.currency}
+            supportedCurrencies={currencyInfo.supportedCurrencies}
           />
           <div className="w-px h-5 bg-border" />
           <LanguageToggleIcon currentLocale={locale} />

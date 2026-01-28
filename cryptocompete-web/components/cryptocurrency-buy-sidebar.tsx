@@ -214,7 +214,7 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
                   key={crypto.symbol}
                   href={`/trade/buy/${crypto.symbol.toLowerCase()}${buildQueryString()}`}
                   className={cn(
-                    "flex flex-col rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted min-h-[56px]",
+                    "flex flex-col rounded-md px-3 py-2 text-sm hover:bg-muted min-h-[56px]",
                     currentSymbol === crypto.symbol && "bg-muted font-medium"
                   )}
                 >
