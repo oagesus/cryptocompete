@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ interface Props {
 
 export function TimeframeDropdown({ timeframe, onTimeframeChange }: Props) {
   const t = useTranslations("trade.timeframe");
+  const [isOpen, setIsOpen] = useState(false);
 
   const timeframeOptions: { value: Timeframe; shortLabel: string }[] = [
     { value: "1d", shortLabel: "1D" },
@@ -31,11 +33,14 @@ export function TimeframeDropdown({ timeframe, onTimeframeChange }: Props) {
   const currentOption = timeframeOptions.find((o) => o.value === timeframe);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="text-xs gap-1">
           {currentOption?.shortLabel ?? timeframe.toUpperCase()}
-          <ChevronDown className="h-3 w-3" />
+          <ChevronDown className={cn(
+            "h-3 w-3 transition-transform duration-200",
+            isOpen && "rotate-180"
+          )} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
