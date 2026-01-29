@@ -28,10 +28,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+const errorMap: Record<string, string> = {
+  "Username is already taken": "usernameAlreadyTaken",
+};
+
 export default function CreateProfilePage() {
   const router = useRouter();
   const { user, refetch } = useAccount();
   const t = useTranslations("account");
+  const tApi = useTranslations("api.errors");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const justCreated = useRef(false);
@@ -76,7 +81,6 @@ export default function CreateProfilePage() {
 
   async function onSubmit(data: CreateProfileFormValues) {
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await fetch("/api/profiles", {
@@ -96,16 +100,24 @@ export default function CreateProfilePage() {
       }
 
       if (!response.ok) {
-        throw new Error(t("failedToCreateProfile"));
+        const data = await response.json();
+        const errorKey = errorMap[data.message];
+        if (errorKey) {
+          setError(tApi(errorKey));
+        } else {
+          setError(t("failedToCreateProfile"));
+        }
+        return;
       }
 
       const profile = await response.json();
       justCreated.current = true;
+      setError(null);
       await refetch();
       toast.success(t("profileCreated"));
       router.push(`/account/profiles/${profile.publicId}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("failedToCreateProfile"));
+    } catch {
+      setError(t("failedToCreateProfile"));
     } finally {
       setIsLoading(false);
     }
