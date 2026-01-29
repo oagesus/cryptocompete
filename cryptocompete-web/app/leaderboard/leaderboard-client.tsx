@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { LeaderboardHeader } from "@/components/leaderboard-header";
 import { LeaderboardList } from "@/components/leaderboard-list";
 
 interface LeaderboardEntry {
@@ -18,12 +17,14 @@ interface LeaderboardClientProps {
   initialEntries: LeaderboardEntry[];
   initialCurrency: string;
   initialExchangeRate: number;
+  header: React.ReactNode;
 }
 
 export function LeaderboardClient({
   initialEntries,
   initialCurrency,
   initialExchangeRate,
+  header,
 }: LeaderboardClientProps) {
   const [entries, setEntries] = useState(initialEntries);
   const [currency, setCurrency] = useState(initialCurrency);
@@ -63,12 +64,10 @@ export function LeaderboardClient({
     return () => clearTimeout(timeout);
   }, [fetchLeaderboard]);
 
-  const calculatedAt = entries[0]?.calculatedAt ?? null;
-
   return (
     <div className="space-y-6">
       <Card>
-        <LeaderboardHeader calculatedAt={calculatedAt} />
+        {header}
         <Separator />
         <CardContent className="pt-6">
           <LeaderboardList

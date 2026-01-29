@@ -1,20 +1,11 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+import { getTimezone } from "@/lib/timezone/get-timezone";
 import { CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LeaderboardCountdown } from "./leaderboard-countdown";
 
 interface LeaderboardHeaderProps {
   calculatedAt: string | null;
-}
-
-function calculateMinutesUntilNextHour(): number {
-  const now = new Date();
-  const nextHour = new Date(now);
-  nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
-  const diff = nextHour.getTime() - now.getTime();
-  return Math.ceil(diff / 1000 / 60);
 }
 
 function roundToNearestHour(date: Date): Date {
@@ -27,39 +18,24 @@ function roundToNearestHour(date: Date): Date {
   return rounded;
 }
 
-export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
-  const t = useTranslations("leaderboard");
-  const locale = useLocale();
-  const [minutesUntilUpdate, setMinutesUntilUpdate] = useState<number | null>(null);
+function calculateMinutesUntilNextHour(timezone: string): number {
+  const now = new Date();
+  const nowInTz = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+  const nextHour = new Date(nowInTz);
+  nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+  const diff = nextHour.getTime() - nowInTz.getTime();
+  return Math.ceil(diff / 1000 / 60);
+}
 
-  useEffect(() => {
-    const update = () => setMinutesUntilUpdate(calculateMinutesUntilNextHour());
-
-    update();
-
-    const now = new Date();
-    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-
-    let interval: NodeJS.Timeout;
-    const timeout = setTimeout(() => {
-      update();
-      interval = setInterval(update, 60000);
-    }, msUntilNextMinute);
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") update();
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, []);
+export async function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
+  const t = await getTranslations("leaderboard");
+  const cookieStore = await cookies();
+  const timezone = await getTimezone();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "en-US";
 
   const lastUpdated = calculatedAt
     ? roundToNearestHour(new Date(calculatedAt)).toLocaleString(locale, {
+        timeZone: timezone,
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -68,8 +44,7 @@ export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
       })
     : null;
 
-  const isHydrated = minutesUntilUpdate !== null;
-  const minutesUnit = minutesUntilUpdate === 1 ? t("minute") : t("minutes");
+  const initialMinutes = calculateMinutesUntilNextHour(timezone);
 
   return (
     <CardHeader className="pb-3">
@@ -77,17 +52,8 @@ export function LeaderboardHeader({ calculatedAt }: LeaderboardHeaderProps) {
         <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
         {lastUpdated && (
           <div className="flex flex-col text-sm text-muted-foreground md:text-right">
-            {isHydrated ? (
-              <>
-                <span>{t("updated", { date: lastUpdated })}</span>
-                <span>{t("nextUpdateIn", { minutes: minutesUntilUpdate, unit: minutesUnit })}</span>
-              </>
-            ) : (
-              <>
-                <Skeleton className="h-4 w-40 md:ml-auto bg-muted" />
-                <Skeleton className="h-4 w-32 mt-1 md:ml-auto bg-muted" />
-              </>
-            )}
+            <span>{t("updated", { date: lastUpdated })}</span>
+            <LeaderboardCountdown initialMinutes={initialMinutes} />
           </div>
         )}
       </div>

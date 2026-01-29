@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { cookies } from "next/headers";
+import { getTimezone } from "@/lib/timezone/get-timezone";
 
 interface GreetingProps {
   username: string;
@@ -7,8 +7,7 @@ interface GreetingProps {
 
 export async function Greeting({ username }: GreetingProps) {
   const t = await getTranslations("dashboard");
-  const cookieStore = await cookies();
-  const timezone = cookieStore.get("timezone")?.value || "UTC";
+  const timezone = await getTimezone();
 
   const hour = new Date().toLocaleString("en-US", { 
     timeZone: timezone, 
