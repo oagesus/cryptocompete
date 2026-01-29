@@ -31,5 +31,9 @@ export function handleAuthRedirects(
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
+  if (pathname === "/" && isAuthenticated) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   return null;
 }

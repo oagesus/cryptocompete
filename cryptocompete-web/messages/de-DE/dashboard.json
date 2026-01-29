@@ -1,0 +1,29 @@
+{
+  "dashboard": {
+    "welcome": "Willkommen",
+    "portfolio": "Portfolio",
+    "profile": "Profil",
+    "leaderboard": "Rangliste",
+    "buy": "Kaufen",
+    "sell": "Verkaufen",
+    "greetings": {
+      "hey": { "text": "Hey,", "punctuation": "!" },
+      "welcomeBack": { "text": "Willkommen zurück,", "punctuation": "!" },
+      "niceToSeeYou": { "text": "Schön dich zu sehen,", "punctuation": "!" },
+      "readyToTrade": { "text": "Bereit zu handeln,", "punctuation": "?" },
+      "whatsUp": { "text": "Wie geht's,", "punctuation": "?" },
+      "goodMorning": { "text": "Guten Morgen,", "punctuation": "!" },
+      "morningCoffee": { "text": "Schon Kaffee gehabt,", "punctuation": "?" },
+      "earlyBird": { "text": "Der frühe Vogel,", "punctuation": "!" },
+      "freshStart": { "text": "Frischer Start heute,", "punctuation": "!" },
+      "goodAfternoon": { "text": "Guten Tag,", "punctuation": "!" },
+      "goodEvening": { "text": "Guten Abend,", "punctuation": "!" },
+      "eveningSession": { "text": "Abendsession,", "punctuation": "?" },
+      "stillAtIt": { "text": "Immer noch dabei,", "punctuation": "?" },
+      "lateNight": { "text": "Späte Nacht,", "punctuation": "!" },
+      "nightOwl": { "text": "Nachtaktiv,", "punctuation": "?" },
+      "cantSleep": { "text": "Auch nicht müde,", "punctuation": "?" },
+      "burningMidnightOil": { "text": "Nachtschicht,", "punctuation": "?" }
+    }
+  }
+}

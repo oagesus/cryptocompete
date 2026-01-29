@@ -6,6 +6,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { AuthGuardian } from "@/components/auth-guardian";
+import { TimezoneGuardian } from "@/components/timezone-guardian";
 import { ThemedToaster } from "@/components/themed-toaster";
 import { CryptoPriceProvider } from "@/providers/crypto-price-provider";
 import { CryptoPriceSubscriber } from "@/providers/crypto-price-subscriber";
@@ -48,6 +49,7 @@ export default async function RootLayout({
             <CryptoPriceProvider>
               <CryptoPriceSubscriber />
               <AuthGuardian />
+              <TimezoneGuardian />
               <Navbar />
               <div className="flex flex-1 flex-col px-6 py-12">
                 <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">

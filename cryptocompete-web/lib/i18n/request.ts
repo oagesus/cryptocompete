@@ -36,6 +36,7 @@ const messageImports = {
     ...(await import("@/messages/en-US/api.json")).default,
     ...(await import("@/messages/en-US/leaderboard.json")).default,
     ...(await import("@/messages/en-US/auth.json")).default,
+    ...(await import("@/messages/en-US/dashboard.json")).default,
   }),
   "de-DE": async () => ({
     ...(await import("@/messages/de-DE/nav.json")).default,
@@ -44,6 +45,7 @@ const messageImports = {
     ...(await import("@/messages/de-DE/api.json")).default,
     ...(await import("@/messages/de-DE/leaderboard.json")).default,
     ...(await import("@/messages/de-DE/auth.json")).default,
+    ...(await import("@/messages/de-DE/dashboard.json")).default,
   }),
 } as const;
 

@@ -1,0 +1,29 @@
+{
+  "dashboard": {
+    "welcome": "Welcome",
+    "portfolio": "Portfolio",
+    "profile": "Profile",
+    "leaderboard": "Leaderboard",
+    "buy": "Buy",
+    "sell": "Sell",
+    "greetings": {
+      "hey": { "text": "Hey,", "punctuation": "!" },
+      "welcomeBack": { "text": "Welcome back,", "punctuation": "!" },
+      "niceToSeeYou": { "text": "Nice to see you,", "punctuation": "!" },
+      "readyToTrade": { "text": "Ready to trade,", "punctuation": "?" },
+      "whatsUp": { "text": "What's up,", "punctuation": "?" },
+      "goodMorning": { "text": "Good morning,", "punctuation": "!" },
+      "morningCoffee": { "text": "Coffee ready,", "punctuation": "?" },
+      "earlyBird": { "text": "Early bird,", "punctuation": "!" },
+      "freshStart": { "text": "Fresh start today,", "punctuation": "!" },
+      "goodAfternoon": { "text": "Good afternoon,", "punctuation": "!" },
+      "goodEvening": { "text": "Good evening,", "punctuation": "!" },
+      "eveningSession": { "text": "Evening session,", "punctuation": "?" },
+      "stillAtIt": { "text": "Still at it,", "punctuation": "?" },
+      "lateNight": { "text": "Late night,", "punctuation": "!" },
+      "nightOwl": { "text": "Night owl,", "punctuation": "?" },
+      "cantSleep": { "text": "Can't sleep either,", "punctuation": "?" },
+      "burningMidnightOil": { "text": "Burning the midnight oil,", "punctuation": "?" }
+    }
+  }
+}
