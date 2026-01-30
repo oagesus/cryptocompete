@@ -1,0 +1,49 @@
+{
+  "home": {
+    "hero": {
+      "title": "Der ultimative",
+      "titleHighlight": "Krypto-Trading-Simulator",
+      "titleEnd": "für kompetitive Trader",
+      "description": "Starte mit virtuellen {startingCapital}, um dein Portfolio aufzubauen, handle Kryptowährungen mit Echtzeitpreisen und tritt gegen Trader weltweit an. Verfolge deine Performance, analysiere Preisverläufe und steige in der globalen Rangliste auf."
+    },
+    "buttons": {
+      "signUp": "Registrieren",
+      "startTrading": "Trading starten"
+    },
+    "features": {
+      "riskFree": {
+        "title": "Risikofreies Trading",
+        "description": "Starte mit virtuellen {startingCapital}, um Trading ohne finanzielles Risiko zu üben. Perfektioniere deine Strategien, bevor du in den echten Markt einsteigst."
+      },
+      "liveTracking": {
+        "title": "Live-Preisverfolgung",
+        "description": "Verfolge Kryptowährungspreise in Echtzeit. Beobachte den Markt und triff sofort fundierte Handelsentscheidungen."
+      },
+      "priceHistory": {
+        "title": "Preisverlauf",
+        "description": "Analysiere historische Preisdaten mit interaktiven Charts. Studiere Trends, erkenne Muster und entwickle Gewinnstrategien basierend auf vergangenen Daten."
+      },
+      "leaderboard": {
+        "title": "Globale Rangliste",
+        "description": "Tritt gegen Trader aus der ganzen Welt an. Erklimme die Rangliste, beweise deine Trading-Fähigkeiten und werde der ultimative Krypto-Trading-Champion."
+      },
+      "learnFromBest": {
+        "title": "Lerne von den Besten",
+        "description": "Erkunde die Portfolios der bestplatzierten Trader in der Rangliste. Lerne ihre Strategien und verbessere deine eigenen Trading-Fähigkeiten."
+      },
+      "portfolio": {
+        "title": "Portfolio-Analysen",
+        "description": "Sieh genau, wie sich deine Trades entwickeln. Verfolge deine Gewinne, überwache deine Verluste und beobachte dein Portfolio in Echtzeit."
+      }
+    },
+    "openSource": {
+      "title": "Open Source",
+      "description": "CryptoCompete ist 100% Open Source. Der gesamte Code ist verfügbar unter der",
+      "mitLicense": "MIT-Lizenz",
+      "on": "auf",
+      "github": "GitHub",
+      "starOnGithub": "Star on GitHub",
+      "checkOutSource": "Schau dir den Quellcode an"
+    }
+  }
+}

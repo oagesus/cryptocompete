@@ -20,7 +20,7 @@ export async function Navbar() {
   const activeProfile = user?.profiles.find((p) => p.publicId === user.activeProfileId);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm px-6">
+    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm px-6">
       <div className="mx-auto flex h-16 w-full max-w-screen-xl items-center justify-between">
         <Link href={user ? "/dashboard" : "/"} className="text-2xl font-thin">
           CryptoCompete
