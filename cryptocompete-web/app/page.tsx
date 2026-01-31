@@ -24,7 +24,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <section className="relative flex flex-col items-center py-16 text-center md:py-24">
+      <section className="relative flex flex-col items-start pb-6 text-left md:items-center md:text-center md:py-16">
         <div className="pointer-events-none absolute inset-0 hidden overflow-hidden md:block">
           <div className="absolute left-0 top-0 flex flex-col gap-4 opacity-20">
             {Array.from({ length: 10 }).map((_, row) => (
@@ -52,22 +52,22 @@ export default async function Home() {
             ))}
           </div>
         </div>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+        <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
           {t("hero.title")}{" "}
           <span className="text-primary">{t("hero.titleHighlight")}</span>
           <br />
           {t("hero.titleEnd")}
         </h1>
 
-        <p className="mt-10 max-w-2xl text-lg text-muted-foreground md:text-xl">
+        <p className="mt-6 md:mt-10 max-w-2xl text-lg text-muted-foreground md:text-xl">
           {t("hero.description", { startingCapital })}
         </p>
 
-        <div className="mt-10 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
-          <Button size="lg" className="h-15 w-full px-10 text-lg sm:w-48" asChild>
+        <div className="mt-6 md:mt-10 flex w-full flex-col items-center justify-center gap-4 md:w-auto md:flex-row">
+          <Button size="lg" className="h-15 w-full px-10 text-lg md:w-48" asChild>
             <Link href="/auth/register">{t("buttons.signUp")}</Link>
           </Button>
-          <Button size="lg" variant="outline" className="h-15 w-full px-10 text-lg sm:w-48" asChild>
+          <Button size="lg" variant="outline" className="h-15 w-full px-10 text-lg md:w-48" asChild>
             <Link href="/trade/buy">
               {t("buttons.startTrading")}
             </Link>
@@ -75,75 +75,81 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="py-16">
+      <section className="py-6 md:py-16">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <Zap className="h-10 w-10 text-primary" />
-            <h3 className="mt-4 text-lg font-semibold">
-              <span className="inline-block border-b-2 border-primary pb-2">
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">
                 {t("features.riskFree.title")}
-              </span>
-            </h3>
+              </h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("features.riskFree.description", { startingCapital })}
             </p>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <LineChart className="h-10 w-10 text-primary" />
-            <h3 className="mt-4 text-lg font-semibold">
-              <span className="inline-block border-b-2 border-primary pb-2">
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">
                 {t("features.liveTracking.title")}
-              </span>
-            </h3>
+              </h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("features.liveTracking.description")}
             </p>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <Clock className="h-10 w-10 text-primary" />
-            <h3 className="mt-4 text-lg font-semibold">
-              <span className="inline-block border-b-2 border-primary pb-2">
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">
                 {t("features.priceHistory.title")}
-              </span>
-            </h3>
+              </h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("features.priceHistory.description")}
             </p>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <Trophy className="h-10 w-10 text-primary" />
-            <h3 className="mt-4 text-lg font-semibold">
-              <span className="inline-block border-b-2 border-primary pb-2">
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">
                 {t("features.leaderboard.title")}
-              </span>
-            </h3>
+              </h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("features.leaderboard.description")}
             </p>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <Users className="h-10 w-10 text-primary" />
-            <h3 className="mt-4 text-lg font-semibold">
-              <span className="inline-block border-b-2 border-primary pb-2">
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">
                 {t("features.learnFromBest.title")}
-              </span>
-            </h3>
+              </h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("features.learnFromBest.description")}
             </p>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <TrendingUp className="h-10 w-10 text-primary" />
-            <h3 className="mt-4 text-lg font-semibold">
-              <span className="inline-block border-b-2 border-primary pb-2">
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">
                 {t("features.portfolio.title")}
-              </span>
-            </h3>
+              </h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("features.portfolio.description")}
             </p>
@@ -151,7 +157,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="flex flex-col items-center py-16 text-center">
+      <section className="flex flex-col items-center py-6 md:py-16 text-center">
         <div className="flex items-center gap-3">
           <Github className="h-10 w-10" />
           <h2 className="text-3xl font-bold">{t("openSource.title")}</h2>
@@ -191,9 +197,10 @@ export default async function Home() {
           href="https://github.com/oagesus/cryptocompete"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-block border-b-2 border-primary pb-4 text-sm text-muted-foreground hover:text-primary hover:underline"
+          className="group mt-6 inline-flex flex-col items-center text-sm text-muted-foreground hover:text-primary"
         >
           {t("openSource.checkOutSource")}
+          <div className="mt-4 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
         </a>
       </section>
     </div>
