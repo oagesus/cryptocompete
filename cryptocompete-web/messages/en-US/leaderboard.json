@@ -10,6 +10,10 @@
     "minute": "minute",
     "minutes": "minutes",
     "rankedByPortfolioValue": "Ranked by portfolio value",
-    "noDataYet": "No leaderboard data available yet. Check back soon!"
+    "noDataYet": "No leaderboard data available yet. Check back soon!",
+    "portfolioValue": "Portfolio Value",
+    "balance": "Balance",
+    "holdings": "Holdings",
+    "noHoldingsYet": "No holdings yet."
   }
 }

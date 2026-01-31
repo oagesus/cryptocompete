@@ -10,6 +10,10 @@
     "minute": "Minute",
     "minutes": "Minuten",
     "rankedByPortfolioValue": "Sortiert nach Portfolio-Wert",
-    "noDataYet": "Noch keine Ranglisten-Daten verfügbar. Schau bald wieder vorbei!"
+    "noDataYet": "Noch keine Ranglisten-Daten verfügbar. Schau bald wieder vorbei!",
+    "portfolioValue": "Portfolio-Wert",
+    "balance": "Guthaben",
+    "holdings": "Bestände",
+    "noHoldingsYet": "Noch keine Bestände."
   }
 }

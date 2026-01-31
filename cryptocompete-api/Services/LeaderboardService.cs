@@ -94,4 +94,30 @@ public class LeaderboardService : ILeaderboardService
             ))
             .ToList();
     }
+
+    public async Task<LeaderboardEntry?> GetEntryByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var rankedSnapshots = await db.LeaderboardSnapshots
+            .Include(s => s.Profile)
+            .OrderByDescending(s => s.TotalValue)
+            .ToListAsync(cancellationToken);
+
+        var entry = rankedSnapshots
+            .Select((s, index) => new { Snapshot = s, Rank = index + 1 })
+            .FirstOrDefault(x => x.Snapshot.ProfileId == profileId);
+
+        if (entry == null)
+            return null;
+
+        return new LeaderboardEntry(
+            entry.Rank,
+            entry.Snapshot.Profile.PublicId,
+            entry.Snapshot.Profile.Username,
+            entry.Snapshot.TotalValue,
+            entry.Snapshot.CalculatedAt
+        );
+    }
 }

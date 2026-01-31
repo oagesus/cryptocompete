@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,12 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
     3: "text-amber-600",
   };
 
+  const getRankSize = (rank: number) => {
+    if (rank < 100) return "w-6 text-sm";
+    if (rank < 1000) return "w-7 text-xs";
+    return "w-auto min-w-8 px-1.5 text-xs";
+  };
+
   return (
     <div className="space-y-1">
       <span className="text-sm text-muted-foreground block mb-3">{t("rankedByPortfolioValue")}</span>
@@ -56,25 +63,29 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
         }).format(entry.totalValue * exchangeRate);
 
         return (
-          <div
+          <Link
             key={entry.profilePublicId}
-            className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-3 rounded-xl hover:bg-muted"
+            href={`/leaderboard/${encodeURIComponent(entry.username)}`}
+            className="block"
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div
-                className={cn(
-                  "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0",
-                  isTopThree
-                    ? `${rankBgStyles[entry.rank]} ${rankTextStyles[entry.rank]}`
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                {entry.rank}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-3 rounded-md hover:bg-muted">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div
+                  className={cn(
+                    "flex h-6 items-center justify-center rounded-full font-bold shrink-0",
+                    getRankSize(entry.rank),
+                    isTopThree
+                      ? `${rankBgStyles[entry.rank]} ${rankTextStyles[entry.rank]}`
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {entry.rank}
+                </div>
+                <span className="text-sm font-medium truncate">{entry.username}</span>
               </div>
-              <span className="text-sm font-medium truncate">{entry.username}</span>
+              <span className="text-sm font-medium shrink-0 ml-9 md:ml-0">{formattedValue}</span>
             </div>
-            <span className="text-sm font-medium shrink-0 ml-9 md:ml-0">{formattedValue}</span>
-          </div>
+          </Link>
         );
       })}
     </div>
