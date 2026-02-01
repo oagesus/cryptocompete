@@ -54,14 +54,17 @@ export function LeaderboardClient({
     nextHour.setHours(nextHour.getHours() + 1, 0, 5, 0);
     const msUntilNextHour = nextHour.getTime() - now.getTime();
 
+    let interval: NodeJS.Timeout;
+
     const timeout = setTimeout(() => {
       fetchLeaderboard();
-
-      const interval = setInterval(fetchLeaderboard, 60 * 60 * 1000);
-      return () => clearInterval(interval);
+      interval = setInterval(fetchLeaderboard, 60 * 60 * 1000);
     }, msUntilNextHour);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [fetchLeaderboard]);
 
   return (

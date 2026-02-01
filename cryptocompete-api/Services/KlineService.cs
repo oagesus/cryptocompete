@@ -12,11 +12,11 @@ public class KlineService : IKlineService
 
     private static readonly Dictionary<KlineTimeframe, TimeframeConfig> TimeframeConfigs = new()
     {
-        { KlineTimeframe.Day1, new("5m", TimeSpan.FromDays(1), TimeSpan.FromMinutes(5)) },
-        { KlineTimeframe.Day7, new("15m", TimeSpan.FromDays(7), TimeSpan.FromMinutes(15)) },
-        { KlineTimeframe.Month1, new("1h", TimeSpan.FromDays(30), TimeSpan.FromHours(1)) },
-        { KlineTimeframe.Month3, new("4h", TimeSpan.FromDays(90), TimeSpan.FromHours(4)) },
-        { KlineTimeframe.Year1, new("1d", TimeSpan.FromDays(365), TimeSpan.FromHours(24)) }
+        { KlineTimeframe.Day1, new("5m", TimeSpan.FromDays(1)) },
+        { KlineTimeframe.Day7, new("15m", TimeSpan.FromDays(7)) },
+        { KlineTimeframe.Month1, new("1h", TimeSpan.FromDays(30)) },
+        { KlineTimeframe.Month3, new("4h", TimeSpan.FromDays(90)) },
+        { KlineTimeframe.Year1, new("1d", TimeSpan.FromDays(365)) }
     };
 
     private static TimeframeConfig GetYtdConfig()
@@ -27,10 +27,10 @@ public class KlineService : IKlineService
 
         return daysElapsed switch
         {
-            <= 7 => new("15m", TimeSpan.Zero, TimeSpan.FromMinutes(15)),
-            <= 30 => new("1h", TimeSpan.Zero, TimeSpan.FromHours(1)),
-            <= 90 => new("4h", TimeSpan.Zero, TimeSpan.FromHours(4)),
-            _ => new("1d", TimeSpan.Zero, TimeSpan.FromHours(24))
+            <= 7 => new("15m", TimeSpan.Zero),
+            <= 30 => new("1h", TimeSpan.Zero),
+            <= 90 => new("4h", TimeSpan.Zero),
+            _ => new("1d", TimeSpan.Zero)
         };
     }
 
@@ -43,7 +43,8 @@ public class KlineService : IKlineService
 
     public async Task<KlineData> GetKlinesAsync(string symbol, KlineTimeframe timeframe, CancellationToken cancellationToken = default)
     {
-        var cacheKey = $"klines_{symbol.ToUpperInvariant()}_{timeframe}";
+        var cacheKey = GetCacheKey(symbol, timeframe);
+        var cacheExpiration = GetCacheExpiration(timeframe);
 
         if (_cache.TryGetValue<KlineData>(cacheKey, out var cachedData) && cachedData != null)
         {
@@ -66,9 +67,66 @@ public class KlineService : IKlineService
             DateTimeOffset.UtcNow
         );
 
-        _cache.Set(cacheKey, result, config.CacheDuration);
+        _cache.Set(cacheKey, result, cacheExpiration);
 
         return result;
+    }
+
+    private static string GetCacheKey(string symbol, KlineTimeframe timeframe)
+    {
+        return $"klines_{symbol.ToUpperInvariant()}_{timeframe}";
+    }
+
+    private static DateTimeOffset GetCacheExpiration(KlineTimeframe timeframe)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        if (timeframe == KlineTimeframe.YearToDate)
+        {
+            var startOfYear = new DateTimeOffset(now.Year, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            var daysElapsed = (int)(now - startOfYear).TotalDays;
+
+            return daysElapsed switch
+            {
+                <= 1 => GetNextInterval(now, 5),
+                <= 7 => GetNextInterval(now, 15),
+                <= 30 => new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, 0, 0, TimeSpan.Zero).AddHours(1),
+                <= 90 => new DateTimeOffset(now.Year, now.Month, now.Day, (now.Hour / 4) * 4, 0, 0, TimeSpan.Zero).AddHours(4),
+                _ => GetNextDailyReset(now)
+            };
+        }
+
+        return timeframe switch
+        {
+            KlineTimeframe.Day1 => GetNextInterval(now, 5),
+            KlineTimeframe.Day7 => GetNextInterval(now, 15),
+            KlineTimeframe.Month1 => new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, 0, 0, TimeSpan.Zero).AddHours(1),
+            KlineTimeframe.Month3 => new DateTimeOffset(now.Year, now.Month, now.Day, (now.Hour / 4) * 4, 0, 0, TimeSpan.Zero).AddHours(4),
+            KlineTimeframe.Year1 => GetNextDailyReset(now),
+            _ => now.AddMinutes(5)
+        };
+    }
+
+    private static DateTimeOffset GetNextInterval(DateTimeOffset now, int intervalMinutes)
+    {
+        var currentIntervalStart = (now.Minute / intervalMinutes) * intervalMinutes;
+        return new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, currentIntervalStart, 0, TimeSpan.Zero)
+            .AddMinutes(intervalMinutes);
+    }
+
+    private static DateTimeOffset GetNextDailyReset(DateTimeOffset now)
+    {
+        var isSummer = now.Month >= 4 && now.Month <= 10;
+        var resetHour = isSummer ? 2 : 1;
+
+        var todayReset = new DateTimeOffset(now.Year, now.Month, now.Day, resetHour, 0, 0, TimeSpan.Zero);
+
+        if (now < todayReset)
+        {
+            return todayReset;
+        }
+
+        return todayReset.AddDays(1);
     }
 
     private static (long startTime, long endTime) GetTimeRange(KlineTimeframe timeframe, TimeframeConfig config)
@@ -155,5 +213,5 @@ public class KlineService : IKlineService
         }
     }
 
-    private record TimeframeConfig(string Interval, TimeSpan Lookback, TimeSpan CacheDuration);
+    private record TimeframeConfig(string Interval, TimeSpan Lookback);
 }

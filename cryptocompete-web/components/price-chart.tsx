@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -39,6 +39,96 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+function getNextRefreshTime(timeframe: KlineTimeframe): number {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const day = now.getUTCDate();
+  const hours = now.getUTCHours();
+  const minutes = now.getUTCMinutes();
+
+  const bufferSeconds = 5;
+
+  let nextRefresh: Date;
+
+  const getYtdIntervalMinutes = (): number => {
+    const startOfYear = new Date(Date.UTC(year, 0, 1));
+    const daysElapsed = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysElapsed <= 1) return 5;
+    if (daysElapsed <= 7) return 15;
+    if (daysElapsed <= 30) return 60;
+    if (daysElapsed <= 90) return 240;
+    return -1;
+  };
+
+  switch (timeframe) {
+    case "1D": {
+      const nextInterval = Math.ceil((minutes + 1) / 5) * 5;
+      nextRefresh = new Date(Date.UTC(year, month, day, hours, nextInterval, bufferSeconds));
+      if (nextInterval >= 60) {
+        nextRefresh = new Date(Date.UTC(year, month, day, hours + 1, 0, bufferSeconds));
+      }
+      break;
+    }
+    case "7D": {
+      const nextInterval = Math.ceil((minutes + 1) / 15) * 15;
+      nextRefresh = new Date(Date.UTC(year, month, day, hours, nextInterval, bufferSeconds));
+      if (nextInterval >= 60) {
+        nextRefresh = new Date(Date.UTC(year, month, day, hours + 1, 0, bufferSeconds));
+      }
+      break;
+    }
+    case "1M": {
+      nextRefresh = new Date(Date.UTC(year, month, day, hours + 1, 0, bufferSeconds));
+      break;
+    }
+    case "3M": {
+      const nextHourBlock = Math.ceil((hours + 1) / 4) * 4;
+      nextRefresh = new Date(Date.UTC(year, month, day, nextHourBlock, 0, bufferSeconds));
+      break;
+    }
+    case "1Y": {
+      const isSummer = month >= 3 && month <= 9;
+      const resetHour = isSummer ? 2 : 1;
+      if (hours >= resetHour) {
+        nextRefresh = new Date(Date.UTC(year, month, day + 1, resetHour, 0, bufferSeconds));
+      } else {
+        nextRefresh = new Date(Date.UTC(year, month, day, resetHour, 0, bufferSeconds));
+      }
+      break;
+    }
+    case "YTD": {
+      const intervalMinutes = getYtdIntervalMinutes();
+      if (intervalMinutes === -1) {
+        const isSummer = month >= 3 && month <= 9;
+        const resetHour = isSummer ? 2 : 1;
+        if (hours >= resetHour) {
+          nextRefresh = new Date(Date.UTC(year, month, day + 1, resetHour, 0, bufferSeconds));
+        } else {
+          nextRefresh = new Date(Date.UTC(year, month, day, resetHour, 0, bufferSeconds));
+        }
+      } else if (intervalMinutes === 60) {
+        nextRefresh = new Date(Date.UTC(year, month, day, hours + 1, 0, bufferSeconds));
+      } else if (intervalMinutes === 240) {
+        const nextHourBlock = Math.ceil((hours + 1) / 4) * 4;
+        nextRefresh = new Date(Date.UTC(year, month, day, nextHourBlock, 0, bufferSeconds));
+      } else {
+        const nextInterval = Math.ceil((minutes + 1) / intervalMinutes) * intervalMinutes;
+        nextRefresh = new Date(Date.UTC(year, month, day, hours, nextInterval, bufferSeconds));
+        if (nextInterval >= 60) {
+          nextRefresh = new Date(Date.UTC(year, month, day, hours + 1, 0, bufferSeconds));
+        }
+      }
+      break;
+    }
+    default:
+      nextRefresh = new Date(now.getTime() + 5 * 60 * 1000);
+  }
+
+  return nextRefresh.getTime() - now.getTime();
+}
+
 export function PriceChart({
   symbol,
   name,
@@ -73,6 +163,7 @@ export function PriceChart({
   const [error, setError] = useState<string | null>(null);
   
   const prefetchStarted = useRef(false);
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const { prices } = useCryptoPrices();
 
@@ -82,6 +173,45 @@ export function PriceChart({
   const liveChangePercent24h = liveData?.changePercent24h;
 
   const klines = klinesCache[timeframe];
+
+  const refreshKlines = useCallback(async (tf: KlineTimeframe) => {
+    try {
+      const response = await fetch(
+        `/api/cryptocurrencies/${symbol}/klines?timeframe=${tf}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setKlinesCache(prev => ({
+          ...prev,
+          [tf]: data.klines,
+        }));
+      }
+    } catch {
+    }
+  }, [symbol]);
+
+  useEffect(() => {
+    const scheduleNextRefresh = () => {
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
+      const msUntilRefresh = getNextRefreshTime(timeframe);
+
+      refreshTimerRef.current = setTimeout(() => {
+        refreshKlines(timeframe);
+        scheduleNextRefresh();
+      }, msUntilRefresh);
+    };
+
+    scheduleNextRefresh();
+
+    return () => {
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+    };
+  }, [timeframe, refreshKlines]);
 
   useEffect(() => {
     if (prefetchStarted.current) return;
@@ -103,7 +233,6 @@ export function PriceChart({
               return { tf, klines: data.klines as Kline[] };
             }
           } catch {
-            // Silently fail
           }
           return { tf, klines: null };
         })
