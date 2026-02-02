@@ -9,7 +9,7 @@
     "changeEmail": "Change Email",
     "deleteAccount": "Delete Account",
     "language": "Language",
-    "currency": "Display Currency",
+    "currency": "Currency",
     "details": "Details",
     "connections": "Connections",
     "email": "Email",
@@ -54,6 +54,17 @@
     "ok": "OK",
     "portfolioValue": "Portfolio Value",
     "noHoldingsYet": "No holdings yet. Start trading to build your portfolio!",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "accountId": "Account ID",
+    "profileId": "Profile ID",
+    "copy": "Copy",
+    "accountIdCopied": "Account ID copied",
+    "failedToCopyAccountId": "Failed to copy Account ID",
+    "profileIdCopied": "Profile ID copied",
+    "failedToCopyProfileId": "Failed to copy Profile ID",
+    "display": "Display",
+    "theme": "Theme",
+    "darkMode": "Dark",
+    "lightMode": "Light"
   }
 }

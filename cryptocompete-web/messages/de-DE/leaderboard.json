@@ -6,6 +6,7 @@
     "totalValue": "Gesamtwert",
     "empty": "Noch keine Einträge",
     "updated": "Aktualisiert: {date}",
+    "notYetUpdated": "Aktualisiert: Noch nicht aktualisiert",
     "nextUpdateIn": "Nächste Aktualisierung in {minutes} {unit}",
     "minute": "Minute",
     "minutes": "Minuten",

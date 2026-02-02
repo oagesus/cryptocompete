@@ -152,7 +152,7 @@ export function GoogleLinkButton({ onSuccess, onError }: GoogleLinkButtonProps) 
       <div id="google-link-hidden-button" className="hidden" />
       <Card
         onClick={handleGoogleClick}
-        className={`cursor-pointer transition-colors hover:bg-muted ${
+        className={`cursor-pointer hover:bg-muted ${
           isLoading || !googleReady ? "pointer-events-none opacity-50" : ""
         }`}
       >

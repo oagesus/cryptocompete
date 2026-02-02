@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { useAccount } from "@/components/account-provider";
 import { UsernameCard } from "@/components/username-card";
+import { ProfileIdCard } from "@/components/profile-id-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ActiveBadge } from "@/components/active-badge";
@@ -82,6 +83,7 @@ export default function ProfilePage() {
       <CardContent className="pt-6 space-y-3">
         <h3 className="text-lg font-semibold">{t("details")}</h3>
         <UsernameCard username={profile.username} profileId={profile.publicId} />
+        <ProfileIdCard publicId={profile.publicId} />
       </CardContent>
     </Card>
   );

@@ -553,7 +553,7 @@ public class AuthController : ControllerBase
         var maxProfiles = isPremium ? ProfileLimits.Premium : ProfileLimits.Free;
 
         return Ok(new MeResponse(
-            user.Id,
+            user.PublicId,
             user.Email,
             user.PasswordHash != null,
             user.ExternalLogins.Select(e => new ExternalLoginDto(e.Provider, e.ProviderEmail ?? "")).ToList(),
@@ -1140,7 +1140,7 @@ public record LoginResponse(string AccessToken, string RefreshToken, int UserId,
 public record RefreshResponse(string AccessToken, string RefreshToken);
 public record ProfileDto(Guid PublicId, string Username, bool IsMain);
 public record ExternalLoginDto(string Provider, string Email);
-public record MeResponse(int Id, string Email, bool HasPassword, List<ExternalLoginDto> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId, List<string> Roles, int MaxProfiles);
+public record MeResponse(Guid PublicId, string Email, bool HasPassword, List<ExternalLoginDto> ConnectedProviders, List<ProfileDto> Profiles, Guid? ActiveProfileId, List<string> Roles, int MaxProfiles);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string Password);
 public record SetPasswordRequest(string Password);

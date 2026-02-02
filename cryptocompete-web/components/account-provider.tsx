@@ -9,9 +9,11 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@/lib/auth/get-user";
+import { CurrencyInfo } from "@/lib/currency/get-currency";
 
 interface AccountContextType {
   user: User;
+  currencyInfo: CurrencyInfo;
   refetch: () => Promise<void>;
 }
 
@@ -28,9 +30,10 @@ export function useAccount() {
 interface AccountProviderProps {
   children: ReactNode;
   initialData: User;
+  initialCurrencyInfo: CurrencyInfo;
 }
 
-export function AccountProvider({ children, initialData }: AccountProviderProps) {
+export function AccountProvider({ children, initialData, initialCurrencyInfo }: AccountProviderProps) {
   const router = useRouter();
   const [user, setUser] = useState<User>(initialData);
 
@@ -55,7 +58,7 @@ export function AccountProvider({ children, initialData }: AccountProviderProps)
   }, [router]);
 
   return (
-    <AccountContext.Provider value={{ user, refetch }}>
+    <AccountContext.Provider value={{ user, currencyInfo: initialCurrencyInfo, refetch }}>
       {children}
     </AccountContext.Provider>
   );

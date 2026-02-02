@@ -14,7 +14,7 @@ export interface ExternalLogin {
 }
 
 export interface User {
-  id: number;
+  publicId: string;
   email: string;
   hasPassword: boolean;
   connectedProviders: ExternalLogin[];

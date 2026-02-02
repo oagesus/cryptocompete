@@ -89,7 +89,7 @@ export function GoogleConnectionCard({
         )}
         <Card
           onClick={handleDisconnect}
-          className="group cursor-pointer transition-colors border-green-500/50 bg-green-50/50 dark:bg-green-950/20 hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-950/20"
+          className="group cursor-pointer border-green-500/50 bg-green-50/50 dark:bg-green-950/20 hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-950/20"
         >
           <CardContent className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">

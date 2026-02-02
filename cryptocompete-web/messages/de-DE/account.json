@@ -9,7 +9,7 @@
     "changeEmail": "E-Mail ändern",
     "deleteAccount": "Konto löschen",
     "language": "Sprache",
-    "currency": "Anzeigewährung",
+    "currency": "Währung",
     "details": "Details",
     "connections": "Verknüpfungen",
     "email": "E-Mail",
@@ -54,6 +54,17 @@
     "ok": "OK",
     "portfolioValue": "Portfolio-Wert",
     "noHoldingsYet": "Noch keine Bestände. Beginne mit dem Handeln, um dein Portfolio aufzubauen!",
-    "loading": "Laden..."
+    "loading": "Laden...",
+    "accountId": "Konto-ID",
+    "profileId": "Profil-ID",
+    "copy": "Kopieren",
+    "accountIdCopied": "Konto-ID kopiert",
+    "failedToCopyAccountId": "Konto-ID konnte nicht kopiert werden",
+    "profileIdCopied": "Profil-ID kopiert",
+    "failedToCopyProfileId": "Profil-ID konnte nicht kopiert werden",
+    "display": "Anzeige",
+    "theme": "Design",
+    "darkMode": "Dunkel",
+    "lightMode": "Hell"
   }
 }

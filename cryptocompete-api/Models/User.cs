@@ -3,6 +3,7 @@ namespace CryptoCompete.Api.Models;
 public class User
 {
     public int Id { get; set; }
+    public Guid PublicId { get; set; } = Guid.NewGuid();
     public string Email { get; set; } = string.Empty;
     public string? PasswordHash { get; set; }
     public bool IsBlocked { get; set; }
