@@ -13,7 +13,7 @@ export default async function SellLayout({
   const user = await getUser();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect("/auth/clear");
   }
 
   if (!user.activeProfileId) {

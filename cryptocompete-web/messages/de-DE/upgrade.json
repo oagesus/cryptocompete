@@ -1,0 +1,25 @@
+{
+  "upgrade": {
+    "title": "Wähle deinen Plan",
+    "current": "Aktuell",
+    "freePlan": "Free",
+    "freeSubtitle": "Starte mit dem Trading",
+    "proPlan": "Pro",
+    "proSubtitle": "Für ambitionierte Trader",
+    "month": "Monat",
+    "billedMonthly": "monatliche Abrechnung",
+    "currentPlan": "Aktueller Plan",
+    "upgrade": "Auf Pro upgraden",
+    "downgrade": "Auf Free downgraden",
+    "freeIncludes": "Beinhaltet:",
+    "freeFeature1": "10.000 € virtuelles Startkapital",
+    "freeFeature2": "Live-Preisaktualisierungen",
+    "freeFeature3": "Preisverlauf anzeigen",
+    "freeFeature4": "Portfolio-Performance verfolgen",
+    "freeFeature5": "Auf 1 Profil beschränkt",
+    "proIncludes": "Alles aus Free und:",
+    "proFeature1": "Erstelle bis zu 5 Profile",
+    "proFeature2": "Priorisierter Support",
+    "disclaimer": "*Abonnements werden mit echtem Geld abgerechnet. Der Handel innerhalb der App erfolgt ausschließlich mit virtuellem Guthaben."
+  }
+}

@@ -552,6 +552,17 @@ public class AuthController : ControllerBase
         var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
         var maxProfiles = isPremium ? ProfileLimits.Premium : ProfileLimits.Free;
 
+        if (!isPremium && activeProfile != null && !activeProfile.IsMain)
+        {
+            var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
+            if (mainProfile != null)
+            {
+                activeProfile = mainProfile;
+                user.ActiveProfileId = mainProfile.Id;
+                await _db.SaveChangesAsync();
+            }
+        }
+
         return Ok(new MeResponse(
             user.PublicId,
             user.Email,
@@ -603,12 +614,7 @@ public class AuthController : ControllerBase
 
         _db.RefreshTokens.Remove(storedToken);
 
-        var roles = await _db.UserRoles
-            .Where(ur => ur.UserId == storedToken.UserId)
-            .Select(ur => ur.Role)
-            .ToListAsync();
-
-        var accessToken = _jwtService.GenerateAccessToken(storedToken.User, roles);
+        var accessToken = _jwtService.GenerateAccessToken(storedToken.User);
         var (newRefreshToken, newRefreshTokenHash) = _jwtService.GenerateRefreshToken();
 
         var newRefreshTokenEntity = new RefreshToken
@@ -947,12 +953,7 @@ public class AuthController : ControllerBase
             }
         }
 
-        var roles = await _db.UserRoles
-            .Where(ur => ur.UserId == user.Id)
-            .Select(ur => ur.Role)
-            .ToListAsync();
-
-        var accessToken = _jwtService.GenerateAccessToken(user, roles);
+        var accessToken = _jwtService.GenerateAccessToken(user);
         var (refreshToken, refreshTokenHash) = _jwtService.GenerateRefreshToken();
 
         var deviceInfo = Request.Headers.UserAgent.ToString();

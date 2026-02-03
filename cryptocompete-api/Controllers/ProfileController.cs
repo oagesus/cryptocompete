@@ -23,13 +23,27 @@ public class ProfileController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Premium,Admin")]
     public async Task<IActionResult> CreateProfile([FromBody] CreateProfileRequest request)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
         {
             return Unauthorized();
+        }
+
+        var user = await _db.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
+        if (!isPremium)
+        {
+            return StatusCode(403, new { message = "Premium required" });
         }
 
         var profileCount = await _db.Profiles.CountAsync(p => p.UserId == userId);
@@ -166,10 +180,21 @@ public class ProfileController : ControllerBase
             return NotFound(new { message = "Profile not found" });
         }
 
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _db.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
         {
             return NotFound(new { message = "User not found" });
+        }
+
+        if (!profile.IsMain)
+        {
+            var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
+            if (!isPremium)
+            {
+                return StatusCode(403, new { message = "Premium required" });
+            }
         }
 
         user.ActiveProfileId = profile.Id;

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PlusCircle, MinusCircle, Wallet, User, Trophy } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getUser } from "@/lib/auth/get-user";
@@ -8,7 +9,11 @@ export default async function DashboardPage() {
   const user = await getUser();
   const t = await getTranslations("dashboard");
 
-  const activeProfile = user!.profiles.find((p) => p.publicId === user!.activeProfileId)!;
+  if (!user) {
+    redirect("/auth/clear");
+  }
+
+  const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
 
   return (
     <div className="space-y-4">

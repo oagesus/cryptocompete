@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 const BYPASS_ROUTES = ["/auth/clear", "/auth/verify-email-change"];
 const AUTHENTICATED_AUTH_ROUTES = ["/auth/set-password", "/auth/change-password", "/auth/change-email"];
 const PUBLIC_ROUTES = ["/auth"];
-const PROTECTED_ROUTES = ["/dashboard", "/account", "/trade/sell"];
+const PROTECTED_ROUTES = ["/dashboard", "/account", "/trade/sell", "/upgrade"];
 
 export function handleAuthRedirects(
   request: NextRequest,

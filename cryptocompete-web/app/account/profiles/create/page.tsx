@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
@@ -10,7 +10,6 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAccount } from "@/components/account-provider";
-import { isPremium } from "@/lib/auth/user-utils";
 import {
   Card,
   CardContent,
@@ -34,15 +33,11 @@ const errorMap: Record<string, string> = {
 
 export default function CreateProfilePage() {
   const router = useRouter();
-  const { user, refetch } = useAccount();
+  const { refetch } = useAccount();
   const t = useTranslations("account");
   const tApi = useTranslations("api.errors");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const justCreated = useRef(false);
-
-  const userIsPremium = isPremium(user);
-  const canAddProfile = user.profiles.length < user.maxProfiles;
 
   const createProfileSchema = z.object({
     username: z
@@ -56,21 +51,6 @@ export default function CreateProfilePage() {
   });
 
   type CreateProfileFormValues = z.infer<typeof createProfileSchema>;
-
-  useEffect(() => {
-    if (justCreated.current) return;
-
-    if (!userIsPremium || !canAddProfile) {
-      const activeProfile = user.profiles.find(p => p.publicId === user.activeProfileId);
-      if (activeProfile) {
-        router.replace(`/account/profiles/${activeProfile.publicId}`);
-      } else if (user.profiles.length > 0) {
-        router.replace(`/account/profiles/${user.profiles[0].publicId}`);
-      } else {
-        router.replace("/account/settings");
-      }
-    }
-  }, [userIsPremium, canAddProfile, user, router]);
 
   const form = useForm<CreateProfileFormValues>({
     resolver: zodResolver(createProfileSchema),
@@ -111,7 +91,6 @@ export default function CreateProfilePage() {
       }
 
       const profile = await response.json();
-      justCreated.current = true;
       setError(null);
       await refetch();
       toast.success(t("profileCreated"));
@@ -121,10 +100,6 @@ export default function CreateProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  }
-
-  if (!userIsPremium || !canAddProfile) {
-    return null;
   }
 
   return (

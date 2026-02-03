@@ -1,0 +1,25 @@
+{
+  "upgrade": {
+    "title": "Choose your plan",
+    "current": "Current",
+    "freePlan": "Free",
+    "freeSubtitle": "Get started with trading",
+    "proPlan": "Pro",
+    "proSubtitle": "Take your trading further",
+    "month": "month",
+    "billedMonthly": "billed monthly",
+    "currentPlan": "Current plan",
+    "upgrade": "Upgrade to Pro",
+    "downgrade": "Downgrade to Free",
+    "freeIncludes": "Includes:",
+    "freeFeature1": "€10,000 virtual start capital",
+    "freeFeature2": "View live price updates",
+    "freeFeature3": "View price history",
+    "freeFeature4": "Track portfolio performance",
+    "freeFeature5": "Limited to 1 profile",
+    "proIncludes": "Everything in Free and:",
+    "proFeature1": "Create up to 5 profiles",
+    "proFeature2": "Priority support",
+    "disclaimer": "*Subscriptions are charged with real money. All trading within the app uses virtual funds only."
+  }
+}

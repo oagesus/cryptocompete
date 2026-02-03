@@ -51,6 +51,7 @@
     "premiumRequiredForProfiles": "Premium subscription required to create additional profiles",
     "premiumRequired": "Premium Required",
     "premiumRequiredDescription": "You need a premium subscription to create additional profiles.",
+    "premiumSwitchDescription": "You need a premium subscription to switch to non-main profiles.",
     "ok": "OK",
     "portfolioValue": "Portfolio Value",
     "noHoldingsYet": "No holdings yet. Start trading to build your portfolio!",
