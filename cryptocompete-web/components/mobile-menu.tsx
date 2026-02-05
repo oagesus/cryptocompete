@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { LayoutDashboard, Settings, User, LogOut, Wallet, TrendingUp, Trophy } from "lucide-react";
+import { LayoutDashboard, Settings, User, LogOut, Wallet, TrendingUp, Trophy, CircleArrowUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -99,6 +99,14 @@ export function MobileMenu({ user, currencyInfo }: MobileMenuProps) {
         >
           <Trophy className="mr-2 h-4 w-4" />
           {t("leaderboard")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => router.push("/upgrade")}
+          className="cursor-pointer"
+        >
+          <CircleArrowUp className="mr-2 h-4 w-4" />
+          {t("upgrade")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

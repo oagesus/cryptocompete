@@ -74,6 +74,16 @@ export async function handleTokenRefresh(request: NextRequest): Promise<TokenRef
           maxAge: 300,
         });
       }
+
+      if (name === "subscription_exp") {
+        response.cookies.set({
+          name,
+          value: decodeURIComponent(value),
+          httpOnly: false,
+          sameSite: "lax",
+          path: "/",
+        });
+      }
     }
 
     return { response, isAuthenticated: true };

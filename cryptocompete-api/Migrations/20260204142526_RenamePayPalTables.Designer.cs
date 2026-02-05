@@ -3,6 +3,7 @@ using System;
 using CryptoCompete.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace cryptocompete_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260204142526_RenamePayPalTables")]
+    partial class RenamePayPalTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -389,6 +392,58 @@ namespace cryptocompete_api.Migrations
                         .HasDatabaseName("ix_paypal_subscriptions_user_id");
 
                     b.ToTable("paypal_subscriptions", (string)null);
+                });
+
+            modelBuilder.Entity("CryptoCompete.Api.Models.PayPalVaultedPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("PayPalCustomerId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("pay_pal_customer_id");
+
+                    b.Property<string>("PayerEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("payer_email");
+
+                    b.Property<string>("PaymentTokenId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("payment_token_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_paypal_vaulted_payments");
+
+                    b.HasIndex("PayPalCustomerId")
+                        .HasDatabaseName("ix_paypal_vaulted_payments_pay_pal_customer_id");
+
+                    b.HasIndex("UserId", "PaymentTokenId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_paypal_vaulted_payments_user_id_payment_token_id");
+
+                    b.ToTable("paypal_vaulted_payments", (string)null);
                 });
 
             modelBuilder.Entity("CryptoCompete.Api.Models.PortfolioHolding", b =>
@@ -868,6 +923,18 @@ namespace cryptocompete_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("CryptoCompete.Api.Models.PayPalVaultedPayment", b =>
+                {
+                    b.HasOne("CryptoCompete.Api.Models.User", "User")
+                        .WithMany("PayPalVaultedPayments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_paypal_vaulted_payments_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CryptoCompete.Api.Models.PortfolioHolding", b =>
                 {
                     b.HasOne("CryptoCompete.Api.Models.Cryptocurrency", "Cryptocurrency")
@@ -1031,6 +1098,8 @@ namespace cryptocompete_api.Migrations
                     b.Navigation("ExternalLogins");
 
                     b.Navigation("PayPalSubscriptions");
+
+                    b.Navigation("PayPalVaultedPayments");
 
                     b.Navigation("Profiles");
 

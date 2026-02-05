@@ -16,6 +16,8 @@ public class User
     public ICollection<ExternalLogin> ExternalLogins { get; set; } = new List<ExternalLogin>();
     public ICollection<Profile> Profiles { get; set; } = new List<Profile>();
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public ICollection<PayPalSubscription> PayPalSubscriptions { get; set; } = new List<PayPalSubscription>();
+    public ICollection<SubscriptionPayment> SubscriptionPayments { get; set; } = new List<SubscriptionPayment>();
     
     public bool HasPassword => !string.IsNullOrEmpty(PasswordHash);
     public bool HasAnyLoginMethod => HasPassword || ExternalLogins.Any();

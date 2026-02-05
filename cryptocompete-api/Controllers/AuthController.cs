@@ -612,9 +612,16 @@ public class AuthController : ControllerBase
 
         storedToken.Session.LastActivityAt = DateTimeOffset.UtcNow;
 
+        await HandleExpiredSubscription(storedToken.UserId);
+
         _db.RefreshTokens.Remove(storedToken);
 
-        var accessToken = _jwtService.GenerateAccessToken(storedToken.User);
+        var user = await _db.Users
+            .Include(u => u.Profiles)
+            .Include(u => u.UserRoles)
+            .FirstAsync(u => u.Id == storedToken.UserId);
+
+        var accessToken = _jwtService.GenerateAccessToken(user);
         var (newRefreshToken, newRefreshTokenHash) = _jwtService.GenerateRefreshToken();
 
         var newRefreshTokenEntity = new RefreshToken
@@ -628,7 +635,8 @@ public class AuthController : ControllerBase
         _db.RefreshTokens.Add(newRefreshTokenEntity);
         await _db.SaveChangesAsync();
 
-        SetTokenCookies(accessToken, newRefreshToken);
+        var subscriptionEnd = await GetSubscriptionEnd(storedToken.UserId);
+        SetTokenCookies(accessToken, newRefreshToken, subscriptionEnd);
 
         return Ok(new RefreshResponse(accessToken, newRefreshToken));
     }
@@ -979,7 +987,8 @@ public class AuthController : ControllerBase
         _db.RefreshTokens.Add(refreshTokenEntity);
         await _db.SaveChangesAsync();
 
-        SetTokenCookies(accessToken, refreshToken);
+        var subscriptionEnd = await GetSubscriptionEnd(user.Id);
+        SetTokenCookies(accessToken, refreshToken, subscriptionEnd);
 
         var activeProfile = user.Profiles.FirstOrDefault(p => p.Id == user.ActiveProfileId)
                         ?? user.Profiles.FirstOrDefault(p => p.IsMain);
@@ -1077,7 +1086,7 @@ public class AuthController : ControllerBase
         return $"user{fallbackNumber}";
     }
 
-    private void SetTokenCookies(string accessToken, string refreshToken)
+    private void SetTokenCookies(string accessToken, string refreshToken, DateTimeOffset? subscriptionEnd = null)
     {
         var tokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accessTokenExpirationMinutes).ToUnixTimeSeconds();
 
@@ -1107,6 +1116,22 @@ public class AuthController : ControllerBase
             Path = "/",
             MaxAge = TimeSpan.FromMinutes(_accessTokenExpirationMinutes)
         });
+
+        if (subscriptionEnd.HasValue && subscriptionEnd.Value > DateTimeOffset.UtcNow)
+        {
+            Response.Cookies.Append("subscription_exp", subscriptionEnd.Value.ToUnixTimeSeconds().ToString(), new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = _isProduction,
+                SameSite = SameSiteMode.Lax,
+                Path = "/",
+                MaxAge = subscriptionEnd.Value - DateTimeOffset.UtcNow
+            });
+        }
+        else
+        {
+            Response.Cookies.Delete("subscription_exp", new CookieOptions { Path = "/" });
+        }
     }
 
     private void DeleteTokenCookies()
@@ -1114,6 +1139,58 @@ public class AuthController : ControllerBase
         Response.Cookies.Delete("access_token", new CookieOptions { Path = "/" });
         Response.Cookies.Delete("refresh_token", new CookieOptions { Path = "/" });
         Response.Cookies.Delete("token_exp", new CookieOptions { Path = "/" });
+        Response.Cookies.Delete("subscription_exp", new CookieOptions { Path = "/" });
+    }
+
+    private async Task<DateTimeOffset?> GetSubscriptionEnd(int userId)
+    {
+        var suspendedSub = await _db.PayPalSubscriptions
+            .Where(s => s.UserId == userId
+                && s.Status == SubscriptionStatus.Suspended
+                && s.CurrentPeriodEnd != null
+                && s.CurrentPeriodEnd > DateTimeOffset.UtcNow)
+            .OrderByDescending(s => s.CurrentPeriodEnd)
+            .FirstOrDefaultAsync();
+
+        return suspendedSub?.CurrentPeriodEnd;
+    }
+
+    private async Task HandleExpiredSubscription(int userId)
+    {
+        var expiredSubs = await _db.PayPalSubscriptions
+            .Where(s => s.UserId == userId
+                && s.Status == SubscriptionStatus.Suspended
+                && s.CurrentPeriodEnd != null
+                && s.CurrentPeriodEnd <= DateTimeOffset.UtcNow)
+            .ToListAsync();
+
+        if (expiredSubs.Count == 0) return;
+
+        foreach (var sub in expiredSubs)
+        {
+            sub.Status = SubscriptionStatus.Expired;
+            sub.UpdatedAt = DateTimeOffset.UtcNow;
+        }
+
+        var premiumRole = await _db.UserRoles
+            .FirstOrDefaultAsync(r => r.UserId == userId && r.Role == Role.Premium);
+
+        if (premiumRole != null)
+        {
+            var hasActiveAccess = await _db.PayPalSubscriptions
+                .AnyAsync(s => s.UserId == userId
+                    && (s.Status == SubscriptionStatus.Active
+                        || (s.Status == SubscriptionStatus.Suspended
+                            && s.CurrentPeriodEnd != null
+                            && s.CurrentPeriodEnd > DateTimeOffset.UtcNow)));
+
+            if (!hasActiveAccess)
+            {
+                _db.UserRoles.Remove(premiumRole);
+            }
+        }
+
+        await _db.SaveChangesAsync();
     }
 
     private async Task RevokeAllUserTokens(int userId)

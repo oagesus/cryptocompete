@@ -21,6 +21,8 @@ public class AppDbContext : DbContext
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<LeaderboardSnapshot> LeaderboardSnapshots => Set<LeaderboardSnapshot>();
     public DbSet<UsernameHistory> UsernameHistories => Set<UsernameHistory>();
+    public DbSet<PayPalSubscription> PayPalSubscriptions => Set<PayPalSubscription>();
+    public DbSet<SubscriptionPayment> SubscriptionPayments => Set<SubscriptionPayment>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -201,6 +203,41 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.ProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PayPalSubscription>(entity =>
+        {
+            entity.ToTable("paypal_subscriptions");
+            entity.HasIndex(e => e.PayPalSubscriptionId).IsUnique();
+            entity.Property(e => e.PayPalSubscriptionId).HasMaxLength(50);
+            entity.Property(e => e.PayPalPlanId).HasMaxLength(50);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Currency).HasMaxLength(3);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.PayPalSubscriptions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SubscriptionPayment>(entity =>
+        {
+            entity.HasIndex(e => e.PayPalCaptureId);
+            entity.Property(e => e.PayPalCaptureId).HasMaxLength(50);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Currency).HasMaxLength(3);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.SubscriptionPayments)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Subscription)
+                .WithMany()
+                .HasForeignKey(e => e.SubscriptionId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

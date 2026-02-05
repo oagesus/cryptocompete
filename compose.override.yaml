@@ -8,6 +8,11 @@ services:
       - Jwt__Secret=${JWT_SECRET}
       - Google__ClientId=${GOOGLE_CLIENT_ID}
       - CoinMarketCap__ApiKey=${COINMARKETCAP_API_KEY}
+      - PayPal__ClientId=${PAYPAL_CLIENT_ID}
+      - PayPal__ClientSecret=${PAYPAL_CLIENT_SECRET}
+      - PayPal__WebhookId=${PAYPAL_WEBHOOK_ID}
+      - PayPal__PlanId=${PAYPAL_PLAN_ID}
+      - PayPal__UseSandbox=true
     depends_on:
       db:
         condition: service_healthy
@@ -17,6 +22,7 @@ services:
       - API_URL=http://api:8080
       - NEXT_PUBLIC_API_URL=http://localhost:5000
       - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - NEXT_PUBLIC_PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
 
   db:
     image: postgres:17-alpine

@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { PlusCircle, MinusCircle, Wallet, User, Trophy } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getUser } from "@/lib/auth/get-user";
 import { Greeting } from "./greeting";
+import { SubscriptionToastHandler } from "@/components/subscription-toast-handler";
 
 export default async function DashboardPage() {
   const user = await getUser();
   const t = await getTranslations("dashboard");
+  const ut = await getTranslations("upgrade");
 
   if (!user) {
     redirect("/auth/clear");
@@ -15,8 +18,19 @@ export default async function DashboardPage() {
 
   const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
 
+  const subscriptionTranslations = {
+    subscriptionCancelled: ut("subscriptionCancelled"),
+    activationFailed: ut("activationFailed"),
+    proActive: ut("proActive"),
+    activationError: ut("activationError"),
+  };
+
   return (
     <div className="space-y-4">
+      <Suspense>
+        <SubscriptionToastHandler translations={subscriptionTranslations} />
+      </Suspense>
+
       <Greeting username={activeProfile.username} />
 
       <div className="grid grid-cols-2 gap-4">

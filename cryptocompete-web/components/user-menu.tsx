@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, CircleArrowUp } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -56,6 +56,14 @@ export function UserMenu({ user, currencyInfo }: UserMenuProps) {
           <p className="text-sm font-medium truncate">{activeProfile.username}</p>
           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
         </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => router.push("/upgrade")}
+          className="cursor-pointer"
+        >
+          <CircleArrowUp className="mr-2 h-4 w-4" />
+          {t("upgrade")}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => router.push(`/account/profiles/${activeProfile.publicId}`)}

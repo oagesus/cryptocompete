@@ -1,13 +1,37 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 import { getUser } from "@/lib/auth/get-user";
 import { isPremium } from "@/lib/auth/user-utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Check } from "lucide-react";
+import { UpgradeCards } from "@/components/upgrade-cards";
+
+const API_URL = process.env.API_URL;
+
+async function getSubscriptionStatus(accessToken: string) {
+  try {
+    const response = await fetch(`${API_URL}/api/subscription/status`, {
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
+  }
+}
+
+function formatDate(dateStr: string, locale: string): string {
+  const formatted = new Date(dateStr).toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  return formatted.replace(/ /g, "\u00A0");
+}
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +44,14 @@ export default async function UpgradePage() {
     redirect("/auth/clear");
   }
 
+  const isCurrentPremium = isPremium(user);
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("access_token")?.value;
+  const subStatus = isCurrentPremium && accessToken
+    ? await getSubscriptionStatus(accessToken)
+    : null;
+
   const freePrice = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "EUR",
@@ -31,9 +63,6 @@ export default async function UpgradePage() {
     currency: "EUR",
     maximumFractionDigits: 0,
   }).format(5);
-
-  const isCurrentPremium = user ? isPremium(user) : false;
-  const isCurrentFree = !isCurrentPremium;
 
   const freeFeatures = [
     t("freeFeature1"),
@@ -48,119 +77,66 @@ export default async function UpgradePage() {
     t("proFeature2"),
   ];
 
+  const formattedActiveUntil = subStatus?.activeUntil
+    ? formatDate(subStatus.activeUntil, locale)
+    : null;
+
+  const formattedPeriodEnd = subStatus?.currentPeriodEnd
+    ? formatDate(subStatus.currentPeriodEnd, locale)
+    : null;
+
+  const daysRemaining = subStatus?.activeUntil
+    ? Math.max(0, Math.ceil((new Date(subStatus.activeUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null;
+
+  const translations = {
+    title: t("title"),
+    freePlan: t("freePlan"),
+    freeSubtitle: t("freeSubtitle"),
+    proPlan: t("proPlan"),
+    proSubtitle: t("proSubtitle"),
+    current: t("current"),
+    month: t("month"),
+    billedMonthly: t("billedMonthly"),
+    currentPlan: t("currentPlan"),
+    downgrade: t("downgrade"),
+    upgrade: t("upgrade"),
+    freeIncludes: t("freeIncludes"),
+    proIncludes: t("proIncludes"),
+    disclaimer: t("disclaimer"),
+    cancelConfirmTitle: t("cancelConfirmTitle"),
+    cancelConfirmLine1: t("cancelConfirmLine1"),
+    cancelConfirmLine2: t("cancelConfirmLine2", { date: formattedPeriodEnd ?? "" }),
+    cancelConfirmButton: t("cancelConfirmButton"),
+    cancelKeepButton: t("cancelKeepButton"),
+    cancelling: t("cancelling"),
+    cancelSuccess: t("cancelSuccess"),
+    cancelError: t("cancelError"),
+    subscribing: t("subscribing"),
+    endsIn: daysRemaining !== null ? t("endsIn", { days: daysRemaining }) : "",
+    endsInTemplate: t("endsIn", { days: "{days}" }),
+    resubscribe: t("resubscribe"),
+    resubscribeConfirmTitle: t("resubscribeConfirmTitle"),
+    resubscribeConfirmDescription: t("resubscribeConfirmDescription", { date: formattedPeriodEnd ?? "" }),
+    resubscribeConfirmButton: t("resubscribeConfirmButton"),
+    resubscribeCancelButton: t("resubscribeCancelButton"),
+    resubscribing: t("resubscribing"),
+    resubscribeSuccess: t("resubscribeSuccess"),
+    resubscribeError: t("resubscribeError"),
+  };
+
   return (
-    <div className="space-y-8">
-      <h1 className="text-4xl font-bold tracking-tight text-center">
-        {t("title")}
-      </h1>
-
-      <div className="grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
-        {/* Free Plan */}
-        <Card className="flex flex-col hover:border-foreground hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]">
-          <CardContent className="px-6 pt-6">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold">{t("freePlan")}</h2>
-                  <p className="text-base text-muted-foreground mt-0.5">
-                    {t("freeSubtitle")}
-                  </p>
-                </div>
-                {isCurrentFree && (
-                  <Badge variant="default">{t("current")}</Badge>
-                )}
-              </div>
-
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold">{freePrice}</span>
-                <span className="text-sm text-muted-foreground">
-                  / {t("month")}
-                </span>
-              </div>
-
-              {isCurrentFree ? (
-                <Button className="w-full h-11 text-base" disabled>
-                  {t("currentPlan")}
-                </Button>
-              ) : (
-                <Button className="w-full h-11 text-base">
-                  {t("downgrade")}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-
-          <Separator />
-
-          <CardContent className="p-6 space-y-3">
-            <p className="text-base font-medium text-muted-foreground">
-              {t("freeIncludes")}
-            </p>
-            <ul className="space-y-2.5">
-              {freeFeatures.map((feature, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                  <span className="text-sm text-muted-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Pro Plan */}
-        <Card className="flex flex-col border-primary/40 hover:border-primary hover:shadow-[0_0_20px_rgba(75,107,251,0.35)]">
-          <CardContent className="px-6 pt-6">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold">{t("proPlan")}</h2>
-                  <p className="text-base text-primary mt-0.5">
-                    {t("proSubtitle")}
-                  </p>
-                </div>
-                {isCurrentPremium && (
-                  <Badge variant="default">{t("current")}</Badge>
-                )}
-              </div>
-
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold">{proPrice}</span>
-                <span className="text-sm text-muted-foreground">
-                  / {t("month")} {t("billedMonthly")}
-                </span>
-              </div>
-
-              {isCurrentPremium ? (
-                <Button className="w-full h-11 text-base" disabled>
-                  {t("currentPlan")}
-                </Button>
-              ) : (
-                <Button className="w-full h-11 text-base">{t("upgrade")}</Button>
-              )}
-            </div>
-          </CardContent>
-
-          <Separator />
-
-          <CardContent className="p-6 space-y-3">
-            <p className="text-base font-medium text-muted-foreground">
-              {t("proIncludes")}
-            </p>
-            <ul className="space-y-2.5">
-              {proFeatures.map((feature, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                  <span className="text-sm text-muted-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-
-      <p className="text-center text-sm text-muted-foreground">
-        {t("disclaimer")}
-      </p>
-    </div>
+    <UpgradeCards
+      isCurrentPremium={isCurrentPremium}
+      cancelledButActive={subStatus?.cancelledButActive ?? false}
+      canResubscribe={subStatus?.canResubscribe ?? false}
+      activeUntil={formattedActiveUntil}
+      daysRemaining={daysRemaining}
+      freePrice={freePrice}
+      proPrice={proPrice}
+      freeFeatures={freeFeatures}
+      proFeatures={proFeatures}
+      translations={translations}
+    />
   );
 }

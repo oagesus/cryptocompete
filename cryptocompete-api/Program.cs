@@ -93,11 +93,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
 builder.Services.AddHttpClient<ICryptocurrencyListService, CryptocurrencyListService>();
 builder.Services.AddHttpClient<IKlineService, KlineService>();
+builder.Services.AddHttpClient<IPayPalService, PayPalService>();
 builder.Services.AddHostedService<CryptocurrencyListBackgroundService>();
 builder.Services.AddSingleton<CryptoPriceBackgroundService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<CryptoPriceBackgroundService>());
 builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>();
 builder.Services.AddHostedService<LeaderboardBackgroundService>();
+builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 
 builder.Services.AddOpenApi();
 
