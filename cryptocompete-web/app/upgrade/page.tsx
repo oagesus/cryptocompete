@@ -1,28 +1,10 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 
 import { getUser } from "@/lib/auth/get-user";
 import { isPremium } from "@/lib/auth/user-utils";
+import { getSubscriptionStatus } from "@/lib/subscription/get-subscription-status";
 import { UpgradeCards } from "@/components/upgrade-cards";
-
-const API_URL = process.env.API_URL;
-
-async function getSubscriptionStatus(accessToken: string) {
-  try {
-    const response = await fetch(`${API_URL}/api/subscription/status`, {
-      headers: {
-        Cookie: `access_token=${accessToken}`,
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) return null;
-    return response.json();
-  } catch {
-    return null;
-  }
-}
 
 function formatDate(dateStr: string, locale: string): string {
   const formatted = new Date(dateStr).toLocaleDateString(locale, {
@@ -46,10 +28,8 @@ export default async function UpgradePage() {
 
   const isCurrentPremium = isPremium(user);
 
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("access_token")?.value;
-  const subStatus = isCurrentPremium && accessToken
-    ? await getSubscriptionStatus(accessToken)
+  const subStatus = isCurrentPremium
+    ? await getSubscriptionStatus()
     : null;
 
   const freePrice = new Intl.NumberFormat(locale, {

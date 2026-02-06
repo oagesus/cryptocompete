@@ -5,11 +5,11 @@
     "portfolio": "Portfolio",
     "trade": "Trade",
     "leaderboard": "Leaderboard",
-    "upgrade": "Upgrade Plan",
+    "upgrade": "Upgrade plan",
     "account": "Account",
-    "login": "Sign In",
-    "register": "Sign Up",
-    "logout": "Sign Out",
+    "login": "Sign in",
+    "register": "Sign up",
+    "logout": "Sign out",
     "toggleTheme": "Toggle theme"
   }
 }

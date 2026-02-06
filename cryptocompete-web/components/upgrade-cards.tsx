@@ -1,22 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Check, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Check } from "lucide-react";
+import { CancelSubscriptionDialog } from "@/components/cancel-subscription-dialog";
+import { ResubscribeDialog } from "@/components/resubscribe-dialog";
 
 interface UpgradeCardsProps {
   isCurrentPremium: boolean;
@@ -35,7 +27,6 @@ export function UpgradeCards({
   isCurrentPremium: isPremium,
   cancelledButActive: initialCancelledButActive,
   canResubscribe: initialCanResubscribe,
-  activeUntil: initialActiveUntil,
   daysRemaining: initialDaysRemaining,
   freePrice,
   proPrice,
@@ -43,81 +34,15 @@ export function UpgradeCards({
   proFeatures,
   translations: t,
 }: UpgradeCardsProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showResubscribeDialog, setShowResubscribeDialog] = useState(false);
   const [cancelledButActive, setCancelledButActive] = useState(initialCancelledButActive);
   const [canResubscribe, setCanResubscribe] = useState(initialCanResubscribe);
-  const [activeUntil, setActiveUntil] = useState(initialActiveUntil);
   const [daysRemaining, setDaysRemaining] = useState(initialDaysRemaining);
 
   const endsInText = cancelledButActive && daysRemaining !== null
     ? t.endsInTemplate.replace("{days}", daysRemaining.toString())
     : "";
-
-  const handleCancel = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/subscription/cancel", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        toast.error(error.message || t.cancelError);
-        return;
-      }
-
-      const data = await res.json();
-      setCancelledButActive(true);
-      setCanResubscribe(true);
-      setActiveUntil(data.activeUntil ? new Date(data.activeUntil).toLocaleDateString() : null);
-      if (data.activeUntil) {
-        const days = Math.max(0, Math.ceil((new Date(data.activeUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-        setDaysRemaining(days);
-      }
-      setShowCancelDialog(false);
-      toast.success(t.cancelSuccess);
-      router.refresh();
-    } catch {
-      toast.error(t.cancelError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResubscribe = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/subscription/resubscribe", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        toast.error(error.message || t.resubscribeError);
-        return;
-      }
-
-      setCancelledButActive(false);
-      setCanResubscribe(false);
-      setActiveUntil(null);
-      setDaysRemaining(null);
-      setShowResubscribeDialog(false);
-      document.cookie = "subscription_exp=; path=/; max-age=0";
-      toast.success(t.resubscribeSuccess, {
-        className: "!bg-green-600 !text-white",
-      });
-      router.refresh();
-    } catch {
-      toast.error(t.resubscribeError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const isCurrentFree = !isPremium;
 
@@ -164,7 +89,6 @@ export function UpgradeCards({
                   <Button
                     className="w-full h-11 text-base"
                     onClick={() => setShowCancelDialog(true)}
-                    disabled={isLoading}
                   >
                     {t.downgrade}
                   </Button>
@@ -263,57 +187,30 @@ export function UpgradeCards({
         </p>
       </div>
 
-      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.cancelConfirmTitle}</DialogTitle>
-            <DialogDescription>
-              {t.cancelConfirmLine1} {t.cancelConfirmLine2}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)} disabled={isLoading}>
-              {t.cancelKeepButton}
-            </Button>
-            <Button onClick={handleCancel} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t.cancelling}
-                </>
-              ) : (
-                t.cancelConfirmButton
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CancelSubscriptionDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        onCancelled={(data) => {
+          setCancelledButActive(true);
+          setCanResubscribe(true);
+          if (data.activeUntil) {
+            const days = Math.max(0, Math.ceil((new Date(data.activeUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+            setDaysRemaining(days);
+          }
+        }}
+        translations={t}
+      />
 
-      <Dialog open={showResubscribeDialog} onOpenChange={setShowResubscribeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.resubscribeConfirmTitle}</DialogTitle>
-            <DialogDescription>
-              {t.resubscribeConfirmDescription}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowResubscribeDialog(false)} disabled={isLoading}>
-              {t.resubscribeCancelButton}
-            </Button>
-            <Button onClick={handleResubscribe} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t.resubscribing}
-                </>
-              ) : (
-                t.resubscribeConfirmButton
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ResubscribeDialog
+        open={showResubscribeDialog}
+        onOpenChange={setShowResubscribeDialog}
+        onResubscribed={() => {
+          setCancelledButActive(false);
+          setCanResubscribe(false);
+          setDaysRemaining(null);
+        }}
+        translations={t}
+      />
     </>
   );
 }

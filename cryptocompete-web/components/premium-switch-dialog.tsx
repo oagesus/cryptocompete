@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -27,11 +29,14 @@ export function PremiumSwitchDialog({ open, onOpenChange }: PremiumSwitchDialogP
             {t("premiumSwitchDescription")}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-end">
-          <Button onClick={() => onOpenChange(false)}>
-            {t("ok")}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t("goBack")}
           </Button>
-        </div>
+          <Button asChild>
+            <Link href="/upgrade">{t("upgradePlan")}</Link>
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

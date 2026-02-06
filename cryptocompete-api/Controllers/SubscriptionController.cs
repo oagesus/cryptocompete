@@ -131,13 +131,22 @@ public class SubscriptionController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "PayPal suspend failed for {SubId}, verifying current status", subscription.PayPalSubscriptionId);
-
-            var details = await _paypal.GetSubscriptionDetailsAsync(subscription.PayPalSubscriptionId);
-            var confirmedStatus = MapPayPalStatus(details.Status);
-
-            if (confirmedStatus != SubscriptionStatus.Suspended)
-                return BadRequest(new { message = "Failed to cancel subscription. Please try again." });
         }
+
+        var confirmedStatus = "UNKNOWN";
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var details = await _paypal.GetSubscriptionDetailsAsync(subscription.PayPalSubscriptionId);
+            confirmedStatus = details.Status.ToUpperInvariant();
+
+            if (confirmedStatus == "SUSPENDED")
+                break;
+
+            await Task.Delay(1000);
+        }
+
+        if (confirmedStatus != "SUSPENDED")
+            return BadRequest(new { message = "Failed to cancel subscription. Please try again." });
 
         var now = DateTimeOffset.UtcNow;
         var updated = await _db.PayPalSubscriptions
@@ -150,12 +159,12 @@ public class SubscriptionController : ControllerBase
         if (updated == 0)
         {
             _logger.LogWarning("Concurrent cancel for subscription {SubId} - already processed", subscription.PayPalSubscriptionId);
-            return Conflict(new { message = "Subscription was already cancelled" });
+            return Conflict(new { message = "Subscription was already canceled" });
         }
 
         return Ok(new
         {
-            message = "Subscription cancelled",
+            message = "Subscription canceled",
             activeUntil = subscription.CurrentPeriodEnd
         });
     }
@@ -204,33 +213,72 @@ public class SubscriptionController : ControllerBase
         var paypalStatus = details.Status.ToUpperInvariant();
 
         if (paypalStatus == "CANCELLED")
-            return BadRequest(new { message = "This subscription was cancelled via PayPal and cannot be reactivated. You can subscribe again after your current period ends." });
+            return BadRequest(new { message = "This subscription was canceled via PayPal and cannot be reactivated. You can subscribe again after your current period ends." });
+
+        if (paypalStatus == "ACTIVE")
+        {
+            var now = DateTimeOffset.UtcNow;
+            await _db.PayPalSubscriptions
+                .Where(s => s.Id == subscription.Id && s.Status == SubscriptionStatus.Suspended)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.Status, SubscriptionStatus.Active)
+                    .SetProperty(x => x.CancelledAt, (DateTimeOffset?)null)
+                    .SetProperty(x => x.UpdatedAt, now));
+
+            await GrantPremiumRoleAsync(userId.Value);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Subscription reactivated" });
+        }
 
         if (paypalStatus != "SUSPENDED")
             return BadRequest(new { message = "Cannot reactivate subscription. PayPal status: " + details.Status });
 
-        bool activatedSuccessfully = false;
-
         try
         {
             await _paypal.ActivateSubscriptionAsync(subscription.PayPalSubscriptionId, "User requested resubscription");
-            activatedSuccessfully = true;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "PayPal activate failed for {SubId}", subscription.PayPalSubscriptionId);
+            return BadRequest(new { message = "Failed to reactivate subscription. Please try again." });
         }
 
-        if (!activatedSuccessfully)
-            return BadRequest(new { message = "Failed to reactivate subscription. Please try again." });
+        PayPalSubscriptionDetails activatedDetails = null!;
+        var confirmedResubStatus = "UNKNOWN";
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            activatedDetails = await _paypal.GetSubscriptionDetailsAsync(subscription.PayPalSubscriptionId);
+            confirmedResubStatus = activatedDetails.Status.ToUpperInvariant();
 
-        var now = DateTimeOffset.UtcNow;
+            if (confirmedResubStatus == "ACTIVE")
+                break;
+
+            await Task.Delay(1000);
+        }
+
+        if (confirmedResubStatus != "ACTIVE")
+        {
+            _logger.LogWarning("PayPal status after activation is {Status} for {SubId}", confirmedResubStatus, subscription.PayPalSubscriptionId);
+            return BadRequest(new { message = "Failed to reactivate subscription. Please try again." });
+        }
+
+        var resubNow = DateTimeOffset.UtcNow;
+        var periodEnd = subscription.CurrentPeriodEnd;
+
+        if (activatedDetails.BillingInfo?.NextBillingTime != null
+            && DateTimeOffset.TryParse(activatedDetails.BillingInfo.NextBillingTime, out var nextBilling))
+        {
+            periodEnd = nextBilling;
+        }
+
         var updated = await _db.PayPalSubscriptions
             .Where(s => s.Id == subscription.Id && s.Status == SubscriptionStatus.Suspended)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.Status, SubscriptionStatus.Active)
                 .SetProperty(x => x.CancelledAt, (DateTimeOffset?)null)
-                .SetProperty(x => x.UpdatedAt, now));
+                .SetProperty(x => x.CurrentPeriodEnd, periodEnd)
+                .SetProperty(x => x.UpdatedAt, resubNow));
 
         if (updated == 0)
             return Conflict(new { message = "Subscription was already reactivated" });
@@ -305,7 +353,28 @@ public class SubscriptionController : ControllerBase
         });
     }
 
-    // ── Webhook ─────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet("invoices")]
+    public async Task<IActionResult> GetInvoices()
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var invoices = await _db.SubscriptionPayments
+            .Where(p => p.UserId == userId && p.Status == PaymentStatus.Completed)
+            .OrderByDescending(p => p.PaidAt)
+            .Select(p => new
+            {
+                p.Id,
+                p.Amount,
+                p.Currency,
+                status = p.Status.ToString(),
+                paidAt = p.PaidAt
+            })
+            .ToListAsync();
+
+        return Ok(invoices);
+    }
 
     [HttpPost("webhook")]
     public async Task<IActionResult> HandleWebhook()
@@ -352,8 +421,6 @@ public class SubscriptionController : ControllerBase
         return Ok();
     }
 
-    // ── Webhook Handlers ────────────────────────────────────────
-
     private static DateTimeOffset? GetWebhookEventTime(JsonElement resource)
     {
         if (resource.TryGetProperty("status_update_time", out var t) && DateTimeOffset.TryParse(t.GetString(), out var dt))
@@ -386,18 +453,30 @@ public class SubscriptionController : ControllerBase
 
         try
         {
-            var details = await _paypal.GetSubscriptionDetailsAsync(subId);
+            var currentDetails = await _paypal.GetSubscriptionDetailsAsync(subId);
+            var currentStatus = currentDetails.Status.ToUpperInvariant();
 
-            if (details.BillingInfo?.NextBillingTime != null
-                && DateTimeOffset.TryParse(details.BillingInfo.NextBillingTime, out var nextBilling))
+            if (currentStatus != "ACTIVE")
             {
-                subscription.CurrentPeriodStart = subscription.CurrentPeriodEnd ?? DateTimeOffset.UtcNow;
-                subscription.CurrentPeriodEnd = nextBilling;
+                _logger.LogInformation("Ignoring ACTIVATED webhook for {SubId} - PayPal current status is {Status}",
+                    subId, currentStatus);
+                return;
+            }
+
+            if (currentDetails.BillingInfo?.NextBillingTime != null
+                && DateTimeOffset.TryParse(currentDetails.BillingInfo.NextBillingTime, out var nextBilling))
+            {
+                if (subscription.CurrentPeriodEnd == null)
+                {
+                    subscription.CurrentPeriodStart = DateTimeOffset.UtcNow;
+                    subscription.CurrentPeriodEnd = nextBilling;
+                }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to fetch subscription details for {SubId} during activation", subId);
+            _logger.LogWarning(ex, "Failed to verify PayPal status for {SubId} during ACTIVATED webhook, skipping to avoid inconsistency", subId);
+            return;
         }
 
         subscription.Status = SubscriptionStatus.Active;
@@ -422,6 +501,24 @@ public class SubscriptionController : ControllerBase
         {
             _logger.LogInformation("Ignoring stale CANCELLED webhook for {SubId} (event: {EventTime}, local: {UpdatedAt})",
                 subId, eventTime.Value, subscription.UpdatedAt);
+            return;
+        }
+
+        try
+        {
+            var currentDetails = await _paypal.GetSubscriptionDetailsAsync(subId);
+            var currentStatus = currentDetails.Status.ToUpperInvariant();
+
+            if (currentStatus == "ACTIVE")
+            {
+                _logger.LogInformation("Ignoring CANCELLED webhook for {SubId} - PayPal current status is ACTIVE",
+                    subId);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to verify PayPal status for {SubId} during CANCELLED webhook, skipping to avoid inconsistency", subId);
             return;
         }
 
@@ -457,6 +554,24 @@ public class SubscriptionController : ControllerBase
         {
             _logger.LogInformation("Ignoring stale SUSPENDED webhook for {SubId} (event: {EventTime}, local: {UpdatedAt})",
                 subId, eventTime.Value, subscription.UpdatedAt);
+            return;
+        }
+
+        try
+        {
+            var currentDetails = await _paypal.GetSubscriptionDetailsAsync(subId);
+            var currentStatus = currentDetails.Status.ToUpperInvariant();
+
+            if (currentStatus != "SUSPENDED")
+            {
+                _logger.LogInformation("Ignoring SUSPENDED webhook for {SubId} - PayPal current status is {Status}",
+                    subId, currentStatus);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to verify PayPal status for {SubId} during SUSPENDED webhook, skipping to avoid inconsistency", subId);
             return;
         }
 
@@ -522,8 +637,16 @@ public class SubscriptionController : ControllerBase
             if (details.BillingInfo?.NextBillingTime != null
                 && DateTimeOffset.TryParse(details.BillingInfo.NextBillingTime, out var nextBilling))
             {
-                subscription.CurrentPeriodStart = subscription.CurrentPeriodEnd ?? DateTimeOffset.UtcNow;
-                subscription.CurrentPeriodEnd = nextBilling;
+                if (subscription.CurrentPeriodEnd != null && subscription.CurrentPeriodEnd != nextBilling)
+                {
+                    subscription.CurrentPeriodStart = subscription.CurrentPeriodEnd;
+                    subscription.CurrentPeriodEnd = nextBilling;
+                }
+                else if (subscription.CurrentPeriodEnd == null)
+                {
+                    subscription.CurrentPeriodStart = DateTimeOffset.UtcNow;
+                    subscription.CurrentPeriodEnd = nextBilling;
+                }
             }
 
             subscription.Status = MapPayPalStatus(details.Status);
@@ -549,8 +672,6 @@ public class SubscriptionController : ControllerBase
         payment.Status = PaymentStatus.Refunded;
         await _db.SaveChangesAsync();
     }
-
-    // ── Helpers ─────────────────────────────────────────────────
 
     private int? GetUserId()
     {
