@@ -700,12 +700,10 @@ public class AuthController : ControllerBase
             _db.PasswordResetTokens.Add(resetToken);
             await _db.SaveChangesAsync();
 
-            var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain);
             var link = $"{_frontendUrl}/auth/reset-password?token={resetToken.Token}";
 
             await _emailService.SendPasswordResetEmailAsync(
                 user.Email,
-                mainProfile?.Username ?? "User",
                 link
             );
         }
@@ -892,14 +890,10 @@ public class AuthController : ControllerBase
         _db.EmailChangeTokens.Add(emailChangeToken);
         await _db.SaveChangesAsync();
 
-        var activeProfile = user.Profiles.FirstOrDefault(p => p.Id == user.ActiveProfileId)
-                        ?? user.Profiles.FirstOrDefault(p => p.IsMain);
-
         var link = $"{_frontendUrl}/auth/verify-email-change?token={emailChangeToken.Token}";
 
         await _emailService.SendEmailChangeEmailAsync(
             request.NewEmail,
-            activeProfile?.Username ?? "User",
             link,
             request.NewEmail
         );

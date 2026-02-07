@@ -33,12 +33,11 @@ public class EmailService : IEmailService
         await _resend.EmailSendAsync(message);
     }
 
-    public async Task SendPasswordResetEmailAsync(string toEmail, string username, string resetLink)
+    public async Task SendPasswordResetEmailAsync(string toEmail, string resetLink)
     {
         var template = await LoadTemplateAsync("PasswordResetEmail.html");
         
         var htmlContent = template
-            .Replace("{{USERNAME}}", username)
             .Replace("{{RESET_LINK}}", resetLink);
 
         var message = new EmailMessage
@@ -52,12 +51,11 @@ public class EmailService : IEmailService
         await _resend.EmailSendAsync(message);
     }
 
-    public async Task SendEmailChangeEmailAsync(string toEmail, string username, string verifyLink, string newEmail)
+    public async Task SendEmailChangeEmailAsync(string toEmail, string verifyLink, string newEmail)
     {
         var template = await LoadTemplateAsync("EmailChangeEmail.html");
         
         var htmlContent = template
-            .Replace("{{USERNAME}}", username)
             .Replace("{{VERIFY_LINK}}", verifyLink)
             .Replace("{{NEW_EMAIL}}", newEmail);
 
@@ -66,6 +64,31 @@ public class EmailService : IEmailService
             From = _fromEmail,
             To = toEmail,
             Subject = "Verify your new email address",
+            HtmlBody = htmlContent
+        };
+
+        await _resend.EmailSendAsync(message);
+    }
+
+    public async Task SendReceiptEmailAsync(string toEmail, string amount, string currency, string paidDate, string subscriptionId, string captureId, string planName, string planPrice, string billingPeriod)
+    {
+        var template = await LoadTemplateAsync("ReceiptEmail.html");
+
+        var htmlContent = template
+            .Replace("{{AMOUNT}}", amount)
+            .Replace("{{CURRENCY}}", currency)
+            .Replace("{{PAID_DATE}}", paidDate)
+            .Replace("{{SUBSCRIPTION_ID}}", subscriptionId)
+            .Replace("{{CAPTURE_ID}}", captureId)
+            .Replace("{{PLAN_NAME}}", planName)
+            .Replace("{{PLAN_PRICE}}", planPrice)
+            .Replace("{{BILLING_PERIOD}}", billingPeriod);
+
+        var message = new EmailMessage
+        {
+            From = _fromEmail,
+            To = toEmail,
+            Subject = $"Your receipt from CryptoCompete #{captureId}",
             HtmlBody = htmlContent
         };
 

@@ -15,6 +15,7 @@ public class SubscriptionController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IPayPalService _paypal;
+    private readonly IEmailService _emailService;
     private readonly IConfiguration _config;
     private readonly ILogger<SubscriptionController> _logger;
     private readonly bool _isDevelopment;
@@ -22,12 +23,14 @@ public class SubscriptionController : ControllerBase
     public SubscriptionController(
         AppDbContext db,
         IPayPalService paypal,
+        IEmailService emailService,
         IConfiguration config,
         ILogger<SubscriptionController> logger,
         IWebHostEnvironment environment)
     {
         _db = db;
         _paypal = paypal;
+        _emailService = emailService;
         _config = config;
         _logger = logger;
         _isDevelopment = environment.IsDevelopment();
@@ -658,6 +661,32 @@ public class SubscriptionController : ControllerBase
 
         subscription.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
+
+        try
+        {
+            var user = await _db.Users.FindAsync(subscription.UserId);
+            if (user != null)
+            {
+                var periodStart = subscription.CurrentPeriodStart ?? payment.PaidAt;
+                var periodEnd = subscription.CurrentPeriodEnd ?? periodStart.AddMonths(1);
+                var billingPeriod = $"{periodStart:MMM dd} – {periodEnd:MMM dd, yyyy}";
+
+                await _emailService.SendReceiptEmailAsync(
+                    user.Email,
+                    payment.Amount.ToString("0.00"),
+                    payment.Currency == "EUR" ? "€" : payment.Currency,
+                    payment.PaidAt.ToString("MMMM dd, yyyy"),
+                    subscription.PayPalSubscriptionId,
+                    captureId,
+                    "Pro plan",
+                    subscription.Amount.ToString("0.00"),
+                    billingPeriod);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send receipt email for capture {CaptureId}", captureId);
+        }
     }
 
     private async Task HandlePaymentRefunded(JsonElement resource)
