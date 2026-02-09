@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
@@ -12,35 +12,29 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-interface AuthRequiredDialogProps {
+interface PremiumTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AuthRequiredDialog({ open, onOpenChange }: AuthRequiredDialogProps) {
-  const router = useRouter();
-  const t = useTranslations("auth.authRequired");
-
-  function handleSignUp() {
-    onOpenChange(false);
-    router.push("/auth/register");
-  }
+export function PremiumTransactionDialog({ open, onOpenChange }: PremiumTransactionDialogProps) {
+  const t = useTranslations("account");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogTitle>{t("premiumRequired")}</DialogTitle>
           <DialogDescription>
-            {t("description")}
+            {t("premiumTransactionDescription")}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("goBack")}
           </Button>
-          <Button onClick={handleSignUp}>
-            {t("signUp")}
+          <Button asChild>
+            <Link href="/upgrade">{t("upgradePlan")}</Link>
           </Button>
         </DialogFooter>
       </DialogContent>

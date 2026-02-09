@@ -83,6 +83,61 @@ public class PortfolioController : ControllerBase
         ));
     }
 
+    [HttpGet("{profilePublicId}/transactions")]
+    public async Task<IActionResult> GetTransactions(Guid profilePublicId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _db.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
+        if (!isPremium)
+        {
+            return StatusCode(403, new { message = "Premium required" });
+        }
+
+        var profile = await _db.Profiles
+            .Include(p => p.Transactions)
+                .ThenInclude(t => t.Cryptocurrency)
+            .FirstOrDefaultAsync(p => p.PublicId == profilePublicId && p.UserId == userId);
+
+        if (profile == null)
+        {
+            return NotFound(new { message = "Profile not found" });
+        }
+
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
+        var exchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
+
+        var transactions = profile.Transactions
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new TransactionDto(
+                t.Id,
+                t.Cryptocurrency.Symbol,
+                t.Cryptocurrency.Name,
+                t.Type.ToString(),
+                t.Amount,
+                t.PricePerUnit,
+                t.TotalValue,
+                displayCurrency,
+                t.CreatedAt
+            ))
+            .ToList();
+
+        return Ok(new TransactionsResponse(transactions, displayCurrency, exchangeRate));
+    }
+
     private decimal CalculateInvestedValue(ICollection<Transaction> transactions, int cryptoId, decimal exchangeRate)
     {
         var cryptoTransactions = transactions
@@ -139,4 +194,22 @@ public record PortfolioResponse(
     string Currency, 
     decimal ExchangeRate,
     List<HoldingDto> Holdings
+);
+
+public record TransactionDto(
+    int Id,
+    string Symbol,
+    string Name,
+    string Type,
+    decimal Amount,
+    decimal PricePerUnit,
+    decimal TotalValue,
+    string Currency,
+    DateTimeOffset CreatedAt
+);
+
+public record TransactionsResponse(
+    List<TransactionDto> Transactions,
+    string Currency,
+    decimal ExchangeRate
 );

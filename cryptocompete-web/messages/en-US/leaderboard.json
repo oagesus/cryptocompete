@@ -15,6 +15,9 @@
     "portfolioValue": "Portfolio Value",
     "balance": "Balance",
     "holdings": "Holdings",
-    "noHoldingsYet": "No holdings yet."
+    "noHoldingsYet": "No holdings yet.",
+    "viewTransactions": "View Transactions",
+    "userTransactions": "{username}'s Transactions",
+    "userPortfolio": "{username}'s Portfolio"
   }
 }

@@ -2,9 +2,12 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
+import { getUser } from "@/lib/auth/get-user";
+import { isPremium } from "@/lib/auth/user-utils";
 import { BalanceCardPortfolio } from "@/components/balance-card-portfolio";
 import { PortfolioHero } from "@/components/portfolio-hero";
 import { HoldingsList } from "@/components/holdings-list";
+import { ViewTransactionsLink } from "@/components/view-transactions-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -17,11 +20,14 @@ export default async function PortfolioPage({
 }) {
   const { id: publicId } = await params;
   const portfolio = await getPortfolio(publicId);
+  const user = await getUser();
   const t = await getTranslations("account");
 
-  if (!portfolio) {
+  if (!portfolio || !user) {
     redirect("/account");
   }
+
+  const userIsPremium = isPremium(user);
 
   return (
     <div className="space-y-6">
@@ -49,6 +55,14 @@ export default async function PortfolioPage({
               holdings={portfolio.holdings}
               currency={portfolio.currency}
               exchangeRate={portfolio.exchangeRate}
+            />
+          </div>
+
+          <div>
+            <ViewTransactionsLink
+              href={`/account/profiles/${publicId}/portfolio/transactions`}
+              isPremium={userIsPremium}
+              label={t("viewTransactions")}
             />
           </div>
         </CardContent>

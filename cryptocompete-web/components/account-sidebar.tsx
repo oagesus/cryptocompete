@@ -4,12 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Settings, User, Plus, Wallet, CreditCard } from "lucide-react";
+import { Settings, User, Plus, Wallet, CreditCard, History } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PremiumRequiredDialog } from "@/components/premium-required-dialog";
+import { PremiumTransactionDialog } from "@/components/premium-transaction-dialog";
 import { ActiveBadge } from "@/components/active-badge";
 import { useAccount } from "@/components/account-provider";
 import { isPremium } from "@/lib/auth/user-utils";
@@ -21,6 +22,7 @@ export function AccountSidebar() {
   const { user } = useAccount();
   const t = useTranslations("account");
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
+  const [showTransactionDialog, setShowTransactionDialog] = useState(false);
 
   const profiles = user.profiles;
   const activeProfileId = user.activeProfileId;
@@ -69,8 +71,10 @@ export function AccountSidebar() {
           {profiles.map((profile) => {
             const profilePath = `/account/profiles/${profile.publicId}`;
             const portfolioPath = `${profilePath}/portfolio`;
+            const transactionsPath = `${portfolioPath}/transactions`;
             const isProfileActive = pathname === profilePath;
             const isPortfolioActive = pathname === portfolioPath;
+            const isTransactionsActive = pathname === transactionsPath;
             const isExpanded = pathname.startsWith(profilePath);
 
             return (
@@ -91,16 +95,38 @@ export function AccountSidebar() {
                   )}
                 </Link>
                 {isExpanded && (
-                  <Link
-                    href={portfolioPath}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 pl-9 text-sm hover:bg-muted min-h-[40px]",
-                      isPortfolioActive && "bg-muted font-medium"
+                  <>
+                    <Link
+                      href={portfolioPath}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md px-3 py-2 pl-9 text-sm hover:bg-muted min-h-[40px]",
+                        isPortfolioActive && "bg-muted font-medium"
+                      )}
+                    >
+                      <Wallet className="h-4 w-4 shrink-0" />
+                      <span>{t("portfolio")}</span>
+                    </Link>
+                    {userIsPremium ? (
+                      <Link
+                        href={transactionsPath}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-3 py-2 pl-9 text-sm hover:bg-muted min-h-[40px]",
+                          isTransactionsActive && "bg-muted font-medium"
+                        )}
+                      >
+                        <History className="h-4 w-4 shrink-0" />
+                        <span>{t("transactions")}</span>
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => setShowTransactionDialog(true)}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 pl-9 text-sm hover:bg-muted min-h-[40px] cursor-pointer"
+                      >
+                        <History className="h-4 w-4 shrink-0" />
+                        <span>{t("transactions")}</span>
+                      </button>
                     )}
-                  >
-                    <Wallet className="h-4 w-4 shrink-0" />
-                    <span>{t("portfolio")}</span>
-                  </Link>
+                  </>
                 )}
               </div>
             );
@@ -134,6 +160,10 @@ export function AccountSidebar() {
       <PremiumRequiredDialog 
         open={showPremiumDialog} 
         onOpenChange={setShowPremiumDialog} 
+      />
+      <PremiumTransactionDialog
+        open={showTransactionDialog}
+        onOpenChange={setShowTransactionDialog}
       />
     </>
   );

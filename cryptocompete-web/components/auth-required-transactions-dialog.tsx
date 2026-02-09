@@ -12,14 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-interface AuthRequiredDialogProps {
+interface AuthRequiredTransactionsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AuthRequiredDialog({ open, onOpenChange }: AuthRequiredDialogProps) {
+export function AuthRequiredTransactionsDialog({ open, onOpenChange }: AuthRequiredTransactionsDialogProps) {
   const router = useRouter();
-  const t = useTranslations("auth.authRequired");
+  const t = useTranslations("auth.authRequiredTransactions");
 
   function handleSignUp() {
     onOpenChange(false);

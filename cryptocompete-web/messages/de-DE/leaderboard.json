@@ -15,6 +15,9 @@
     "portfolioValue": "Portfolio-Wert",
     "balance": "Guthaben",
     "holdings": "Bestände",
-    "noHoldingsYet": "Noch keine Bestände."
+    "noHoldingsYet": "Noch keine Bestände.",
+    "viewTransactions": "Transaktionen anzeigen",
+    "userTransactions": "{username}'s Transaktionen",
+    "userPortfolio": "{username}'s Portfolio"
   }
 }

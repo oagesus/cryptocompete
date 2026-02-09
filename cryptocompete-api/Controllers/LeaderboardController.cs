@@ -9,7 +9,6 @@ namespace CryptoCompete.Api.Controllers;
 
 [ApiController]
 [Route("api/leaderboard")]
-[AllowAnonymous]
 public class LeaderboardController : ControllerBase
 {
     private readonly ILeaderboardService _leaderboardService;
@@ -30,6 +29,7 @@ public class LeaderboardController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetLeaderboard([FromQuery] int limit = 100, CancellationToken cancellationToken = default)
     {
         if (limit < 1) limit = 1;
@@ -51,6 +51,7 @@ public class LeaderboardController : ControllerBase
     }
 
     [HttpGet("profile/{username}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetPublicProfile(string username, CancellationToken cancellationToken = default)
     {
         var profile = await _db.Profiles
@@ -100,6 +101,63 @@ public class LeaderboardController : ControllerBase
             exchangeRate,
             holdings
         ));
+    }
+
+    [HttpGet("profile/{username}/transactions")]
+    [Authorize]
+    public async Task<IActionResult> GetPublicProfileTransactions(string username, CancellationToken cancellationToken = default)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _db.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
+        if (!isPremium)
+        {
+            return StatusCode(403, new { message = "Premium required" });
+        }
+
+        var profile = await _db.Profiles
+            .Include(p => p.Transactions)
+                .ThenInclude(t => t.Cryptocurrency)
+            .FirstOrDefaultAsync(p => EF.Functions.ILike(p.Username, username), cancellationToken);
+
+        if (profile == null)
+        {
+            return NotFound(new { message = "Profile not found" });
+        }
+
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
+        var exchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
+        var leaderboardEntry = await _leaderboardService.GetEntryByProfileIdAsync(profile.Id, cancellationToken);
+
+        var transactions = profile.Transactions
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new PublicTransactionDto(
+                t.Id,
+                t.Cryptocurrency.Symbol,
+                t.Cryptocurrency.Name,
+                t.Type.ToString(),
+                t.Amount,
+                t.PricePerUnit,
+                t.TotalValue,
+                displayCurrency,
+                t.CreatedAt
+            ))
+            .ToList();
+
+        return Ok(new PublicTransactionsResponse(transactions, displayCurrency, exchangeRate, leaderboardEntry?.Rank));
     }
 
     private decimal CalculateInvestedValue(ICollection<Transaction> transactions, int cryptoId, decimal exchangeRate)
@@ -172,4 +230,23 @@ public record PublicProfileResponse(
     string Currency,
     decimal ExchangeRate,
     List<PublicHoldingDto> Holdings
+);
+
+public record PublicTransactionDto(
+    int Id,
+    string Symbol,
+    string Name,
+    string Type,
+    decimal Amount,
+    decimal PricePerUnit,
+    decimal TotalValue,
+    string Currency,
+    DateTimeOffset CreatedAt
+);
+
+public record PublicTransactionsResponse(
+    List<PublicTransactionDto> Transactions,
+    string Currency,
+    decimal ExchangeRate,
+    int? Rank
 );

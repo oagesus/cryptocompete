@@ -26,6 +26,8 @@
     "addProfile": "Add Profile",
     "active": "Active",
     "portfolio": "Portfolio",
+    "transactions": "Transactions",
+    "viewTransactions": "View Transactions",
     "profileNotFound": "Profile not found",
     "switchToThisProfile": "Switch to this profile",
     "profileSwitched": "Profile switched successfully",
@@ -53,6 +55,7 @@
     "premiumRequired": "Pro Required",
     "premiumRequiredDescription": "You need a Pro subscription to create additional profiles.",
     "premiumSwitchDescription": "You need a Pro subscription to switch to non-main profiles.",
+    "premiumTransactionDescription": "You need a Pro subscription to view transaction history.",
     "upgradePlan": "Upgrade plan",
     "goBack": "Go back",
     "ok": "OK",
@@ -69,6 +72,16 @@
     "display": "Display",
     "theme": "Theme",
     "darkMode": "Dark",
-    "lightMode": "Light"
+    "lightMode": "Light",
+    "transactionsPremiumOnly": "Transaction history is available for Pro subscribers.",
+    "noTransactions": "No transactions yet.",
+    "transactionDate": "Date",
+    "transactionType": "Type",
+    "transactionAsset": "Asset",
+    "transactionAmount": "Amount",
+    "transactionPricePerUnit": "Price per Unit",
+    "transactionTotal": "Total",
+    "transactionBuy": "Buy",
+    "transactionSell": "Sell"
   }
 }
