@@ -3,6 +3,7 @@ using System;
 using CryptoCompete.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace cryptocompete_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260210121734_AddPriceAlarms")]
+    partial class AddPriceAlarms
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -447,26 +450,6 @@ namespace cryptocompete_api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("cryptocurrency_id");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
-                        .HasDefaultValue("EUR")
-                        .HasColumnName("currency");
-
-                    b.Property<bool>("IsAbove")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("is_above");
-
-                    b.Property<bool>("IsRecurring")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_recurring");
-
                     b.Property<bool>("IsTriggered")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -474,8 +457,8 @@ namespace cryptocompete_api.Migrations
                         .HasColumnName("is_triggered");
 
                     b.Property<decimal>("TargetPrice")
-                        .HasPrecision(28, 8)
-                        .HasColumnType("numeric(28,8)")
+                        .HasPrecision(18, 8)
+                        .HasColumnType("numeric(18,8)")
                         .HasColumnName("target_price");
 
                     b.Property<DateTimeOffset?>("TriggeredAt")

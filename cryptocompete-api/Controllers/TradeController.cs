@@ -279,6 +279,179 @@ public class TradeController : ControllerBase
             Math.Round(profile.Balance * eurToUserCurrency, 2)
         ));
     }
+    [HttpPost("price-alarm")]
+    public async Task<IActionResult> CreatePriceAlarm([FromBody] CreatePriceAlarmRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _db.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var isPremium = user.UserRoles.Any(r => r.Role == Role.Premium || r.Role == Role.Admin);
+        if (!isPremium)
+        {
+            return StatusCode(403, new { message = "Premium required" });
+        }
+
+        var crypto = await _db.Cryptocurrencies
+            .FirstOrDefaultAsync(c => c.Symbol.ToLower() == request.Symbol.ToLower() && c.IsActive);
+
+        if (crypto == null)
+        {
+            return NotFound(new { message = $"Cryptocurrency {request.Symbol} not found" });
+        }
+
+        if (request.TargetPrice <= 0)
+        {
+            return BadRequest(new { message = "Target price must be greater than 0" });
+        }
+
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
+
+        var priceUsd = _priceService.GetPrice(crypto.Symbol);
+        var userCurrencyToUsd = await _currencyService.GetExchangeRateAsync(displayCurrency, "USD");
+        var targetPriceUsd = request.TargetPrice * userCurrencyToUsd;
+        var currentPriceUsd = priceUsd.HasValue ? (decimal)priceUsd.Value : 0;
+        var isAbove = targetPriceUsd >= currentPriceUsd;
+
+        var alarm = new PriceAlarm
+        {
+            UserId = userId,
+            CryptocurrencyId = crypto.Id,
+            TargetPrice = request.TargetPrice,
+            Currency = displayCurrency,
+            IsAbove = isAbove,
+            IsRecurring = request.IsRecurring
+        };
+        _db.PriceAlarms.Add(alarm);
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new PriceAlarmDto(
+            alarm.Id,
+            crypto.Symbol,
+            crypto.Name,
+            alarm.TargetPrice,
+            alarm.Currency,
+            alarm.IsAbove,
+            alarm.IsRecurring,
+            alarm.IsTriggered,
+            alarm.CreatedAt
+        ));
+    }
+
+    [HttpGet("price-alarms")]
+    public async Task<IActionResult> GetPriceAlarms()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var alarms = await _db.PriceAlarms
+            .Include(a => a.Cryptocurrency)
+            .Where(a => a.UserId == userId)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
+        var result = alarms.Select(a => new PriceAlarmDto(
+            a.Id,
+            a.Cryptocurrency.Symbol,
+            a.Cryptocurrency.Name,
+            a.TargetPrice,
+            a.Currency,
+            a.IsAbove,
+            a.IsRecurring,
+            a.IsTriggered,
+            a.CreatedAt
+        )).ToList();
+
+        return Ok(new PriceAlarmsResponse(result));
+    }
+
+    [HttpPut("price-alarm/{id}")]
+    public async Task<IActionResult> UpdatePriceAlarm(int id, [FromBody] UpdatePriceAlarmRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var alarm = await _db.PriceAlarms
+            .Include(a => a.Cryptocurrency)
+            .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+
+        if (alarm == null)
+        {
+            return NotFound(new { message = "Price alarm not found" });
+        }
+
+        if (request.TargetPrice <= 0)
+        {
+            return BadRequest(new { message = "Target price must be greater than 0" });
+        }
+
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
+
+        var priceUsd = _priceService.GetPrice(alarm.Cryptocurrency.Symbol);
+        var userCurrencyToUsd = await _currencyService.GetExchangeRateAsync(displayCurrency, "USD");
+        var targetPriceUsd = request.TargetPrice * userCurrencyToUsd;
+        var currentPriceUsd = priceUsd.HasValue ? (decimal)priceUsd.Value : 0;
+
+        alarm.TargetPrice = request.TargetPrice;
+        alarm.Currency = displayCurrency;
+        alarm.IsAbove = targetPriceUsd >= currentPriceUsd;
+        alarm.IsRecurring = request.IsRecurring;
+        alarm.IsTriggered = false;
+        alarm.TriggeredAt = null;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new PriceAlarmDto(
+            alarm.Id,
+            alarm.Cryptocurrency.Symbol,
+            alarm.Cryptocurrency.Name,
+            alarm.TargetPrice,
+            alarm.Currency,
+            alarm.IsAbove,
+            alarm.IsRecurring,
+            alarm.IsTriggered,
+            alarm.CreatedAt
+        ));
+    }
+
+    [HttpDelete("price-alarm/{id}")]
+    public async Task<IActionResult> DeletePriceAlarm(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var alarm = await _db.PriceAlarms.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+        if (alarm == null)
+        {
+            return NotFound(new { message = "Price alarm not found" });
+        }
+
+        _db.PriceAlarms.Remove(alarm);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Price alarm deleted" });
+    }
 }
 
 public record TradeRequest(string Symbol, decimal Amount, string Mode = "spend");
@@ -291,4 +464,23 @@ public record TradeResponse(
     decimal Value,
     string Currency,
     decimal NewBalance
+);
+
+public record CreatePriceAlarmRequest(string Symbol, decimal TargetPrice, bool IsRecurring = false);
+public record UpdatePriceAlarmRequest(decimal TargetPrice, bool IsRecurring = false);
+
+public record PriceAlarmDto(
+    int Id,
+    string Symbol,
+    string Name,
+    decimal TargetPrice,
+    string Currency,
+    bool IsAbove,
+    bool IsRecurring,
+    bool IsTriggered,
+    DateTimeOffset CreatedAt
+);
+
+public record PriceAlarmsResponse(
+    List<PriceAlarmDto> Alarms
 );

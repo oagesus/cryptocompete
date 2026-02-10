@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<UsernameHistory> UsernameHistories => Set<UsernameHistory>();
     public DbSet<PayPalSubscription> PayPalSubscriptions => Set<PayPalSubscription>();
     public DbSet<SubscriptionPayment> SubscriptionPayments => Set<SubscriptionPayment>();
+    public DbSet<PriceAlarm> PriceAlarms => Set<PriceAlarm>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -238,6 +239,25 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.SubscriptionId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<PriceAlarm>(entity =>
+        {
+            entity.Property(e => e.TargetPrice).HasPrecision(28, 8);
+            entity.Property(e => e.Currency).HasMaxLength(3).HasDefaultValue("EUR");
+            entity.Property(e => e.IsAbove).HasDefaultValue(true);
+            entity.Property(e => e.IsRecurring).HasDefaultValue(false);
+            entity.Property(e => e.IsTriggered).HasDefaultValue(false);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Cryptocurrency)
+                .WithMany()
+                .HasForeignKey(e => e.CryptocurrencyId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

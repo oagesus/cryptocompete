@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2 } from "lucide-react";
 import { SellCard } from "@/components/sell-card";
@@ -203,39 +204,35 @@ export function SellPanel({
           onChange={handleSellAmountChange}
         />
 
-        <div className="flex gap-2">
-          <Button
+        <div className="flex flex-wrap gap-2">
+          <Badge
             variant="outline"
-            size="sm"
-            className="flex-1"
+            className="cursor-pointer px-3 py-1 text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-950/50"
             onClick={() => handlePercentageClick(25)}
           >
             25%
-          </Button>
-          <Button
+          </Badge>
+          <Badge
             variant="outline"
-            size="sm"
-            className="flex-1"
+            className="cursor-pointer px-3 py-1 text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-950/50"
             onClick={() => handlePercentageClick(50)}
           >
             50%
-          </Button>
-          <Button
+          </Badge>
+          <Badge
             variant="outline"
-            size="sm"
-            className="flex-1"
+            className="cursor-pointer px-3 py-1 text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-950/50"
             onClick={() => handlePercentageClick(75)}
           >
             75%
-          </Button>
-          <Button
+          </Badge>
+          <Badge
             variant="outline"
-            size="sm"
-            className="flex-1"
+            className="cursor-pointer px-3 py-1 text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-950/50"
             onClick={() => handlePercentageClick(100)}
           >
             100%
-          </Button>
+          </Badge>
         </div>
 
         <ReceiveCard
