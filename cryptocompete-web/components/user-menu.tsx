@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { User, Settings, LogOut, CircleArrowUp } from "lucide-react";
+import { User, Settings, LogOut, CircleArrowUp, CreditCard, Bell } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -78,6 +78,20 @@ export function UserMenu({ user, currencyInfo }: UserMenuProps) {
         >
           <Settings className="mr-2 h-4 w-4" />
           {tAccount("title")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push("/account/billing")}
+          className="cursor-pointer"
+        >
+          <CreditCard className="mr-2 h-4 w-4" />
+          {tAccount("billing")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push("/account/notify")}
+          className="cursor-pointer"
+        >
+          <Bell className="mr-2 h-4 w-4" />
+          {tAccount("priceAlarms")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

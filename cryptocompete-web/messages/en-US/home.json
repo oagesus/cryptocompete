@@ -4,7 +4,7 @@
       "title": "The ultimate",
       "titleHighlight": "crypto trading simulator",
       "titleEnd": "for competitive traders",
-      "description": "Start with {startingCapital} in virtual funds to build your portfolio, trade cryptocurrencies with real-time prices, and compete against traders worldwide. Track your performance, analyze price histories, and climb the global leaderboard."
+      "description": "Start with {startingCapital} in virtual funds to build your portfolio, trade cryptocurrencies with real-time prices, and compete against traders worldwide. Track your performance, analyze price histories, add price alarms, and climb the global leaderboard."
     },
     "buttons": {
       "signUp": "Sign Up",
@@ -13,11 +13,11 @@
     "features": {
       "riskFree": {
         "title": "Risk-Free Trading",
-        "description": "Start with {startingCapital} in virtual funds to practice trading without any financial risk. Perfect your strategies before entering the real market."
+        "description": "Start with {startingCapital} in virtual funds to practice trading without any financial risk. Perfect your trading strategies before entering the real market."
       },
       "liveTracking": {
         "title": "Live Price Tracking",
-        "description": "Track cryptocurrency prices in real-time. Watch the market move and make informed trading decisions instantly."
+        "description": "Track cryptocurrency prices in real‑time. Watch the market move and make informed trading decisions instantly."
       },
       "priceHistory": {
         "title": "Price History",
@@ -27,13 +27,13 @@
         "title": "Global Leaderboard",
         "description": "Compete against traders from around the world. Climb the rankings, prove your trading skills, and become the ultimate crypto trading champion."
       },
-      "learnFromBest": {
-        "title": "Learn from the Best",
-        "description": "Explore the portfolios of top-ranked traders on the leaderboard. Learn their strategies and improve your own trading skills."
+      "priceAlarms": {
+        "title": "Price Alarms",
+        "description": "Add custom price alarms for any cryptocurrency. Get notified by email when prices hit your target, so you never miss a trading opportunity."
       },
       "portfolio": {
         "title": "Portfolio Analytics",
-        "description": "See exactly how your trades are performing. Track your wins, monitor your losses, and watch your portfolio grow in real-time."
+        "description": "See exactly how your trades are performing. Track your wins, monitor your losses, and watch your portfolio grow in real‑time."
       }
     },
     "openSource": {

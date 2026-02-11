@@ -13,16 +13,18 @@ export default async function TradePage() {
   const t = await getTranslations("trade");
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-      <Link
-        href="/trade/buy"
-        className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50"
-      >
-        <PlusCircle className="h-12 w-12" />
-        <span className="text-xl font-semibold">{t("buy")}</span>
-      </Link>
-      <SellLink isAuthenticated={isAuthenticated} />
-      <NotifyLink isAuthenticated={isAuthenticated} isPremium={userIsPremium} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <Link
+          href="/trade/buy"
+          className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50"
+        >
+          <PlusCircle className="h-12 w-12" />
+          <span className="text-xl font-semibold">{t("buy")}</span>
+        </Link>
+        <SellLink isAuthenticated={isAuthenticated} />
+      </div>
+      <NotifyLink isAuthenticated={isAuthenticated} isPremium={userIsPremium} variant="wide" />
     </div>
   );
 }

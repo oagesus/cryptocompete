@@ -338,7 +338,7 @@ public class TradeController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new PriceAlarmDto(
-            alarm.Id,
+            alarm.PublicId,
             crypto.Symbol,
             crypto.Name,
             alarm.TargetPrice,
@@ -366,7 +366,7 @@ public class TradeController : ControllerBase
             .ToListAsync();
 
         var result = alarms.Select(a => new PriceAlarmDto(
-            a.Id,
+            a.PublicId,
             a.Cryptocurrency.Symbol,
             a.Cryptocurrency.Name,
             a.TargetPrice,
@@ -380,8 +380,8 @@ public class TradeController : ControllerBase
         return Ok(new PriceAlarmsResponse(result));
     }
 
-    [HttpPut("price-alarm/{id}")]
-    public async Task<IActionResult> UpdatePriceAlarm(int id, [FromBody] UpdatePriceAlarmRequest request)
+    [HttpPut("price-alarm/{publicId}")]
+    public async Task<IActionResult> UpdatePriceAlarm(Guid publicId, [FromBody] UpdatePriceAlarmRequest request)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
@@ -391,7 +391,7 @@ public class TradeController : ControllerBase
 
         var alarm = await _db.PriceAlarms
             .Include(a => a.Cryptocurrency)
-            .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+            .FirstOrDefaultAsync(a => a.PublicId == publicId && a.UserId == userId);
 
         if (alarm == null)
         {
@@ -420,7 +420,7 @@ public class TradeController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new PriceAlarmDto(
-            alarm.Id,
+            alarm.PublicId,
             alarm.Cryptocurrency.Symbol,
             alarm.Cryptocurrency.Name,
             alarm.TargetPrice,
@@ -432,8 +432,8 @@ public class TradeController : ControllerBase
         ));
     }
 
-    [HttpDelete("price-alarm/{id}")]
-    public async Task<IActionResult> DeletePriceAlarm(int id)
+    [HttpDelete("price-alarm/{publicId}")]
+    public async Task<IActionResult> DeletePriceAlarm(Guid publicId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
@@ -441,7 +441,7 @@ public class TradeController : ControllerBase
             return Unauthorized();
         }
 
-        var alarm = await _db.PriceAlarms.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+        var alarm = await _db.PriceAlarms.FirstOrDefaultAsync(a => a.PublicId == publicId && a.UserId == userId);
         if (alarm == null)
         {
             return NotFound(new { message = "Price alarm not found" });
@@ -470,7 +470,7 @@ public record CreatePriceAlarmRequest(string Symbol, decimal TargetPrice, bool I
 public record UpdatePriceAlarmRequest(decimal TargetPrice, bool IsRecurring = false);
 
 public record PriceAlarmDto(
-    int Id,
+    Guid PublicId,
     string Symbol,
     string Name,
     decimal TargetPrice,

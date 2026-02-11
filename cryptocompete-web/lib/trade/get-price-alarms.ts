@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 const API_URL = process.env.API_URL;
 
 export interface PriceAlarm {
-  id: number;
+  publicId: string;
   symbol: string;
   name: string;
   targetPrice: number;

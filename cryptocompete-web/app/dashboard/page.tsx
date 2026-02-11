@@ -4,8 +4,10 @@ import { Suspense } from "react";
 import { PlusCircle, MinusCircle, Wallet, User, Trophy } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getUser } from "@/lib/auth/get-user";
+import { isPremium } from "@/lib/auth/user-utils";
 import { Greeting } from "./greeting";
 import { SubscriptionToastHandler } from "@/components/subscription-toast-handler";
+import { NotifyLink } from "@/app/trade/notify-link";
 
 export default async function DashboardPage() {
   const user = await getUser();
@@ -17,6 +19,7 @@ export default async function DashboardPage() {
   }
 
   const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
+  const userIsPremium = isPremium(user);
 
   const subscriptionTranslations = {
     subscriptionCancelled: ut("subscriptionCancelled"),
@@ -51,6 +54,17 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <NotifyLink isAuthenticated={true} isPremium={userIsPremium} />
+        <Link
+          href="/leaderboard"
+          className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50"
+        >
+          <Trophy className="h-12 w-12" />
+          <span className="text-xl font-semibold">{t("leaderboard")}</span>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <Link
           href={`/account/profiles/${activeProfile.publicId}/portfolio`}
           className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50"
@@ -66,14 +80,6 @@ export default async function DashboardPage() {
           <span className="text-xl font-semibold">{t("profile")}</span>
         </Link>
       </div>
-
-      <Link
-        href="/leaderboard"
-        className="flex items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50 w-full"
-      >
-        <Trophy className="h-12 w-12" />
-        <span className="text-xl font-semibold">{t("leaderboard")}</span>
-      </Link>
     </div>
   );
 }

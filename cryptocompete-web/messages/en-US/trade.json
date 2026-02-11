@@ -47,7 +47,7 @@
     "alarmDeleted": "Price alarm deleted",
     "save": "Save",
     "cancel": "Cancel",
-    "selectCryptoForAlarm": "Select a cryptocurrency from the sidebar to set a price alarm.",
+    "selectCryptoForAlarm": "Select a cryptocurrency from the sidebar to add a price alarm.",
     "priceAbove": "Price above {price}",
     "priceBelow": "Price below {price}",
     "once": "One-Time Notification",

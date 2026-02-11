@@ -47,7 +47,7 @@
     "alarmDeleted": "Kursalarm gelöscht",
     "save": "Speichern",
     "cancel": "Abbrechen",
-    "selectCryptoForAlarm": "Wähle eine Kryptowährung aus der Seitenleiste, um einen Kursalarm zu setzen.",
+    "selectCryptoForAlarm": "Wähle eine Kryptowährung aus der Seitenleiste, um einen Kursalarm hinzuzufügen.",
     "priceAbove": "Preis über {price}",
     "priceBelow": "Preis unter {price}",
     "once": "Einmalige Benachrichtigung",

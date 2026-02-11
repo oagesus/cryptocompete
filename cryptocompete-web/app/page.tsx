@@ -6,7 +6,7 @@ import {
   Trophy,
   LineChart,
   Clock,
-  Users,
+  Bell,
   Zap,
   Github,
   Star,
@@ -117,6 +117,19 @@ export default async function Home() {
           </div>
 
           <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
+            <Bell className="h-10 w-10 text-primary" />
+            <div className="mt-4 inline-block">
+              <h3 className="text-lg font-semibold">
+                {t("features.priceAlarms.title")}
+              </h3>
+              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {t("features.priceAlarms.description")}
+            </p>
+          </div>
+
+          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
             <Trophy className="h-10 w-10 text-primary" />
             <div className="mt-4 inline-block">
               <h3 className="text-lg font-semibold">
@@ -126,19 +139,6 @@ export default async function Home() {
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("features.leaderboard.description")}
-            </p>
-          </div>
-
-          <div className="group rounded-lg border border-border bg-card p-6 hover:border-primary hover:bg-muted">
-            <Users className="h-10 w-10 text-primary" />
-            <div className="mt-4 inline-block">
-              <h3 className="text-lg font-semibold">
-                {t("features.learnFromBest.title")}
-              </h3>
-              <div className="mt-2 h-0.5 w-12 bg-primary transition-all duration-200 group-hover:w-full" />
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {t("features.learnFromBest.description")}
             </p>
           </div>
 

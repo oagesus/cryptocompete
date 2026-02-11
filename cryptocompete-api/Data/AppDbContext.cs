@@ -243,6 +243,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PriceAlarm>(entity =>
         {
+            entity.HasIndex(e => e.PublicId).IsUnique();
             entity.Property(e => e.TargetPrice).HasPrecision(28, 8);
             entity.Property(e => e.Currency).HasMaxLength(3).HasDefaultValue("EUR");
             entity.Property(e => e.IsAbove).HasDefaultValue(true);

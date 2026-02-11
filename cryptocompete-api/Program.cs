@@ -100,6 +100,7 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<CryptoPriceBackgro
 builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>();
 builder.Services.AddHostedService<LeaderboardBackgroundService>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
+builder.Services.AddHostedService<PriceAlarmBackgroundService>();
 
 builder.Services.AddOpenApi();
 

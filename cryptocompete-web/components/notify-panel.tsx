@@ -12,7 +12,7 @@ import { Loader2, Trash2, TrendingUp, TrendingDown, Pencil } from "lucide-react"
 import { NotifyCard } from "@/components/notify-card";
 
 interface PriceAlarm {
-  id: number;
+  publicId: string;
   symbol: string;
   name: string;
   targetPrice: number;
@@ -31,6 +31,7 @@ interface Props {
   initialPriceUsd: number | null;
   supportedCurrencies: string[];
   alarms: PriceAlarm[];
+  editAlarmId?: string;
 }
 
 export function NotifyPanel({
@@ -41,16 +42,26 @@ export function NotifyPanel({
   initialPriceUsd,
   supportedCurrencies,
   alarms: initialAlarms,
+  editAlarmId,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("trade");
   const locale = useLocale();
-  const [targetPrice, setTargetPrice] = useState("");
-  const [isRecurring, setIsRecurring] = useState(false);
+
+  const initialEditAlarm = editAlarmId
+    ? initialAlarms.find((a) => a.publicId === editAlarmId)
+    : undefined;
+
+  const [targetPrice, setTargetPrice] = useState(() => {
+    if (!initialEditAlarm) return "";
+    const decimals = initialEditAlarm.targetPrice >= 10 ? 2 : 6;
+    return initialEditAlarm.targetPrice.toFixed(decimals);
+  });
+  const [isRecurring, setIsRecurring] = useState(initialEditAlarm?.isRecurring ?? false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(initialEditAlarm?.publicId ?? null);
 
   const { prices } = useCryptoPrices();
 
@@ -96,8 +107,9 @@ export function NotifyPanel({
     const decimals = alarm.targetPrice >= 10 ? 2 : 6;
     setTargetPrice(alarm.targetPrice.toFixed(decimals));
     setIsRecurring(alarm.isRecurring);
-    setEditingId(alarm.id);
+    setEditingId(alarm.publicId);
     setError(null);
+    window.history.replaceState(null, "", `${window.location.pathname}?edit=${alarm.publicId}`);
 
     if (alarm.currency !== displayCurrency) {
       try {
@@ -117,6 +129,7 @@ export function NotifyPanel({
     setTargetPrice("");
     setIsRecurring(false);
     setError(null);
+    router.push(window.location.pathname, { scroll: false });
   }
 
   async function handleSubmit() {
@@ -164,6 +177,8 @@ export function NotifyPanel({
       setTargetPrice("");
       setEditingId(null);
       setIsRecurring(false);
+      setError(null);
+      router.push(window.location.pathname, { scroll: false });
       router.refresh();
     } catch {
       setError(t("somethingWentWrong"));
@@ -172,11 +187,11 @@ export function NotifyPanel({
     }
   }
 
-  async function handleDeleteAlarm(id: number) {
-    setDeletingId(id);
+  async function handleDeleteAlarm(publicId: string) {
+    setDeletingId(publicId);
 
     try {
-      const response = await fetch(`/api/trade/price-alarm/${id}`, {
+      const response = await fetch(`/api/trade/price-alarm/${publicId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -188,13 +203,16 @@ export function NotifyPanel({
       }
 
       toast.success(t("alarmDeleted"));
-      if (editingId === id) {
+      if (editingId === publicId) {
         setEditingId(null);
         setTargetPrice("");
         setIsRecurring(false);
         setError(null);
+        router.push(window.location.pathname, { scroll: false });
+        router.refresh();
+      } else {
+        router.refresh();
       }
-      router.refresh();
     } catch {
       toast.error(t("somethingWentWrong"));
     } finally {
@@ -223,7 +241,7 @@ export function NotifyPanel({
   };
 
   const symbolAlarms = initialAlarms.filter(
-    (a) => a.symbol.toLowerCase() === symbol.toLowerCase()
+    (a) => a.symbol.toLowerCase() === symbol.toLowerCase() && (!a.isTriggered || a.isRecurring)
   );
 
   return (
@@ -334,9 +352,9 @@ export function NotifyPanel({
             <span className="text-sm font-medium">{t("activeAlarms")}</span>
             {symbolAlarms.map((alarm) => (
               <div
-                key={alarm.id}
+                key={alarm.publicId}
                 className={`flex items-center justify-between rounded-lg border p-3 ${
-                  editingId === alarm.id
+                  editingId === alarm.publicId
                     ? "border-primary bg-primary/10"
                     : ""
                 }`}
@@ -361,17 +379,17 @@ export function NotifyPanel({
                     variant="ghost"
                     size="icon"
                     onClick={() => handleEditAlarm(alarm)}
-                    disabled={editingId === alarm.id}
+                    disabled={editingId === alarm.publicId}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDeleteAlarm(alarm.id)}
-                    disabled={deletingId === alarm.id}
+                    onClick={() => handleDeleteAlarm(alarm.publicId)}
+                    disabled={deletingId === alarm.publicId}
                   >
-                    {deletingId === alarm.id ? (
+                    {deletingId === alarm.publicId ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Trash2 className="h-4 w-4" />

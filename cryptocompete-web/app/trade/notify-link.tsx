@@ -10,20 +10,22 @@ import { PremiumRequiredNotifyDialog } from "@/components/premium-required-notif
 interface Props {
   isAuthenticated: boolean;
   isPremium: boolean;
+  variant?: "card" | "wide";
 }
 
-export function NotifyLink({ isAuthenticated, isPremium }: Props) {
+export function NotifyLink({ isAuthenticated, isPremium, variant = "card" }: Props) {
   const t = useTranslations("trade");
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
 
+  const className = variant === "wide"
+    ? "flex items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50 w-full"
+    : "flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50";
+
   if (isAuthenticated && isPremium) {
     return (
-      <Link
-        href="/trade/notify"
-        className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50"
-      >
-        <Bell className="h-12 w-12" />
+      <Link href="/trade/notify" className={className}>
+        <Bell className="h-12 w-12 shrink-0" />
         <span className="text-xl font-semibold">{t("priceAlarm")}</span>
       </Link>
     );
@@ -33,9 +35,9 @@ export function NotifyLink({ isAuthenticated, isPremium }: Props) {
     <>
       <button
         onClick={() => isAuthenticated ? setShowPremiumDialog(true) : setShowAuthDialog(true)}
-        className="flex flex-col items-center justify-center gap-4 p-8 rounded-xl border bg-card hover:bg-muted/50 cursor-pointer"
+        className={`${className} cursor-pointer`}
       >
-        <Bell className="h-12 w-12" />
+        <Bell className="h-12 w-12 shrink-0" />
         <span className="text-xl font-semibold">{t("priceAlarm")}</span>
       </button>
       <AuthRequiredDialog

@@ -95,6 +95,33 @@ public class EmailService : IEmailService
         await _resend.EmailSendAsync(message);
     }
 
+    public async Task SendPriceAlarmEmailAsync(string toEmail, string cryptocurrencyName, string symbol, string targetPrice, string currentPrice, string currency, bool isAbove, string triggeredAt, string checkPricesLink)
+    {
+        var template = await LoadTemplateAsync("PriceAlarmEmail.html");
+
+        var direction = isAbove ? "risen above" : "dropped below";
+
+        var htmlContent = template
+            .Replace("{{CRYPTOCURRENCY_NAME}}", cryptocurrencyName)
+            .Replace("{{SYMBOL}}", symbol)
+            .Replace("{{TARGET_PRICE}}", targetPrice)
+            .Replace("{{CURRENT_PRICE}}", currentPrice)
+            .Replace("{{CURRENCY}}", currency)
+            .Replace("risen above", direction)
+            .Replace("{{TRIGGERED_AT}}", triggeredAt)
+            .Replace("{{CHECK_PRICES_LINK}}", checkPricesLink);
+
+        var message = new EmailMessage
+        {
+            From = _fromEmail,
+            To = toEmail,
+            Subject = $"{cryptocurrencyName} has {direction} {currency}{targetPrice}",
+            HtmlBody = htmlContent
+        };
+
+        await _resend.EmailSendAsync(message);
+    }
+
     private static async Task<string> LoadTemplateAsync(string templateName)
     {
         var assembly = Assembly.GetExecutingAssembly();

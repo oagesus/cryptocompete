@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Settings, User, Plus, Wallet, CreditCard, History } from "lucide-react";
+import { Settings, User, Plus, Wallet, CreditCard, History, Bell } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,16 @@ export function AccountSidebar() {
           >
             <CreditCard className="h-4 w-4" />
             {t("billing")}
+          </Link>
+          <Link
+            href="/account/notify"
+            className={cn(
+              "flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted min-h-[40px]",
+              pathname === "/account/notify" && "bg-muted font-medium"
+            )}
+          >
+            <Bell className="h-4 w-4" />
+            {t("priceAlarms")}
           </Link>
           <div className="py-2">
             <span className="px-3 text-xs font-semibold uppercase text-muted-foreground">

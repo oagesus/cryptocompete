@@ -12,10 +12,12 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ symbol: string }>;
+  searchParams: Promise<{ edit?: string }>;
 }
 
-export default async function NotifyDetailPage({ params }: Props) {
+export default async function NotifyDetailPage({ params, searchParams }: Props) {
   const { symbol } = await params;
+  const { edit: editAlarmId } = await searchParams;
   const [crypto, klineData, user, currencyInfo] = await Promise.all([
     getCryptocurrency(symbol),
     getKlines(symbol, "1D"),
@@ -62,6 +64,7 @@ export default async function NotifyDetailPage({ params }: Props) {
         initialPriceUsd={crypto.priceUsd}
         supportedCurrencies={currencyInfo.supportedCurrencies}
         alarms={alarms}
+        editAlarmId={editAlarmId}
       />
     </div>
   );

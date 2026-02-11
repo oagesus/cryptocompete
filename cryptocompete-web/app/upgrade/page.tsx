@@ -56,6 +56,7 @@ export default async function UpgradePage() {
     t("proFeature1"),
     t("proFeature2"),
     t("proFeature3"),
+    t("proFeature4"),
   ];
 
   const formattedActiveUntil = subStatus?.activeUntil

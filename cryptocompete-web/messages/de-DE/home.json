@@ -4,7 +4,7 @@
       "title": "Der ultimative",
       "titleHighlight": "Krypto-Trading-Simulator",
       "titleEnd": "für kompetitive Trader",
-      "description": "Starte mit virtuellen {startingCapital}, um dein Portfolio aufzubauen, handle Kryptowährungen mit Echtzeitpreisen und tritt gegen Trader weltweit an. Verfolge deine Performance, analysiere Preisverläufe und steige in der globalen Rangliste auf."
+      "description": "Starte mit virtuellen {startingCapital}, um dein Portfolio aufzubauen, handle Kryptowährungen mit Echtzeitpreisen und tritt gegen Trader weltweit an. Verfolge deine Performance, analysiere Preisverläufe, setze Kursalarme und steige in der globalen Rangliste auf."
     },
     "buttons": {
       "signUp": "Registrieren",
@@ -13,7 +13,7 @@
     "features": {
       "riskFree": {
         "title": "Risikofreies Trading",
-        "description": "Starte mit virtuellen {startingCapital}, um Trading ohne finanzielles Risiko zu üben. Perfektioniere deine Strategien, bevor du in den echten Markt einsteigst."
+        "description": "Starte mit virtuellen {startingCapital}, um Trading ohne finanzielles Risiko zu üben. Perfektioniere deine Trading‑Strategien, bevor du in den echten Markt einsteigst."
       },
       "liveTracking": {
         "title": "Live-Preisverfolgung",
@@ -25,11 +25,11 @@
       },
       "leaderboard": {
         "title": "Globale Rangliste",
-        "description": "Tritt gegen Trader aus der ganzen Welt an. Erklimme die Rangliste, beweise deine Trading-Fähigkeiten und werde der ultimative Krypto-Trading-Champion."
+        "description": "Tritt gegen Trader aus der ganzen Welt an. Erklimme die Rangliste, beweise deine Trading‑Fähigkeiten und werde der ultimative Krypto‑Trading‑Champion."
       },
-      "learnFromBest": {
-        "title": "Lerne von den Besten",
-        "description": "Erkunde die Portfolios der bestplatzierten Trader in der Rangliste. Lerne ihre Strategien und verbessere deine eigenen Trading-Fähigkeiten."
+      "priceAlarms": {
+        "title": "Kursalarme",
+        "description": "Setze individuelle Kursalarme für jede Kryptowährung. Werde per E‑Mail benachrichtigt, wenn Kurse deinen Zielwert erreichen, damit du keine Trading‑Gelegenheit verpasst."
       },
       "portfolio": {
         "title": "Portfolio-Analysen",
