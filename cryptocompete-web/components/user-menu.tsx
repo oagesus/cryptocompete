@@ -27,7 +27,6 @@ export function UserMenu({ user, currencyInfo }: UserMenuProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("nav");
-  const tAccount = useTranslations("account");
 
   const activeProfile = user.profiles.find((p) => p.publicId === user.activeProfileId)!;
 
@@ -70,28 +69,28 @@ export function UserMenu({ user, currencyInfo }: UserMenuProps) {
           className="cursor-pointer"
         >
           <User className="mr-2 h-4 w-4" />
-          {tAccount("profile")}
+          {t("profile")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/account/settings")}
           className="cursor-pointer"
         >
           <Settings className="mr-2 h-4 w-4" />
-          {tAccount("title")}
+          {t("settings")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/account/billing")}
           className="cursor-pointer"
         >
           <CreditCard className="mr-2 h-4 w-4" />
-          {tAccount("billing")}
+          {t("billing")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/account/notify")}
           className="cursor-pointer"
         >
           <Bell className="mr-2 h-4 w-4" />
-          {tAccount("priceAlarms")}
+          {t("priceAlarms")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
