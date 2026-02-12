@@ -128,7 +128,12 @@ public class PriceAlarmBackgroundService : BackgroundService
 
                 var targetPriceFormatted = FormatPrice(alarm.TargetPrice);
                 var currentPriceFormatted = FormatPrice(currentPriceInCurrency);
-                var triggeredAt = now.ToString("MMMM dd, yyyy 'at' HH:mm 'UTC'");
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(alarm.User.Timezone ?? "UTC");
+                var localTime = TimeZoneInfo.ConvertTime(now, tz);
+                var offset = tz.GetUtcOffset(localTime);
+                var offsetStr = offset >= TimeSpan.Zero ? $"UTC+{offset.TotalHours:0}" : $"UTC{offset.TotalHours:0}";
+                var displayTime = localTime.Second >= 55 ? localTime.AddMinutes(1) : localTime;
+                var triggeredAt = displayTime.ToString("MMMM dd, yyyy 'at' HH:mm") + $" [" + offsetStr + "]";
                 var checkPricesLink = $"{_frontendUrl}/trade/buy/{alarm.Cryptocurrency.Symbol.ToLower()}";
 
                 await emailService.SendPriceAlarmEmailAsync(

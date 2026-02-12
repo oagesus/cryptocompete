@@ -32,6 +32,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.IsBlocked).HasDefaultValue(false);
             entity.Property(e => e.PasswordHash).IsRequired(false);
+            entity.Property(e => e.Timezone).HasMaxLength(100).HasDefaultValue("UTC");
 
             entity.HasOne(e => e.ActiveProfile)
                 .WithMany()

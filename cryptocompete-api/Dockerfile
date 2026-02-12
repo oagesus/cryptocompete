@@ -11,6 +11,8 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
 
+RUN apk add --no-cache tzdata
+
 COPY --from=build /app .
 
 USER $APP_UID

@@ -944,6 +944,17 @@ public class AuthController : ControllerBase
 
     private async Task<IActionResult> CreateSessionAndRespond(User user)
     {
+        var timezone = Request.Cookies["timezone"];
+        if (!string.IsNullOrEmpty(timezone))
+        {
+            try
+            {
+                TimeZoneInfo.FindSystemTimeZoneById(timezone);
+                user.Timezone = timezone;
+            }
+            catch (TimeZoneNotFoundException) { }
+        }
+
         if (user.ActiveProfileId == null)
         {
             var mainProfile = user.Profiles.FirstOrDefault(p => p.IsMain) 
