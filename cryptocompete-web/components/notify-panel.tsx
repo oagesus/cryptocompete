@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2, Trash2, TrendingUp, TrendingDown, Pencil } from "lucide-react";
 import { NotifyCard } from "@/components/notify-card";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber } from "@/lib/format/format-number";
 
 interface PriceAlarm {
   publicId: string;
@@ -48,6 +49,8 @@ export function NotifyPanel({
   const t = useTranslations("trade");
   const locale = useLocale();
 
+  const { group: groupSep, decimal: decimalSep } = useMemo(() => getLocaleSeparators(locale), [locale]);
+
   const initialEditAlarm = editAlarmId
     ? initialAlarms.find((a) => a.publicId === editAlarmId)
     : undefined;
@@ -69,28 +72,10 @@ export function NotifyPanel({
   const priceUsd = liveData?.price ?? initialPriceUsd;
   const priceInUserCurrency = priceUsd ? priceUsd * exchangeRate : null;
 
-  function formatInputNumber(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (!cleanValue || cleanValue === ".") return cleanValue;
-
-    const parts = cleanValue.split(".");
-    const integerPart = parts[0];
-    const decimalPart = parts[1];
-
-    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-    if (parts.length === 2) {
-      return `${formattedInteger}.${decimalPart}`;
-    }
-    return formattedInteger;
-  }
-
   function handleTargetPriceChange(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (cleanValue.length > 14) return;
-    if (!/^[0-9.]*$/.test(cleanValue)) return;
-    if ((cleanValue.match(/\./g) || []).length > 1) return;
-    setTargetPrice(cleanValue);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    if (cleaned === null) return;
+    setTargetPrice(cleaned);
   }
 
   function handlePercentageClick(percent: number) {
@@ -100,7 +85,7 @@ export function NotifyPanel({
     setTargetPrice(adjusted.toFixed(decimals));
   }
 
-  const displayTargetPrice = formatInputNumber(targetPrice);
+  const displayTargetPrice = formatInputNumber(targetPrice, groupSep, decimalSep);
   const parsedTargetPrice = parseFloat(targetPrice) || 0;
 
   async function handleEditAlarm(alarm: PriceAlarm) {

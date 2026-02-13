@@ -11,6 +11,7 @@ import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2 } from "lucide-react";
 import { SellCard } from "@/components/sell-card";
 import { ReceiveCard } from "@/components/receive-card";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -42,6 +43,8 @@ export function SellPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { group: groupSep, decimal: decimalSep } = useMemo(() => getLocaleSeparators(locale), [locale]);
+
   const { prices } = useCryptoPrices();
 
   const liveData = prices[symbol];
@@ -68,60 +71,39 @@ export function SellPanel({
 
   function formatCrypto(amount: number) {
     if (amount === 0) return "0";
-    return amount.toFixed(CRYPTO_PRECISION);
-  }
-
-  function formatInputNumber(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (!cleanValue || cleanValue === ".") return cleanValue;
-    
-    const parts = cleanValue.split(".");
-    const integerPart = parts[0];
-    const decimalPart = parts[1];
-    
-    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    
-    if (parts.length === 2) {
-      return `${formattedInteger}.${decimalPart}`;
-    }
-    return formattedInteger;
-  }
-
-  function parseInputNumber(value: string) {
-    return value.replace(/,/g, "");
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: CRYPTO_PRECISION,
+      maximumFractionDigits: CRYPTO_PRECISION,
+    }).format(amount);
   }
 
   const displaySellAmount = activeField === "receive"
     ? (calculatedSellAmount ?? 0) > 0 ? formatCrypto(calculatedSellAmount ?? 0) : ""
-    : formatInputNumber(sellAmount);
+    : formatInputNumber(sellAmount, groupSep, decimalSep);
 
   const displayReceiveAmount = activeField === "sell"
-    ? (calculatedReceiveAmount ?? 0) > 0 ? formatInputNumber((calculatedReceiveAmount ?? 0).toFixed(2)) : ""
-    : formatInputNumber(receiveAmount);
+    ? (calculatedReceiveAmount ?? 0) > 0 ? formatInputNumber((calculatedReceiveAmount ?? 0).toFixed(2), groupSep, decimalSep) : ""
+    : formatInputNumber(receiveAmount, groupSep, decimalSep);
 
   const finalSellValue = activeField === "sell"
-    ? parseFloat(parseInputNumber(sellAmount)) || 0
+    ? parseFloat(sellAmount) || 0
     : calculatedSellAmount ?? 0;
 
   const finalReceiveValue = activeField === "receive"
-    ? parseFloat(parseInputNumber(receiveAmount)) || 0
+    ? parseFloat(receiveAmount) || 0
     : calculatedReceiveAmount ?? 0;
 
   function handleSellAmountChange(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (cleanValue.length > 14) return;
-    if (!/^[0-9.]*$/.test(cleanValue)) return;
-    if ((cleanValue.match(/\./g) || []).length > 1) return;
-    setSellAmount(cleanValue);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    if (cleaned === null) return;
+    setSellAmount(cleaned);
     setActiveField("sell");
   }
 
   function handleReceiveAmountChange(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (cleanValue.length > 14) return;
-    if (!/^[0-9.]*$/.test(cleanValue)) return;
-    if ((cleanValue.match(/\./g) || []).length > 1) return;
-    setReceiveAmount(cleanValue);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    if (cleaned === null) return;
+    setReceiveAmount(cleaned);
     setActiveField("receive");
   }
 

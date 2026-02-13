@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import { SpendCard } from "@/components/spend-card";
 import { BuyCard } from "@/components/buy-card";
 import { AuthRequiredDialog } from "@/components/auth-required-dialog";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -45,6 +46,8 @@ export function BuyPanel({
   const [error, setError] = useState<string | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
+  const { group: groupSep, decimal: decimalSep } = useMemo(() => getLocaleSeparators(locale), [locale]);
+
   const { prices } = useCryptoPrices();
 
   const liveData = prices[symbol];
@@ -69,62 +72,41 @@ export function BuyPanel({
     return crypto * priceInUserCurrency;
   }, [activeField, cryptoAmount, priceInUserCurrency]);
 
-  function formatInputNumber(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (!cleanValue || cleanValue === ".") return cleanValue;
-    
-    const parts = cleanValue.split(".");
-    const integerPart = parts[0];
-    const decimalPart = parts[1];
-    
-    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    
-    if (parts.length === 2) {
-      return `${formattedInteger}.${decimalPart}`;
-    }
-    return formattedInteger;
-  }
-
-  function parseInputNumber(value: string) {
-    return value.replace(/,/g, "");
+  function formatCrypto(amount: number) {
+    if (amount === 0) return "0";
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: CRYPTO_PRECISION,
+      maximumFractionDigits: CRYPTO_PRECISION,
+    }).format(amount);
   }
 
   const displayCryptoAmount = activeField === "spend" 
     ? (calculatedCryptoAmount ?? 0) > 0 ? formatCrypto(calculatedCryptoAmount ?? 0) : ""
-    : formatInputNumber(cryptoAmount);
+    : formatInputNumber(cryptoAmount, groupSep, decimalSep);
 
   const displaySpendAmount = activeField === "crypto"
-    ? (calculatedSpendAmount ?? 0) > 0 ? formatInputNumber((calculatedSpendAmount ?? 0).toFixed(2)) : ""
-    : formatInputNumber(spendAmount);
+    ? (calculatedSpendAmount ?? 0) > 0 ? formatInputNumber((calculatedSpendAmount ?? 0).toFixed(2), groupSep, decimalSep) : ""
+    : formatInputNumber(spendAmount, groupSep, decimalSep);
 
   const finalSpendValue = activeField === "spend" 
-    ? parseFloat(parseInputNumber(spendAmount)) || 0
+    ? parseFloat(spendAmount) || 0
     : calculatedSpendAmount ?? 0;
 
   const finalCryptoValue = activeField === "crypto"
-    ? parseFloat(parseInputNumber(cryptoAmount)) || 0
+    ? parseFloat(cryptoAmount) || 0
     : calculatedCryptoAmount ?? 0;
 
-  function formatCrypto(amount: number) {
-    if (amount === 0) return "0";
-    return amount.toFixed(CRYPTO_PRECISION);
-  }
-
   function handleSpendChange(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (cleanValue.length > 14) return;
-    if (!/^[0-9.]*$/.test(cleanValue)) return;
-    if ((cleanValue.match(/\./g) || []).length > 1) return;
-    setSpendAmount(cleanValue);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    if (cleaned === null) return;
+    setSpendAmount(cleaned);
     setActiveField("spend");
   }
 
   function handleCryptoChange(value: string) {
-    const cleanValue = value.replace(/,/g, "");
-    if (cleanValue.length > 14) return;
-    if (!/^[0-9.]*$/.test(cleanValue)) return;
-    if ((cleanValue.match(/\./g) || []).length > 1) return;
-    setCryptoAmount(cleanValue);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    if (cleaned === null) return;
+    setCryptoAmount(cleaned);
     setActiveField("crypto");
   }
 

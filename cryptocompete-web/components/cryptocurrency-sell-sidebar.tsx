@@ -106,9 +106,13 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
 
   function formatCrypto(amount: number) {
     if (amount === 0) return "0";
-    if (amount < 1) return amount.toFixed(8);
-    if (amount < 1000) return amount.toFixed(6);
-    return amount.toLocaleString(locale, { maximumFractionDigits: 2 });
+    if (amount < 1) {
+      return new Intl.NumberFormat(locale, { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(amount);
+    }
+    if (amount < 1000) {
+      return new Intl.NumberFormat(locale, { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(amount);
+    }
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(amount);
   }
 
   function formatValue(holding: HoldingItem) {
