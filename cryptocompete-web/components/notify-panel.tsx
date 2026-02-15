@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2, Trash2, TrendingUp, TrendingDown, Pencil } from "lucide-react";
 import { NotifyCard } from "@/components/notify-card";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber } from "@/lib/format/format-number";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, getPriceDecimals } from "@/lib/format/format-number";
 
 interface PriceAlarm {
   publicId: string;
@@ -57,7 +57,7 @@ export function NotifyPanel({
 
   const [targetPrice, setTargetPrice] = useState(() => {
     if (!initialEditAlarm) return "";
-    const decimals = initialEditAlarm.targetPrice >= 10 ? 2 : 6;
+    const decimals = getPriceDecimals(initialEditAlarm.targetPrice);
     return initialEditAlarm.targetPrice.toFixed(decimals);
   });
   const [isRecurring, setIsRecurring] = useState(initialEditAlarm?.isRecurring ?? false);
@@ -81,7 +81,7 @@ export function NotifyPanel({
   function handlePercentageClick(percent: number) {
     if (!priceInUserCurrency) return;
     const adjusted = priceInUserCurrency * (1 + percent / 100);
-    const decimals = adjusted >= 10 ? 2 : 6;
+    const decimals = getPriceDecimals(adjusted);
     setTargetPrice(adjusted.toFixed(decimals));
   }
 
@@ -89,7 +89,7 @@ export function NotifyPanel({
   const parsedTargetPrice = parseFloat(targetPrice) || 0;
 
   async function handleEditAlarm(alarm: PriceAlarm) {
-    const decimals = alarm.targetPrice >= 10 ? 2 : 6;
+    const decimals = getPriceDecimals(alarm.targetPrice);
     setTargetPrice(alarm.targetPrice.toFixed(decimals));
     setIsRecurring(alarm.isRecurring);
     setEditingId(alarm.publicId);
@@ -147,11 +147,12 @@ export function NotifyPanel({
         return;
       }
 
+      const toastDecimals = getPriceDecimals(parsedTargetPrice);
       const formattedPrice = new Intl.NumberFormat(locale, {
         style: "currency",
         currency: displayCurrency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: toastDecimals,
+        maximumFractionDigits: toastDecimals,
       }).format(parsedTargetPrice);
 
       toast.success(
@@ -206,7 +207,7 @@ export function NotifyPanel({
   }
 
   const formatPrice = (value: number) => {
-    const decimals = value >= 10 ? 2 : 6;
+    const decimals = getPriceDecimals(value);
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: displayCurrency,
@@ -216,7 +217,7 @@ export function NotifyPanel({
   };
 
   const formatAlarmPrice = (value: number, alarmCurrency: string) => {
-    const decimals = value >= 10 ? 2 : 6;
+    const decimals = getPriceDecimals(value);
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: alarmCurrency,

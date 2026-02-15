@@ -8,6 +8,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { type Kline, type KlineTimeframe } from "@/lib/crypto/get-klines";
+import { getPriceDecimals } from "@/lib/format/format-number";
 
 interface Props {
   symbol: string;
@@ -319,7 +320,7 @@ export function PriceChart({
   }, [chartData, timeframe]);
 
   const formatYAxisPrice = (value: number) => {
-    const decimals = value >= 10 ? 2 : 6;
+    const decimals = getPriceDecimals(value);
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
@@ -404,7 +405,7 @@ export function PriceChart({
   };
 
   const formatPrice = (value: number) => {
-    const decimals = value >= 10 ? 2 : 6;
+    const decimals = getPriceDecimals(value);
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: displayCurrency,
@@ -427,7 +428,7 @@ export function PriceChart({
 
   const showSkeleton = loading && chartData.length === 0;
 
-  const livePriceDecimals = livePrice && livePrice >= 10 ? 2 : 6;
+  const livePriceDecimals = livePrice ? getPriceDecimals(livePrice) : 6;
   const formattedLivePrice = livePrice
     ? new Intl.NumberFormat(locale, {
         style: "currency",

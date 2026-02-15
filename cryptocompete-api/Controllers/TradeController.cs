@@ -206,7 +206,13 @@ public class TradeController : ControllerBase
         decimal cryptoAmount;
         decimal valueEur;
 
-        if (request.Mode == "receive")
+        if (request.SellAll)
+        {
+            cryptoAmount = holding.Amount;
+            var valueUsd = cryptoAmount * priceUsd.Value;
+            valueEur = valueUsd * usdToEur;
+        }
+        else if (request.Mode == "receive")
         {
             var receiveAmountEur = request.Amount * userCurrencyToEur;
             
@@ -245,7 +251,7 @@ public class TradeController : ControllerBase
 
         holding.Amount -= cryptoAmount;
 
-        if (holding.Amount < 0.00000001m)
+        if (holding.Amount <= 0.00000001m)
         {
             holding.Amount = 0;
         }
@@ -455,7 +461,7 @@ public class TradeController : ControllerBase
 }
 
 public record TradeRequest(string Symbol, decimal Amount, string Mode = "spend");
-public record TradeSellRequest(string Symbol, decimal Amount, string Mode = "sell");
+public record TradeSellRequest(string Symbol, decimal Amount, string Mode = "sell", bool SellAll = false);
 public record TradeResponse(
     string Symbol,
     string Name,

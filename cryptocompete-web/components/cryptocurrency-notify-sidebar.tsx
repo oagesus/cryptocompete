@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getPriceDecimals } from "@/lib/format/format-number";
 import { Cryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
@@ -153,12 +154,13 @@ export function CryptocurrencyNotifySidebar({ cryptocurrencies, currency, exchan
     if (!priceUsd) return "...";
 
     const priceInCurrency = priceUsd * exchangeRate;
+    const decimals = getPriceDecimals(priceInCurrency);
 
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currency,
-      minimumFractionDigits: priceInCurrency >= 10 ? 2 : 6,
-      maximumFractionDigits: priceInCurrency >= 10 ? 2 : 6,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
     }).format(priceInCurrency);
   }
 

@@ -41,6 +41,7 @@ export function SellPanel({
   const [receiveAmount, setReceiveAmount] = useState("");
   const [activeField, setActiveField] = useState<"sell" | "receive">("sell");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSellAll, setIsSellAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { group: groupSep, decimal: decimalSep } = useMemo(() => getLocaleSeparators(locale), [locale]);
@@ -97,6 +98,7 @@ export function SellPanel({
     const cleaned = sanitizeInput(value, groupSep, decimalSep);
     if (cleaned === null) return;
     setSellAmount(cleaned);
+    setIsSellAll(false);
     setActiveField("sell");
   }
 
@@ -104,13 +106,16 @@ export function SellPanel({
     const cleaned = sanitizeInput(value, groupSep, decimalSep);
     if (cleaned === null) return;
     setReceiveAmount(cleaned);
+    setIsSellAll(false);
     setActiveField("receive");
   }
 
   function handlePercentageClick(percentage: number) {
     if (percentage === 100) {
+      setIsSellAll(true);
       setSellAmount(holdingAmount.toFixed(CRYPTO_PRECISION));
     } else {
+      setIsSellAll(false);
       const amount = roundCrypto(holdingAmount * (percentage / 100));
       setSellAmount(amount.toFixed(CRYPTO_PRECISION));
     }
@@ -142,6 +147,7 @@ export function SellPanel({
           symbol,
           amount: activeField === "sell" ? finalSellValue : finalReceiveValue,
           mode: activeField,
+          sellAll: isSellAll,
         }),
       });
 

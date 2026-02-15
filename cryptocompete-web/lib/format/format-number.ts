@@ -30,3 +30,9 @@ export function formatInputNumber(value: string, groupSep: string, decimalSep: s
   }
   return formattedInteger;
 }
+
+export function getPriceDecimals(price: number): number {
+  if (price >= 10) return 2;
+  if (price >= 0.01) return 6;
+  return 8;
+}
