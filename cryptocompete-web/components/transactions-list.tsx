@@ -19,6 +19,7 @@ import { TransactionTypeBadge } from "@/components/transaction-type-badge";
 import { PremiumTransactionDialog } from "@/components/premium-transaction-dialog";
 import { TransactionsResponse } from "@/lib/transactions/get-transactions";
 import { cn } from "@/lib/utils";
+import { getPriceDecimals } from "@/lib/format/format-number";
 
 interface TransactionsListProps {
   title?: string;
@@ -66,6 +67,16 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
+
+  const formatPriceCurrency = (value: number, currency: string) => {
+    const decimals = getPriceDecimals(value);
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(value);
+  };
 
   const formatAmount = (value: number) =>
     new Intl.NumberFormat(locale, {
@@ -158,7 +169,7 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                         {formatAmount(tx.amount)}
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(tx.pricePerUnit * transactions.exchangeRate, transactions.currency)}
+                        {formatPriceCurrency(tx.pricePerUnit * transactions.exchangeRate, transactions.currency)}
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {formatCurrency(tx.totalValue * transactions.exchangeRate, transactions.currency)}
