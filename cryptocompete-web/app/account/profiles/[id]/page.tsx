@@ -13,7 +13,6 @@ import { ProfileIdCard } from "@/components/profile-id-card";
 import { PremiumSwitchDialog } from "@/components/premium-switch-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ActiveBadge } from "@/components/active-badge";
 import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {
@@ -82,23 +81,20 @@ export default function ProfilePage() {
     <>
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
             <CardTitle className="text-2xl font-bold">{t("profile")}</CardTitle>
-            {isActive ? (
-              <ActiveBadge />
-            ) : (
-              <Button onClick={handleSwitchProfile} disabled={isLoading} size="sm">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t("switchToThisProfile")}
-              </Button>
-            )}
-          </div>
         </CardHeader>
         <Separator />
         <CardContent className="pt-6 space-y-3">
           <h3 className="text-lg font-semibold">{t("details")}</h3>
           <UsernameCard username={profile.username} profileId={profile.publicId} />
           <ProfileIdCard publicId={profile.publicId} />
+          <Button
+            onClick={handleSwitchProfile}
+            disabled={isActive || isLoading}
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isActive ? t("activeProfile") : t("switchToThisProfile")}
+          </Button>
         </CardContent>
       </Card>
       <PremiumSwitchDialog

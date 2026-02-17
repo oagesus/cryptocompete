@@ -275,30 +275,32 @@ export function NotifyPanel({
           <p className="text-sm text-destructive text-center">{error}</p>
         )}
 
-        <Button
-          onClick={handleSubmit}
-          disabled={isLoading || parsedTargetPrice <= 0}
-          className="w-full"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t("processing")}
-            </>
-          ) : (
-            editingId ? t("save") : t("setAlarm")
-          )}
-        </Button>
-
-        {editingId && (
+        <div className="flex flex-col gap-1.5">
           <Button
-            variant="outline"
-            onClick={handleCancelEdit}
+            onClick={handleSubmit}
+            disabled={isLoading || parsedTargetPrice <= 0}
             className="w-full"
           >
-            {t("cancel")}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("processing")}
+              </>
+            ) : (
+              editingId ? t("save") : t("setAlarm")
+            )}
           </Button>
-        )}
+
+          {editingId && (
+            <Button
+              variant="outline"
+              onClick={handleCancelEdit}
+              className="w-full"
+            >
+              {t("cancel")}
+            </Button>
+          )}
+        </div>
 
         <div className="space-y-2">
           <span className="text-sm text-muted-foreground">{t("frequency")}</span>

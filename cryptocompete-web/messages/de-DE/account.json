@@ -91,6 +91,7 @@
     "transactionPricePerUnit": "Preis pro Einheit",
     "transactionTotal": "Gesamt",
     "transactionBuy": "Kauf",
-    "transactionSell": "Verkauf"
+    "transactionSell": "Verkauf",
+    "activeProfile": "Aktives Profil"
   }
 }
