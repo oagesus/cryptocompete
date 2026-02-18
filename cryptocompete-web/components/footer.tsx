@@ -5,8 +5,8 @@ export function Footer() {
   const t = useTranslations("footer");
 
   return (
-    <footer className="bg-muted dark:bg-black/30">
-      <div className="mx-auto flex w-full max-w-screen-xl flex-col-reverse items-center gap-3 px-6 py-4 md:flex-row md:justify-between">
+    <footer className="bg-muted dark:bg-black/30 px-6">
+      <div className="mx-auto flex w-full max-w-screen-xl flex-col-reverse items-center gap-3 py-4 md:flex-row md:justify-between">
         <span className="text-xs text-muted-foreground">
           © {new Date().getFullYear()} CryptoCompete
         </span>
