@@ -1,0 +1,24 @@
+{
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {date}",
+    "introTitle": "General",
+    "introText": "In this privacy policy, we inform you about the key aspects of data processing on our website. We collect and process personal data only in accordance with the applicable legal provisions (General Data Protection Regulation, Telecommunications Act 2003).",
+    "ipCollection": "When you access or visit our website, your IP address, as well as the start and end of your session, are recorded. This is technically necessary and constitutes a legitimate interest within the meaning of Art. 6(1)(f) GDPR.",
+    "dataStorageTitle": "Data Storage",
+    "dataStorageText": "To facilitate account management and subsequent contract processing, the following data is stored: email address, authentication data (via Google login or email/password), and payment information (via PayPal). The data you provide is necessary for contract fulfillment and for carrying out pre-contractual measures. A contract cannot be concluded without this data.",
+    "dataTransferText": "Your data will not be transferred to third parties, except for the transmission of payment data to the processing payment service providers (PayPal) for the purpose of debiting the subscription fee.",
+    "dataRetentionText": "If a contract is concluded, all data resulting from the contractual relationship will be stored until the expiry of the tax retention period (7 years). Data processing is carried out on the basis of Art. 6(1)(a) (consent) and/or Art. 6(1)(b) (necessary for contract fulfillment) GDPR.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "Our website uses cookies. These are small text files that are stored on your device with the help of your browser. We use cookies for authentication (login sessions) and to make our service user-friendly. Some cookies remain on your device until you delete them. If you do not wish this, you can configure your browser to inform you about the setting of cookies. Disabling cookies may limit the functionality of our website.",
+    "googleFontsTitle": "Google Fonts",
+    "googleFontsText": "Our website uses fonts from Google Fonts. The service provider is Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland. When you access this website, your browser loads fonts and stores them in the cache. Since you, as a visitor to the website, receive data from the service provider, Google may set or analyze cookies on your device. The use of Google Fonts serves to optimize our service and ensure a uniform presentation of content. This constitutes a legitimate interest within the meaning of Art. 6(1)(f) GDPR.",
+    "serverLogTitle": "Server Log Files",
+    "serverLogText": "This website and its associated provider automatically collect information in the form of server log files during website usage. This includes: IP address or hostname, browser used, duration of visit as well as date and time, pages visited, language settings and operating system, leaving page, and ISP (Internet Service Provider). This information is not processed on a personal basis or linked to personal data.",
+    "rightsTitle": "Your Rights",
+    "rightsText": "As a data subject, you have the following rights regarding your stored data: access, deletion, rectification, portability, revocation and objection to data processing, and restriction. If you believe that violations of data protection law have occurred during the processing of your data, you have the option of filing a complaint with us or the data protection authority.",
+    "contactTitle": "Contact",
+    "operator": "Website operator: Michael Stubenvoll",
+    "contactEmail": "Email: contact[at]cryptocompete.io"
+  }
+}

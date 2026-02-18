@@ -1,0 +1,15 @@
+{
+  "imprint": {
+    "title": "Imprint",
+    "lastUpdated": "Last updated: {date}",
+    "operatorTitle": "Website Operator",
+    "name": "Michael Stubenvoll",
+    "address": "Meynertgasse 5\n3400 Klosterneuburg\nLower Austria, Austria",
+    "contactTitle": "Contact",
+    "contactEmail": "Email: contact[at]cryptocompete.io",
+    "disclaimerTitle": "Disclaimer",
+    "disclaimerText": "The contents of this website have been created with the utmost care. However, no guarantee can be given for the accuracy, completeness, or timeliness of the content. As a service provider, we are responsible for our own content on these pages in accordance with general laws. However, we are not obligated to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity.",
+    "liabilityLinksTitle": "Liability for Links",
+    "liabilityLinksText": "Our website may contain links to external third-party websites over whose content we have no influence. We therefore cannot accept any liability for this third-party content. The respective provider or operator of the linked pages is always responsible for their content."
+  }
+}

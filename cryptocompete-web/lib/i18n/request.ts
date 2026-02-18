@@ -40,6 +40,10 @@ const messageImports = {
     ...(await import("@/messages/en-US/home.json")).default,
     ...(await import("@/messages/en-US/upgrade.json")).default,
     ...(await import("@/messages/en-US/billing.json")).default,
+    ...(await import("@/messages/en-US/privacy-policy.json")).default,
+    ...(await import("@/messages/en-US/terms-of-service.json")).default,
+    ...(await import("@/messages/en-US/imprint.json")).default,
+    ...(await import("@/messages/en-US/footer.json")).default,
   }),
   "de-DE": async () => ({
     ...(await import("@/messages/de-DE/nav.json")).default,
@@ -52,6 +56,10 @@ const messageImports = {
     ...(await import("@/messages/de-DE/home.json")).default,
     ...(await import("@/messages/de-DE/upgrade.json")).default,
     ...(await import("@/messages/de-DE/billing.json")).default,
+    ...(await import("@/messages/de-DE/privacy-policy.json")).default,
+    ...(await import("@/messages/de-DE/terms-of-service.json")).default,
+    ...(await import("@/messages/de-DE/imprint.json")).default,
+    ...(await import("@/messages/de-DE/footer.json")).default,
   }),
 } as const;
 

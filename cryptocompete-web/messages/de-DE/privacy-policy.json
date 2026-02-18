@@ -1,0 +1,24 @@
+{
+  "privacyPolicy": {
+    "title": "Datenschutzerklärung",
+    "lastUpdated": "Zuletzt aktualisiert: {date}",
+    "introTitle": "Allgemeines",
+    "introText": "In folgender Datenschutzerklärung informieren wir Sie über die wichtigsten Aspekte der Datenverarbeitung im Rahmen unserer Webseite. Wir erheben und verarbeiten personenbezogene Daten nur auf Grundlage der gesetzlichen Bestimmungen (Datenschutzgrundverordnung, Telekommunikationsgesetz 2003).",
+    "ipCollection": "Sobald Sie als Benutzer auf unsere Webseite zugreifen oder diese besuchen, wird Ihre IP-Adresse, Beginn sowie Ende der Sitzung erfasst. Dies ist technisch bedingt und stellt somit ein berechtigtes Interesse iSv Art 6 Abs 1 lit f DSGVO dar.",
+    "dataStorageTitle": "Datenspeicherung",
+    "dataStorageText": "Zur Erleichterung der Kontoverwaltung und zur späteren Vertragsabwicklung werden folgende Daten gespeichert: E-Mail-Adresse, Authentifizierungsdaten (über Google-Login oder E-Mail/Passwort) und Zahlungsinformationen (über PayPal). Die von Ihnen bereitgestellten Daten sind für die Vertragserfüllung und zur Durchführung vorvertraglicher Maßnahmen erforderlich. Ein Vertragsabschluss ohne diese Daten ist nicht möglich.",
+    "dataTransferText": "Eine Übermittlung der erhobenen Daten an Dritte erfolgt nicht, mit Ausnahme der Übermittlung von Zahlungsdaten an die abwickelnden Zahlungsdienstleister (PayPal) zum Zwecke der Abbuchung des Abonnementpreises.",
+    "dataRetentionText": "Sollte ein Vertragsabschluss zustande kommen, werden sämtliche Daten, resultierend aus dem Vertragsverhältnis, bis zum Ablauf der steuerrechtlichen Aufbewahrungsfrist (7 Jahre) gespeichert. Die Datenverarbeitung erfolgt auf Basis der gesetzlichen Bestimmungen des Art 6 Abs 1 lit a (Einwilligung) und/oder lit b (notwendig zur Vertragserfüllung) der DSGVO.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "Unsere Website verwendet Cookies. Dabei handelt es sich um kleine Textdateien, die mit Hilfe des Browsers auf Ihrem Endgerät abgelegt werden. Wir nutzen Cookies zur Authentifizierung (Login-Sitzungen) und dazu, unser Angebot nutzerfreundlich zu gestalten. Einige Cookies bleiben auf Ihrem Endgerät gespeichert, bis Sie diese löschen. Wenn Sie dies nicht wünschen, so können Sie Ihren Browser so einrichten, dass er Sie über das Setzen von Cookies informiert. Bei der Deaktivierung von Cookies kann die Funktionalität unserer Website eingeschränkt sein.",
+    "googleFontsTitle": "Google Fonts",
+    "googleFontsText": "Unsere Website verwendet Schriftarten von Google Fonts. Der Dienstanbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland. Beim Aufrufen dieser Webseite lädt Ihr Browser Schriftarten und speichert diese in den Cache. Da Sie als Besucher der Webseite Daten des Dienstanbieters empfangen, kann Google unter Umständen Cookies auf Ihrem Rechner setzen oder analysieren. Die Nutzung von Google Fonts dient der Optimierung unserer Dienstleistung und der einheitlichen Darstellung von Inhalten. Dies stellt ein berechtigtes Interesse im Sinne von Art. 6 Abs. 1 lit. f DSGVO dar.",
+    "serverLogTitle": "Server-Log Files",
+    "serverLogText": "Diese Webseite und der damit verbundene Provider erhebt im Zuge der Webseitennutzung automatisch Informationen im Rahmen sogenannter Server-Log Files. Dies betrifft insbesondere: IP-Adresse oder Hostname, den verwendeten Browser, Aufenthaltsdauer auf der Webseite sowie Datum und Uhrzeit, aufgerufene Seiten der Webseite, Spracheinstellungen und Betriebssystem, Leaving-Page und ISP (Internet Service Provider). Diese erhobenen Informationen werden nicht personenbezogen verarbeitet oder mit personenbezogenen Daten in Verbindung gebracht.",
+    "rightsTitle": "Ihre Rechte als Betroffener",
+    "rightsText": "Sie als Betroffener haben bezüglich Ihrer Daten, welche bei uns gespeichert sind, grundsätzlich ein Recht auf: Auskunft, Löschung, Berichtigung, Übertragbarkeit, Widerruf und Widerspruch zur Datenverarbeitung sowie Einschränkung. Wenn Sie vermuten, dass im Zuge der Verarbeitung Ihrer Daten Verstöße gegen das Datenschutzrecht passiert sind, so haben Sie die Möglichkeit, sich bei uns oder der Datenschutzbehörde zu beschweren.",
+    "contactTitle": "Kontakt",
+    "operator": "Webseitenbetreiber: Michael Stubenvoll",
+    "contactEmail": "E-Mail: contact[at]cryptocompete.io"
+  }
+}

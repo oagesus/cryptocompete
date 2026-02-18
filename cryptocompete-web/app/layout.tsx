@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { AuthGuardian } from "@/components/auth-guardian";
 import { SubscriptionGuardian } from "@/components/subscription-guardian";
 import { TimezoneGuardian } from "@/components/timezone-guardian";
@@ -53,11 +54,12 @@ export default async function RootLayout({
               <SubscriptionGuardian />
               <TimezoneGuardian />
               <Navbar />
-              <div className="flex flex-1 flex-col px-6 py-12">
+              <div className="flex flex-1 flex-col px-6 pt-12 pb-20">
                 <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col">
                   {children}
                 </div>
               </div>
+              <Footer />
               <ThemedToaster />
             </CryptoPriceProvider>
           </ThemeProvider>

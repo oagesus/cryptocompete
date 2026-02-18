@@ -1,0 +1,23 @@
+{
+  "termsOfService": {
+    "title": "Nutzungsbedingungen",
+    "lastUpdated": "Zuletzt aktualisiert: {date}",
+    "introTitle": "Allgemeines",
+    "introText": "Mit der Nutzung von CryptoCompete stimmen Sie diesen Nutzungsbedingungen zu. CryptoCompete ist ein Kryptowährungs-Handelssimulator, der ausschließlich virtuelles Guthaben verwendet. Es werden keine echten Kryptowährungen auf dieser Plattform gekauft, verkauft oder gehandelt.",
+    "accountTitle": "Konto",
+    "accountText": "Zur Erstellung eines Kontos ist eine gültige E-Mail-Adresse oder die Anmeldung über Google erforderlich. Sie sind für die Sicherheit Ihrer Zugangsdaten verantwortlich. Jede Person darf nur ein Konto betreiben. Wir behalten uns das Recht vor, Konten, die gegen diese Bedingungen verstoßen, zu sperren oder zu löschen.",
+    "virtualTradingTitle": "Virtueller Handel",
+    "virtualTradingText": "Alle Handelsaktivitäten auf CryptoCompete sind simuliert und verwenden ausschließlich virtuelles Guthaben. Es wird kein echtes Geld investiert und es werden keine realen finanziellen Erträge durch den Handel erzielt. CryptoCompete stellt keine Finanzberatung dar. Portfoliowerte basieren auf Echtzeit-Marktdaten und dienen ausschließlich Simulationszwecken.",
+    "subscriptionTitle": "Abonnements",
+    "subscriptionText": "CryptoCompete bietet einen kostenlosen Plan und einen kostenpflichtigen Pro-Plan an. Pro-Abonnements werden monatlich über PayPal mit echtem Geld abgerechnet. Sie können Ihr Abonnement jederzeit kündigen. Nach der Kündigung behalten Sie Zugang zu den Pro-Funktionen bis zum Ende des aktuellen Abrechnungszeitraums. Für teilweise genutzte Abrechnungszeiträume werden keine Rückerstattungen gewährt.",
+    "liabilityTitle": "Haftungsbeschränkung",
+    "liabilityText": "CryptoCompete wird ohne jegliche Gewährleistung bereitgestellt. Wir garantieren weder die Richtigkeit noch die Verfügbarkeit von Marktdaten. Wir haften nicht für Entscheidungen, die auf Grundlage der auf der Plattform angezeigten Informationen getroffen werden. Wir übernehmen keine Haftung für Verluste oder Schäden, die aus der Nutzung des Dienstes entstehen.",
+    "conductTitle": "Nutzerverhalten",
+    "conductText": "Sie verpflichten sich, die Plattform nicht zu missbrauchen, insbesondere durch: Manipulation des Leaderboards, Ausnutzung von Fehlern oder Schwachstellen, Einsatz automatisierter Tools oder Bots, oder Beeinträchtigung des Dienstes für andere Nutzer. Verstöße können zur Sperrung oder Löschung des Kontos führen.",
+    "changesTitle": "Änderungen der Bedingungen",
+    "changesText": "Wir behalten uns das Recht vor, diese Bedingungen jederzeit zu ändern. Die fortgesetzte Nutzung der Plattform nach Änderungen gilt als Zustimmung zu den aktualisierten Bedingungen. Bei Änderungen wird das Datum oben auf dieser Seite aktualisiert.",
+    "contactTitle": "Kontakt",
+    "operator": "Webseitenbetreiber: Michael Stubenvoll",
+    "contactEmail": "E-Mail: contact[at]cryptocompete.io"
+  }
+}

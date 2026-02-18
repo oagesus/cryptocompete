@@ -1,0 +1,23 @@
+{
+  "termsOfService": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: {date}",
+    "introTitle": "General",
+    "introText": "By using CryptoCompete, you agree to these Terms of Service. CryptoCompete is a cryptocurrency trading simulator that uses virtual funds only. No real cryptocurrencies are bought, sold, or traded on this platform.",
+    "accountTitle": "Account",
+    "accountText": "You must provide a valid email address or use Google login to create an account. You are responsible for keeping your login credentials secure. Each person may only operate one account. We reserve the right to suspend or delete accounts that violate these terms.",
+    "virtualTradingTitle": "Virtual Trading",
+    "virtualTradingText": "All trading activity on CryptoCompete is simulated and uses virtual funds only. No real money is invested, and no real financial returns are generated through trading. CryptoCompete does not constitute financial advice, and portfolio values are based on real-time market data for simulation purposes only.",
+    "subscriptionTitle": "Subscriptions",
+    "subscriptionText": "CryptoCompete offers a free plan and a paid Pro plan. Pro subscriptions are billed monthly via PayPal using real money. You can cancel your subscription at any time. After cancellation, you retain access to Pro features until the end of the current billing period. No refunds are issued for partially used billing periods.",
+    "liabilityTitle": "Limitation of Liability",
+    "liabilityText": "CryptoCompete is provided as-is without any warranty. We do not guarantee the accuracy or availability of market data. We are not liable for any decisions made based on information displayed on the platform. We are not responsible for any losses or damages arising from the use of the service.",
+    "conductTitle": "User Conduct",
+    "conductText": "You agree not to misuse the platform, including but not limited to: attempting to manipulate the leaderboard, exploiting bugs or vulnerabilities, using automated tools or bots, or interfering with the service for other users. Violations may result in account suspension or termination.",
+    "changesTitle": "Changes to Terms",
+    "changesText": "We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the updated terms. We will update the date at the top of this page when changes are made.",
+    "contactTitle": "Contact",
+    "operator": "Website operator: Michael Stubenvoll",
+    "contactEmail": "Email: contact[at]cryptocompete.io"
+  }
+}
