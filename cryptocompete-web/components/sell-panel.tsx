@@ -11,7 +11,7 @@ import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2 } from "lucide-react";
 import { SellCard } from "@/components/sell-card";
 import { ReceiveCard } from "@/components/receive-card";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber } from "@/lib/format/format-number";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -40,6 +40,7 @@ export function SellPanel({
   const [sellAmount, setSellAmount] = useState("");
   const [receiveAmount, setReceiveAmount] = useState("");
   const [activeField, setActiveField] = useState<"sell" | "receive">("sell");
+  const [focusedField, setFocusedField] = useState<"sell" | "receive" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSellAll, setIsSellAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,11 +81,15 @@ export function SellPanel({
 
   const displaySellAmount = activeField === "receive"
     ? (calculatedSellAmount ?? 0) > 0 ? formatCrypto(calculatedSellAmount ?? 0) : ""
-    : formatInputNumber(sellAmount, groupSep, decimalSep);
+    : focusedField === "sell"
+      ? formatInputNumberRaw(sellAmount, decimalSep)
+      : formatInputNumber(sellAmount, groupSep, decimalSep);
 
   const displayReceiveAmount = activeField === "sell"
     ? (calculatedReceiveAmount ?? 0) > 0 ? formatInputNumber((calculatedReceiveAmount ?? 0).toFixed(2), groupSep, decimalSep) : ""
-    : formatInputNumber(receiveAmount, groupSep, decimalSep);
+    : focusedField === "receive"
+      ? formatInputNumberRaw(receiveAmount, decimalSep)
+      : formatInputNumber(receiveAmount, groupSep, decimalSep);
 
   const finalSellValue = activeField === "sell"
     ? parseFloat(sellAmount) || 0
@@ -95,7 +100,7 @@ export function SellPanel({
     : calculatedReceiveAmount ?? 0;
 
   function handleSellAmountChange(value: string) {
-    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep, sellAmount);
     if (cleaned === null) return;
     setSellAmount(cleaned);
     setIsSellAll(false);
@@ -103,7 +108,7 @@ export function SellPanel({
   }
 
   function handleReceiveAmountChange(value: string) {
-    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep, receiveAmount);
     if (cleaned === null) return;
     setReceiveAmount(cleaned);
     setIsSellAll(false);
@@ -186,11 +191,16 @@ export function SellPanel({
         </span>
       </CardHeader>
       <CardContent className="space-y-4">
-        <SellCard
-          value={displaySellAmount}
-          symbol={symbol}
-          onChange={handleSellAmountChange}
-        />
+        <div
+          onFocus={() => setFocusedField("sell")}
+          onBlur={() => setFocusedField((prev) => prev === "sell" ? null : prev)}
+        >
+          <SellCard
+            value={displaySellAmount}
+            symbol={symbol}
+            onChange={handleSellAmountChange}
+          />
+        </div>
 
         <div className="flex flex-wrap gap-2">
           <Badge
@@ -223,12 +233,17 @@ export function SellPanel({
           </Badge>
         </div>
 
-        <ReceiveCard
-          value={displayReceiveAmount}
-          currency={displayCurrency}
-          supportedCurrencies={supportedCurrencies}
-          onChange={handleReceiveAmountChange}
-        />
+        <div
+          onFocus={() => setFocusedField("receive")}
+          onBlur={() => setFocusedField((prev) => prev === "receive" ? null : prev)}
+        >
+          <ReceiveCard
+            value={displayReceiveAmount}
+            currency={displayCurrency}
+            supportedCurrencies={supportedCurrencies}
+            onChange={handleReceiveAmountChange}
+          />
+        </div>
 
         {priceInUserCurrency && priceInUserCurrency > 0 && (
           <p className="text-xs text-muted-foreground text-center">

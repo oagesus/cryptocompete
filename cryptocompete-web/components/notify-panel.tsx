@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2, Trash2, TrendingUp, TrendingDown, Pencil } from "lucide-react";
 import { NotifyCard } from "@/components/notify-card";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber, getPriceDecimals } from "@/lib/format/format-number";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, getPriceDecimals } from "@/lib/format/format-number";
 
 interface PriceAlarm {
   publicId: string;
@@ -65,6 +65,7 @@ export function NotifyPanel({
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(initialEditAlarm?.publicId ?? null);
+  const [focusedField, setFocusedField] = useState<"target" | null>(null);
 
   const { prices } = useCryptoPrices();
 
@@ -73,7 +74,7 @@ export function NotifyPanel({
   const priceInUserCurrency = priceUsd ? priceUsd * exchangeRate : null;
 
   function handleTargetPriceChange(value: string) {
-    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep, targetPrice);
     if (cleaned === null) return;
     setTargetPrice(cleaned);
   }
@@ -85,7 +86,9 @@ export function NotifyPanel({
     setTargetPrice(adjusted.toFixed(decimals));
   }
 
-  const displayTargetPrice = formatInputNumber(targetPrice, groupSep, decimalSep);
+  const displayTargetPrice = focusedField === "target"
+    ? formatInputNumberRaw(targetPrice, decimalSep)
+    : formatInputNumber(targetPrice, groupSep, decimalSep);
   const parsedTargetPrice = parseFloat(targetPrice) || 0;
 
   async function handleEditAlarm(alarm: PriceAlarm) {
@@ -233,12 +236,17 @@ export function NotifyPanel({
   return (
     <Card>
       <CardContent className="space-y-4">
-        <NotifyCard
-          value={displayTargetPrice}
-          currency={displayCurrency}
-          supportedCurrencies={supportedCurrencies}
-          onChange={handleTargetPriceChange}
-        />
+        <div
+          onFocus={() => setFocusedField("target")}
+          onBlur={() => setFocusedField((prev) => prev === "target" ? null : prev)}
+        >
+          <NotifyCard
+            value={displayTargetPrice}
+            currency={displayCurrency}
+            supportedCurrencies={supportedCurrencies}
+            onChange={handleTargetPriceChange}
+          />
+        </div>
 
         <div className="flex flex-wrap gap-2">
           <Badge

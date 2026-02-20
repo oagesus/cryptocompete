@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 import { SpendCard } from "@/components/spend-card";
 import { BuyCard } from "@/components/buy-card";
 import { AuthRequiredDialog } from "@/components/auth-required-dialog";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber } from "@/lib/format/format-number";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -42,6 +42,7 @@ export function BuyPanel({
   const [spendAmount, setSpendAmount] = useState("");
   const [cryptoAmount, setCryptoAmount] = useState("");
   const [activeField, setActiveField] = useState<"spend" | "crypto">("spend");
+  const [focusedField, setFocusedField] = useState<"spend" | "crypto" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -82,11 +83,15 @@ export function BuyPanel({
 
   const displayCryptoAmount = activeField === "spend" 
     ? (calculatedCryptoAmount ?? 0) > 0 ? formatCrypto(calculatedCryptoAmount ?? 0) : ""
-    : formatInputNumber(cryptoAmount, groupSep, decimalSep);
+    : focusedField === "crypto"
+      ? formatInputNumberRaw(cryptoAmount, decimalSep)
+      : formatInputNumber(cryptoAmount, groupSep, decimalSep);
 
   const displaySpendAmount = activeField === "crypto"
     ? (calculatedSpendAmount ?? 0) > 0 ? formatInputNumber((calculatedSpendAmount ?? 0).toFixed(2), groupSep, decimalSep) : ""
-    : formatInputNumber(spendAmount, groupSep, decimalSep);
+    : focusedField === "spend"
+      ? formatInputNumberRaw(spendAmount, decimalSep)
+      : formatInputNumber(spendAmount, groupSep, decimalSep);
 
   const finalSpendValue = activeField === "spend" 
     ? parseFloat(spendAmount) || 0
@@ -97,14 +102,14 @@ export function BuyPanel({
     : calculatedCryptoAmount ?? 0;
 
   function handleSpendChange(value: string) {
-    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep, spendAmount);
     if (cleaned === null) return;
     setSpendAmount(cleaned);
     setActiveField("spend");
   }
 
   function handleCryptoChange(value: string) {
-    const cleaned = sanitizeInput(value, groupSep, decimalSep);
+    const cleaned = sanitizeInput(value, groupSep, decimalSep, cryptoAmount);
     if (cleaned === null) return;
     setCryptoAmount(cleaned);
     setActiveField("crypto");
@@ -178,19 +183,29 @@ export function BuyPanel({
           </CardHeader>
         )}
         <CardContent className="space-y-4">
-          <SpendCard
-            value={displaySpendAmount}
-            currency={displayCurrency}
-            supportedCurrencies={supportedCurrencies}
-            onChange={handleSpendChange}
-            disabled={!isAuthenticated}
-          />
+          <div
+            onFocus={() => setFocusedField("spend")}
+            onBlur={() => setFocusedField((prev) => prev === "spend" ? null : prev)}
+          >
+            <SpendCard
+              value={displaySpendAmount}
+              currency={displayCurrency}
+              supportedCurrencies={supportedCurrencies}
+              onChange={handleSpendChange}
+              disabled={!isAuthenticated}
+            />
+          </div>
 
-          <BuyCard
-            value={displayCryptoAmount}
-            symbol={symbol}
-            onChange={handleCryptoChange}
-          />
+          <div
+            onFocus={() => setFocusedField("crypto")}
+            onBlur={() => setFocusedField((prev) => prev === "crypto" ? null : prev)}
+          >
+            <BuyCard
+              value={displayCryptoAmount}
+              symbol={symbol}
+              onChange={handleCryptoChange}
+            />
+          </div>
 
           {priceInUserCurrency && priceInUserCurrency > 0 && (
             <p className="text-xs text-muted-foreground text-center">

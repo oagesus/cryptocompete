@@ -5,14 +5,32 @@ export function getLocaleSeparators(locale: string) {
   return { group, decimal };
 }
 
-export function sanitizeInput(value: string, groupSep: string, decimalSep: string): string | null {
+export function sanitizeInput(value: string, groupSep: string, decimalSep: string, currentValue?: string): string | null {
+  const otherSep = decimalSep === "." ? "," : ".";
+
+  const hasExistingDecimal = value.includes(decimalSep);
+  let cleanValue = value;
+
+  if (!hasExistingDecimal && cleanValue.includes(otherSep)) {
+    const otherCount = (cleanValue.match(new RegExp(`\\${otherSep}`, "g")) || []).length;
+    if (otherCount === 1) {
+      cleanValue = cleanValue.replace(otherSep, decimalSep);
+    }
+  }
+
   const groupRegex = new RegExp(`\\${groupSep}`, "g");
-  const cleanValue = value.replace(groupRegex, "");
-  if (cleanValue.length > 14) return null;
+  cleanValue = cleanValue.replace(groupRegex, "");
+
   const allowedRegex = new RegExp(`^[0-9\\${decimalSep}]*$`);
   if (!allowedRegex.test(cleanValue)) return null;
   const decimalRegex = new RegExp(`\\${decimalSep}`, "g");
   if ((cleanValue.match(decimalRegex) || []).length > 1) return null;
+
+  const newDigitCount = cleanValue.replace(new RegExp(`\\${decimalSep}`, "g"), "").length;
+  const prevDigitCount = currentValue ? currentValue.replace(/[^0-9]/g, "").length : 0;
+
+  if (newDigitCount > 14 && newDigitCount > prevDigitCount) return null;
+
   return cleanValue.replace(decimalSep, ".");
 }
 
@@ -29,6 +47,11 @@ export function formatInputNumber(value: string, groupSep: string, decimalSep: s
     return `${formattedInteger}${decimalSep}${decimalPart}`;
   }
   return formattedInteger;
+}
+
+export function formatInputNumberRaw(value: string, decimalSep: string): string {
+  if (!value || value === ".") return value.replace(".", decimalSep);
+  return value.replace(".", decimalSep);
 }
 
 export function getPriceDecimals(price: number): number {
