@@ -92,6 +92,7 @@
     "transactionTotal": "Gesamt",
     "transactionBuy": "Kauf",
     "transactionSell": "Verkauf",
-    "activeProfile": "Aktives Profil"
+    "activeProfile": "Aktives Profil",
+    "rowsPerPage": "Zeilen pro Seite"
   }
 }

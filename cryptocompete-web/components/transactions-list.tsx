@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TransactionTypeBadge } from "@/components/transaction-type-badge";
 import { PremiumTransactionDialog } from "@/components/premium-transaction-dialog";
 import { TransactionsResponse } from "@/lib/transactions/get-transactions";
@@ -29,10 +36,29 @@ interface TransactionsListProps {
   isPremium: boolean;
 }
 
+function getPageRange(currentPage: number, totalPages: number): number[] {
+  const windowSize = Math.min(5, totalPages);
+
+  let start = currentPage - Math.floor(windowSize / 2);
+  start = Math.max(1, start);
+  start = Math.min(start, totalPages - windowSize + 1);
+
+  return Array.from({ length: windowSize }, (_, i) => start + i);
+}
+
+const PAGE_SIZE_OPTIONS = [15, 25, 50, 100];
+
 export function TransactionsList({ title, backHref, rank, transactions, isPremium }: TransactionsListProps) {
   const t = useTranslations("account");
   const locale = useLocale();
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(Number(value));
+    setCurrentPage(1);
+  };
 
   useEffect(() => {
     if (!isPremium) {
@@ -93,11 +119,22 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
       minute: "2-digit",
     }).format(new Date(dateString));
 
+  const allTransactions = transactions?.transactions ?? [];
+  const totalItems = allTransactions.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const validPage = Math.min(Math.max(1, currentPage), totalPages || 1);
+
+  const paginatedTransactions = useMemo(() => {
+    const start = (validPage - 1) * pageSize;
+    return allTransactions.slice(start, start + pageSize);
+  }, [allTransactions, validPage, pageSize]);
+
   return (
     <>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold flex items-center gap-2">
             {backHref && (
               <Button
                 variant="ghost"
@@ -124,7 +161,25 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
               </div>
             )}
             {title ?? t("transactions")}
-          </CardTitle>
+            </CardTitle>
+            {isPremium && transactions && transactions.transactions.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{t("rowsPerPage")}</span>
+                <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                  <SelectTrigger className="h-8 w-[80px] cursor-pointer">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={size.toString()} className="cursor-pointer">
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <Separator />
         <CardContent>
@@ -148,7 +203,7 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.transactions.map((tx) => (
+                  {paginatedTransactions.map((tx) => (
                     <TableRow key={tx.id} className="border-0">
                       <TableCell className="whitespace-nowrap">
                         {formatDate(tx.createdAt)}
@@ -178,6 +233,59 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                   ))}
                 </TableBody>
               </Table>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 pt-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={validPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setCurrentPage(validPage - 1)}
+                    disabled={validPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {getPageRange(validPage, totalPages).map((pageNum) => (
+                    <Button
+                      key={pageNum}
+                      variant={pageNum === validPage ? "default" : "ghost"}
+                      size="icon"
+                      className="h-8 w-8 text-xs"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  ))}
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setCurrentPage(validPage + 1)}
+                    disabled={validPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={validPage === totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

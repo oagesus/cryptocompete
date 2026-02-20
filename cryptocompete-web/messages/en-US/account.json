@@ -92,6 +92,7 @@
     "transactionTotal": "Total",
     "transactionBuy": "Buy",
     "transactionSell": "Sell",
-    "activeProfile": "Active profile"
+    "activeProfile": "Active profile",
+    "rowsPerPage": "Rows per page"
   }
 }
