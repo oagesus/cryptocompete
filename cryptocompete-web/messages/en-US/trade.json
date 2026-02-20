@@ -59,6 +59,8 @@
     "recurringDescription": "You will receive a notification every time the price of 1 {symbol} hits {price}.",
     "onceDescriptionGeneric": "You will receive a one-time notification when the target price is reached.",
     "recurringDescriptionGeneric": "You will receive a notification every time the target price is reached.",
+    "first": "First",
+    "last": "Last",
     "timeframe": {
       "1d": "1 Day",
       "7d": "7 Days",

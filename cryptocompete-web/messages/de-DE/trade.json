@@ -59,6 +59,8 @@
     "recurringDescription": "Du erhältst jedes Mal eine Benachrichtigung, wenn der Kurs von 1 {symbol} {price} erreicht.",
     "onceDescriptionGeneric": "Du erhältst einmalig eine Benachrichtigung, wenn der Zielkurs erreicht wird.",
     "recurringDescriptionGeneric": "Du erhältst jedes Mal eine Benachrichtigung, wenn der Zielkurs erreicht wird.",
+    "first": "Erste",
+    "last": "Letzte",
     "timeframe": {
       "1d": "1 Tag",
       "7d": "7 Tage",

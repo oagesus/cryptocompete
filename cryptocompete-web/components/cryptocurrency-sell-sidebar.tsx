@@ -4,11 +4,12 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SidebarPagination } from "@/components/sidebar-pagination";
 import { cn } from "@/lib/utils";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 
@@ -158,7 +159,7 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
           />
         </div>
 
-        <div className="space-y-1 min-h-[440px]">
+        <div className="space-y-1 h-[480px]">
           {paginatedHoldings.length === 0 ? (
             <p className="text-sm text-muted-foreground px-3 py-2">
               {holdings.filter((h) => h.amount > 0).length === 0 
@@ -195,29 +196,11 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
           )}
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(validPage - 1)}
-              disabled={validPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {validPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(validPage + 1)}
-              disabled={validPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        <SidebarPagination
+          currentPage={validPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </CardContent>
     </Card>
   );
