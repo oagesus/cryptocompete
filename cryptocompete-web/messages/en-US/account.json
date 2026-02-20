@@ -93,6 +93,8 @@
     "transactionBuy": "Buy",
     "transactionSell": "Sell",
     "activeProfile": "Active profile",
-    "rowsPerPage": "Rows per page"
+    "rowsPerPage": "Rows per page",
+    "first": "First",
+    "last": "Last"
   }
 }

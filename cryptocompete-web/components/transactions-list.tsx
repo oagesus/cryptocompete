@@ -133,34 +133,39 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
     <>
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-            {backHref && (
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className="shrink-0 h-8 w-8"
-              >
-                <Link href={backHref}>
-                  <ArrowLeft className="!h-8 !w-8" />
-                </Link>
-              </Button>
-            )}
-            {rank && (
-              <div
-                className={cn(
-                  "flex h-8 items-center justify-center rounded-full font-bold shrink-0",
-                  getRankSize(rank),
-                  isTopThree
-                    ? `${rankBgStyles[rank]} ${rankTextStyles[rank]}`
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                {rank}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <CardTitle className="text-2xl font-bold">
+              <div className="flex flex-col md:flex-row md:items-center gap-2">
+                <div className="flex items-center gap-2">
+                  {backHref && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      className="shrink-0 h-8 w-8"
+                    >
+                      <Link href={backHref}>
+                        <ArrowLeft className="!h-8 !w-8" />
+                      </Link>
+                    </Button>
+                  )}
+                  {rank && (
+                    <div
+                      className={cn(
+                        "flex h-8 items-center justify-center rounded-full font-bold shrink-0",
+                        getRankSize(rank),
+                        isTopThree
+                          ? `${rankBgStyles[rank]} ${rankTextStyles[rank]}`
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {rank}
+                    </div>
+                  )}
+                  <span className="hidden md:inline">{title ?? t("transactions")}</span>
+                </div>
+                <span className="md:hidden">{title ?? t("transactions")}</span>
               </div>
-            )}
-            {title ?? t("transactions")}
             </CardTitle>
             {isPremium && transactions && transactions.transactions.length > 0 && (
               <div className="flex items-center gap-2">
@@ -234,56 +239,80 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                 </TableBody>
               </Table>
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-1 pt-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setCurrentPage(1)}
-                    disabled={validPage === 1}
-                  >
-                    <ChevronsLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setCurrentPage(validPage - 1)}
-                    disabled={validPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-
-                  {getPageRange(validPage, totalPages).map((pageNum) => (
+                <div className="flex flex-col gap-1 pt-4">
+                  <div className="flex items-center justify-between md:justify-center md:gap-1">
                     <Button
-                      key={pageNum}
-                      variant={pageNum === validPage ? "default" : "ghost"}
+                      variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-xs"
-                      onClick={() => setCurrentPage(pageNum)}
+                      className="hidden md:inline-flex h-8 w-8"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={validPage === 1}
                     >
-                      {pageNum}
+                      <ChevronsLeft className="h-4 w-4" />
                     </Button>
-                  ))}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setCurrentPage(validPage - 1)}
+                      disabled={validPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setCurrentPage(validPage + 1)}
-                    disabled={validPage === totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={validPage === totalPages}
-                  >
-                    <ChevronsRight className="h-4 w-4" />
-                  </Button>
+                    {getPageRange(validPage, totalPages).map((pageNum) => (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === validPage ? "default" : "ghost"}
+                        size="icon"
+                        className="h-8 w-8 text-xs"
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    ))}
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setCurrentPage(validPage + 1)}
+                      disabled={validPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hidden md:inline-flex h-8 w-8"
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={validPage === totalPages}
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between md:hidden">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 pl-0 text-xs text-muted-foreground"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={validPage === 1}
+                    >
+                      <ChevronsLeft className="h-3.5 w-3.5" />
+                      {t("first")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 pr-0 text-xs text-muted-foreground"
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={validPage === totalPages}
+                    >
+                      {t("last")}
+                      <ChevronsRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

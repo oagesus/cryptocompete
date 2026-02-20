@@ -30,16 +30,17 @@ public class LeaderboardController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetLeaderboard([FromQuery] int limit = 100, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetLeaderboard([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        if (limit < 1) limit = 1;
-        if (limit > 500) limit = 500;
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 1;
+        if (pageSize > 100) pageSize = 100;
 
         var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var exchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
-        var entries = await _leaderboardService.GetLeaderboardAsync(limit, cancellationToken);
+        var result = await _leaderboardService.GetLeaderboardAsync(page, pageSize, cancellationToken);
 
-        var response = entries.Select(e => new LeaderboardEntryDto(
+        var response = result.Entries.Select(e => new LeaderboardEntryDto(
             e.Rank,
             e.ProfilePublicId,
             e.Username,
@@ -47,7 +48,7 @@ public class LeaderboardController : ControllerBase
             e.CalculatedAt
         )).ToList();
 
-        return Ok(new LeaderboardResponse(response, displayCurrency, exchangeRate));
+        return Ok(new LeaderboardResponse(response, displayCurrency, exchangeRate, result.TotalCount, result.Page, result.PageSize));
     }
 
     [HttpGet("profile/{username}")]
@@ -209,7 +210,10 @@ public record LeaderboardEntryDto(
 public record LeaderboardResponse(
     List<LeaderboardEntryDto> Entries,
     string Currency,
-    decimal ExchangeRate
+    decimal ExchangeRate,
+    int TotalCount,
+    int Page,
+    int PageSize
 );
 
 public record PublicHoldingDto(

@@ -18,6 +18,9 @@
     "noHoldingsYet": "Noch keine Bestände.",
     "viewTransactions": "Transaktionen anzeigen",
     "userTransactions": "{username}'s Transaktionen",
-    "userPortfolio": "{username}'s Portfolio"
+    "userPortfolio": "{username}'s Portfolio",
+    "first": "Erste",
+    "last": "Letzte",
+    "rowsPerPage": "Zeilen pro Seite"
   }
 }

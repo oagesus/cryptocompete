@@ -10,7 +10,7 @@
     "nextUpdateIn": "Next update in {minutes} {unit}",
     "minute": "minute",
     "minutes": "minutes",
-    "rankedByPortfolioValue": "Ranked by portfolio value",
+    "rankedByPortfolioValue": "Ranked by Portfolio Value",
     "noDataYet": "No leaderboard data available yet. Check back soon!",
     "portfolioValue": "Portfolio Value",
     "balance": "Balance",
@@ -18,6 +18,9 @@
     "noHoldingsYet": "No holdings yet.",
     "viewTransactions": "View Transactions",
     "userTransactions": "{username}'s Transactions",
-    "userPortfolio": "{username}'s Portfolio"
+    "userPortfolio": "{username}'s Portfolio",
+    "first": "First",
+    "last": "Last",
+    "rowsPerPage": "Rows per page"
   }
 }

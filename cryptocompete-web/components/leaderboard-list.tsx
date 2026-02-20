@@ -16,9 +16,11 @@ interface LeaderboardListProps {
   entries: LeaderboardEntry[];
   currency: string;
   exchangeRate: number;
+  hideSubtitle?: boolean;
+  leaderboardParams?: string;
 }
 
-export function LeaderboardList({ entries, currency, exchangeRate }: LeaderboardListProps) {
+export function LeaderboardList({ entries, currency, exchangeRate, hideSubtitle, leaderboardParams }: LeaderboardListProps) {
   const t = useTranslations("leaderboard");
   const locale = useLocale();
 
@@ -54,7 +56,9 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
 
   return (
     <div className="space-y-1">
-      <span className="text-sm text-muted-foreground block mb-3">{t("rankedByPortfolioValue")}</span>
+      {!hideSubtitle && (
+        <span className="text-sm text-muted-foreground block mb-3">{t("rankedByPortfolioValue")}</span>
+      )}
       {entries.map((entry) => {
         const isTopThree = entry.rank <= 3;
         const formattedValue = new Intl.NumberFormat(locale, {
@@ -65,7 +69,7 @@ export function LeaderboardList({ entries, currency, exchangeRate }: Leaderboard
         return (
           <Link
             key={entry.profilePublicId}
-            href={`/leaderboard/${encodeURIComponent(entry.username)}`}
+            href={`/leaderboard/${encodeURIComponent(entry.username)}${leaderboardParams ? `?${leaderboardParams}` : ""}`}
             className="block"
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-3 rounded-md hover:bg-muted">

@@ -18,12 +18,19 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ page?: string; pageSize?: string }>;
 }
 
-export default async function PublicProfilePage({ params }: PageProps) {
+export default async function PublicProfilePage({ params, searchParams }: PageProps) {
   const { username } = await params;
   const decodedUsername = decodeURIComponent(username);
   const t = await getTranslations("leaderboard");
+  const sp = await searchParams;
+
+  const backParams = new URLSearchParams();
+  if (sp.page) backParams.set("page", sp.page);
+  if (sp.pageSize) backParams.set("pageSize", sp.pageSize);
+  const backHref = `/leaderboard${backParams.toString() ? `?${backParams.toString()}` : ""}`;
 
   const profile = await getPublicProfile(decodedUsername);
 
@@ -59,31 +66,36 @@ export default async function PublicProfilePage({ params }: PageProps) {
       <div className="space-y-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className="shrink-0 h-8 w-8"
-              >
-                <Link href="/leaderboard">
-                  <ArrowLeft className="!h-8 !w-8" />
-                </Link>
-              </Button>
-              {profile.rank && (
-                <div
-                  className={cn(
-                    "flex h-8 items-center justify-center rounded-full font-bold shrink-0",
-                    getRankSize(profile.rank),
-                    isTopThree
-                      ? `${rankBgStyles[profile.rank]} ${rankTextStyles[profile.rank]}`
-                      : "bg-muted text-muted-foreground"
+            <CardTitle className="text-2xl font-bold">
+              <div className="flex flex-col md:flex-row md:items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="shrink-0 h-8 w-8"
+                  >
+                    <Link href={backHref}>
+                      <ArrowLeft className="!h-8 !w-8" />
+                    </Link>
+                  </Button>
+                  {profile.rank && (
+                    <div
+                      className={cn(
+                        "flex h-8 items-center justify-center rounded-full font-bold shrink-0",
+                        getRankSize(profile.rank),
+                        isTopThree
+                          ? `${rankBgStyles[profile.rank]} ${rankTextStyles[profile.rank]}`
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {profile.rank}
+                    </div>
                   )}
-                >
-                  {profile.rank}
+                  <span className="hidden md:inline">{t("userPortfolio", { username: profile.username })}</span>
                 </div>
-              )}
-              {t("userPortfolio", { username: profile.username })}
+                <span className="md:hidden">{t("userPortfolio", { username: profile.username })}</span>
+              </div>
             </CardTitle>
           </CardHeader>
           <Separator />
@@ -113,7 +125,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
             <div>
               <ViewTransactionsLink
-                href={`/leaderboard/${encodeURIComponent(profile.username)}/transactions`}
+                href={`/leaderboard/${encodeURIComponent(profile.username)}/transactions${backParams.toString() ? `?${backParams.toString()}` : ""}`}
                 isAuthenticated={!!user}
                 isPremium={userIsPremium}
                 label={t("viewTransactions")}

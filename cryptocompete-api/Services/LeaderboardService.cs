@@ -73,26 +73,33 @@ public class LeaderboardService : ILeaderboardService
         }
     }
 
-    public async Task<List<LeaderboardEntry>> GetLeaderboardAsync(int limit = 100, CancellationToken cancellationToken = default)
+    public async Task<PaginatedLeaderboard> GetLeaderboardAsync(int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+        var totalCount = await db.LeaderboardSnapshots.CountAsync(cancellationToken);
+
         var snapshots = await db.LeaderboardSnapshots
             .Include(s => s.Profile)
             .OrderByDescending(s => s.TotalValue)
-            .Take(limit)
+            .ThenBy(s => s.Profile.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return snapshots
+        var offset = (page - 1) * pageSize;
+        var entries = snapshots
             .Select((s, index) => new LeaderboardEntry(
-                index + 1,
+                offset + index + 1,
                 s.Profile.PublicId,
                 s.Profile.Username,
                 s.TotalValue,
                 s.CalculatedAt
             ))
             .ToList();
+
+        return new PaginatedLeaderboard(entries, totalCount, page, pageSize);
     }
 
     public async Task<LeaderboardEntry?> GetEntryByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
@@ -103,6 +110,7 @@ public class LeaderboardService : ILeaderboardService
         var rankedSnapshots = await db.LeaderboardSnapshots
             .Include(s => s.Profile)
             .OrderByDescending(s => s.TotalValue)
+            .ThenBy(s => s.Profile.CreatedAt)
             .ToListAsync(cancellationToken);
 
         var entry = rankedSnapshots

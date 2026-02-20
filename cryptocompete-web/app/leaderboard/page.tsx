@@ -4,6 +4,9 @@ import { LeaderboardClient } from "./leaderboard-client";
 
 export const dynamic = "force-dynamic";
 
+const DEFAULT_PAGE_SIZE = 10;
+const VALID_PAGE_SIZES = [10, 25, 50, 100];
+
 function calculateMinutesUntilNextHour(timezone: string): number {
   const now = new Date();
   const nowInTz = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
@@ -13,8 +16,17 @@ function calculateMinutesUntilNextHour(timezone: string): number {
   return Math.ceil(diff / 1000 / 60);
 }
 
-export default async function LeaderboardPage() {
-  const leaderboard = await getLeaderboard();
+interface Props {
+  searchParams: Promise<{ page?: string; pageSize?: string }>;
+}
+
+export default async function LeaderboardPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10));
+  const parsedPageSize = parseInt(params.pageSize ?? "", 10);
+  const pageSize = VALID_PAGE_SIZES.includes(parsedPageSize) ? parsedPageSize : DEFAULT_PAGE_SIZE;
+
+  const leaderboard = await getLeaderboard(page, pageSize);
   const timezone = await getTimezone();
   const calculatedAt = leaderboard.entries[0]?.calculatedAt ?? null;
   const initialMinutes = calculateMinutesUntilNextHour(timezone);
@@ -26,6 +38,9 @@ export default async function LeaderboardPage() {
       initialExchangeRate={leaderboard.exchangeRate}
       initialCalculatedAt={calculatedAt}
       initialMinutes={initialMinutes}
+      initialTotalCount={leaderboard.totalCount}
+      currentPage={page}
+      currentPageSize={pageSize}
       timezone={timezone}
     />
   );

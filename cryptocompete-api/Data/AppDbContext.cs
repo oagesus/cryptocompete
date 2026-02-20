@@ -199,6 +199,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<LeaderboardSnapshot>(entity =>
         {
             entity.HasIndex(e => e.ProfileId).IsUnique();
+            entity.HasIndex(e => e.TotalValue).IsDescending();
             entity.Property(e => e.TotalValue).HasPrecision(18, 2);
 
             entity.HasOne(e => e.Profile)
