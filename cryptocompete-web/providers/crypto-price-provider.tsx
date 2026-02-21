@@ -14,7 +14,7 @@ export interface PriceUpdate {
 interface CryptoPriceContextType {
   prices: Record<string, PriceUpdate>;
   isConnected: boolean;
-  subscribeToSymbols: (symbols: string[]) => void;
+  subscribeToAll: () => void;
 }
 
 const CryptoPriceContext = createContext<CryptoPriceContextType | null>(null);
@@ -23,7 +23,6 @@ export function CryptoPriceProvider({ children }: { children: ReactNode }) {
   const [prices, setPrices] = useState<Record<string, PriceUpdate>>({});
   const [isConnected, setIsConnected] = useState(false);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
-  const subscribedSymbolsRef = useRef<Set<string>>(new Set());
   const isMountedRef = useRef(true);
   const pendingUpdatesRef = useRef<Record<string, PriceUpdate>>({});
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,13 +52,10 @@ export function CryptoPriceProvider({ children }: { children: ReactNode }) {
     });
 
     const resubscribe = async () => {
-      const symbols = Array.from(subscribedSymbolsRef.current);
-      for (const symbol of symbols) {
-        try {
-          await connection.invoke("SubscribeToSymbol", symbol);
-        } catch (err) {
-          console.error(`Error resubscribing to ${symbol}:`, err);
-        }
+      try {
+        await connection.invoke("SubscribeToAll");
+      } catch (err) {
+        console.error("Error resubscribing to all:", err);
       }
     };
 
@@ -106,24 +102,19 @@ export function CryptoPriceProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const subscribeToSymbols = useCallback(async (symbols: string[]) => {
+  const subscribeToAll = useCallback(async () => {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
 
-    for (const symbol of symbols) {
-      if (!subscribedSymbolsRef.current.has(symbol)) {
-        try {
-          await connection.invoke("SubscribeToSymbol", symbol);
-          subscribedSymbolsRef.current.add(symbol);
-        } catch (err) {
-          console.error(`Error subscribing to ${symbol}:`, err);
-        }
-      }
+    try {
+      await connection.invoke("SubscribeToAll");
+    } catch (err) {
+      console.error("Error subscribing to all:", err);
     }
   }, []);
 
   return (
-    <CryptoPriceContext.Provider value={{ prices, isConnected, subscribeToSymbols }}>
+    <CryptoPriceContext.Provider value={{ prices, isConnected, subscribeToAll }}>
       {children}
     </CryptoPriceContext.Provider>
   );
