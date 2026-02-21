@@ -80,7 +80,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<PortfolioHolding>(entity =>
         {
             entity.HasIndex(e => new { e.ProfileId, e.CryptocurrencyId }).IsUnique();
-            entity.Property(e => e.Amount).HasPrecision(28, 18);
+            entity.Property(e => e.Amount).HasPrecision(28, 8);
             
             entity.HasOne(e => e.Profile)
                 .WithMany(p => p.Holdings)
@@ -95,7 +95,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Transaction>(entity =>
         {
-            entity.Property(e => e.Amount).HasPrecision(28, 18);
+            entity.Property(e => e.Amount).HasPrecision(28, 8);
             entity.Property(e => e.PricePerUnit).HasPrecision(18, 8);
             entity.Property(e => e.TotalValue).HasPrecision(18, 2);
             entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(10);

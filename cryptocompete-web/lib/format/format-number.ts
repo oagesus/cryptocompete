@@ -31,7 +31,7 @@ export function sanitizeInput(value: string, groupSep: string, decimalSep: strin
   const newDigitCount = cleanValue.replace(new RegExp(`\\${decimalSep}`, "g"), "").length;
   const prevDigitCount = currentValue ? currentValue.replace(/[^0-9]/g, "").length : 0;
 
-  if (newDigitCount > 18 && newDigitCount > prevDigitCount) return null;
+  if (newDigitCount > 20 && newDigitCount > prevDigitCount) return null;
 
   return cleanValue.replace(decimalSep, ".");
 }
