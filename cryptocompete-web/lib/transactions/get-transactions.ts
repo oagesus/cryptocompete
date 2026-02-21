@@ -8,6 +8,7 @@ export interface Transaction {
   name: string;
   type: "Buy" | "Sell";
   amount: number;
+  amountRaw: string;
   pricePerUnit: number;
   totalValue: number;
   currency: string;

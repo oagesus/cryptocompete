@@ -11,7 +11,8 @@ import { Loader2 } from "lucide-react";
 import { SpendCard } from "@/components/spend-card";
 import { BuyCard } from "@/components/buy-card";
 import { AuthRequiredDialog } from "@/components/auth-required-dialog";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw } from "@/lib/format/format-number";
+import Decimal from "decimal.js-light";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, formatRawAmount, divideDecimalRaw, multiplyDecimalRaw } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -55,51 +56,51 @@ export function BuyPanel({
   const priceUsd = liveData?.price ?? initialPriceUsd;
   const priceInUserCurrency = priceUsd ? priceUsd * exchangeRate : null;
 
-  function roundCrypto(value: number): number {
-    return Math.floor(value * Math.pow(10, CRYPTO_PRECISION)) / Math.pow(10, CRYPTO_PRECISION);
-  }
+  const priceInUserCurrencyStr = useMemo(() => {
+    if (!priceUsd) return null;
+    const result = new Decimal(priceUsd).mul(new Decimal(exchangeRate));
+    return result.toFixed(18);
+  }, [priceUsd, exchangeRate]);
 
-  const calculatedCryptoAmount = useMemo(() => {
-    if (activeField !== "spend") return null;
-    const spend = parseFloat(spendAmount) || 0;
-    if (!priceInUserCurrency || spend <= 0) return 0;
-    return roundCrypto(spend / priceInUserCurrency);
-  }, [activeField, spendAmount, priceInUserCurrency]);
+  const calculatedCryptoRaw = useMemo(() => {
+    if (activeField !== "spend" || !priceInUserCurrencyStr) return "";
+    if (!spendAmount || parseFloat(spendAmount) <= 0) return "";
+    return divideDecimalRaw(spendAmount, priceInUserCurrencyStr, CRYPTO_PRECISION);
+  }, [activeField, spendAmount, priceInUserCurrencyStr]);
 
-  const calculatedSpendAmount = useMemo(() => {
-    if (activeField !== "crypto") return null;
-    const crypto = parseFloat(cryptoAmount) || 0;
-    if (!priceInUserCurrency || crypto <= 0) return 0;
-    return crypto * priceInUserCurrency;
-  }, [activeField, cryptoAmount, priceInUserCurrency]);
+  const calculatedSpendRaw = useMemo(() => {
+    if (activeField !== "crypto" || !priceInUserCurrencyStr) return "";
+    if (!cryptoAmount || parseFloat(cryptoAmount) <= 0) return "";
+    return multiplyDecimalRaw(cryptoAmount, priceInUserCurrencyStr, 2);
+  }, [activeField, cryptoAmount, priceInUserCurrencyStr]);
 
   function formatCrypto(amount: number) {
     if (amount === 0) return "0";
     return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: CRYPTO_PRECISION,
+      minimumFractionDigits: 2,
       maximumFractionDigits: CRYPTO_PRECISION,
     }).format(amount);
   }
 
   const displayCryptoAmount = activeField === "spend" 
-    ? (calculatedCryptoAmount ?? 0) > 0 ? formatCrypto(calculatedCryptoAmount ?? 0) : ""
+    ? calculatedCryptoRaw ? formatRawAmount(calculatedCryptoRaw, groupSep, decimalSep, CRYPTO_PRECISION, true) : ""
     : focusedField === "crypto"
       ? formatInputNumberRaw(cryptoAmount, decimalSep)
       : formatInputNumber(cryptoAmount, groupSep, decimalSep);
 
   const displaySpendAmount = activeField === "crypto"
-    ? (calculatedSpendAmount ?? 0) > 0 ? formatInputNumber((calculatedSpendAmount ?? 0).toFixed(2), groupSep, decimalSep) : ""
+    ? calculatedSpendRaw ? formatInputNumber(calculatedSpendRaw, groupSep, decimalSep) : ""
     : focusedField === "spend"
       ? formatInputNumberRaw(spendAmount, decimalSep)
       : formatInputNumber(spendAmount, groupSep, decimalSep);
 
   const finalSpendValue = activeField === "spend" 
     ? parseFloat(spendAmount) || 0
-    : calculatedSpendAmount ?? 0;
+    : parseFloat(calculatedSpendRaw) || 0;
 
   const finalCryptoValue = activeField === "crypto"
     ? parseFloat(cryptoAmount) || 0
-    : calculatedCryptoAmount ?? 0;
+    : parseFloat(calculatedCryptoRaw) || 0;
 
   function handleSpendChange(value: string) {
     const cleaned = sanitizeInput(value, groupSep, decimalSep, spendAmount);
@@ -116,7 +117,7 @@ export function BuyPanel({
   }
 
   const isAmountTooSmall = 
-    roundCrypto(finalCryptoValue) <= 0 || 
+    finalCryptoValue <= 0 || 
     Math.round(finalSpendValue * 100) / 100 <= 0;
 
   async function handleBuy() {
@@ -137,7 +138,7 @@ export function BuyPanel({
         credentials: "include",
         body: JSON.stringify({
           symbol,
-          amount: activeField === "spend" ? finalSpendValue : finalCryptoValue,
+          amount: activeField === "spend" ? spendAmount : cryptoAmount,
           mode: activeField,
         }),
       });
@@ -155,7 +156,9 @@ export function BuyPanel({
       }).format(data.value);
       
       toast.success(t("successBought", { 
-        amount: formatCrypto(data.cryptoAmount), 
+        amount: data.cryptoAmountRaw 
+          ? formatRawAmount(data.cryptoAmountRaw, groupSep, decimalSep, CRYPTO_PRECISION, true)
+          : formatCrypto(data.cryptoAmount), 
         symbol, 
         value: formattedValue 
       }));

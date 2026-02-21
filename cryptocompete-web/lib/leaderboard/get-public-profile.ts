@@ -6,6 +6,7 @@ export interface PublicHolding {
   symbol: string;
   name: string;
   amount: number;
+  amountRaw: string;
   priceUsd: number | null;
   changePercent24h: number | null;
   rank: number | null;

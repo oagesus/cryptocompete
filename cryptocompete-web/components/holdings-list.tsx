@@ -9,6 +9,7 @@ interface Holding {
   symbol: string;
   name: string;
   amount: number;
+  amountRaw?: string;
   priceUsd: number | null;
   investedValue: number;
 }
@@ -57,6 +58,7 @@ export function HoldingsList({ holdings, currency, exchangeRate }: HoldingsListP
             symbol={holding.symbol}
             name={holding.name}
             amount={holding.amount}
+            amountRaw={holding.amountRaw}
             currentValue={currentValue}
             profitLossPercent={profitLossPercent}
             currency={currency}

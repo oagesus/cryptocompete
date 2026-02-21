@@ -3,11 +3,13 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
+import { getLocaleSeparators, formatRawAmount } from "@/lib/format/format-number";
 
 interface HoldingCardProps {
   symbol: string;
   name: string;
   amount: number;
+  amountRaw?: string;
   currentValue?: number;
   profitLossPercent?: number;
   currency: string;
@@ -17,12 +19,18 @@ export function HoldingCard({
   symbol,
   name,
   amount,
+  amountRaw,
   currentValue,
   profitLossPercent,
   currency,
 }: HoldingCardProps) {
   const t = useTranslations("account");
   const locale = useLocale();
+  const { group: groupSep, decimal: decimalSep } = getLocaleSeparators(locale);
+
+  const formattedAmount = amountRaw
+    ? formatRawAmount(amountRaw, groupSep, decimalSep, 8, true)
+    : amount.toLocaleString(locale, { maximumFractionDigits: 8 });
 
   const formattedValue = currentValue
     ? new Intl.NumberFormat(locale, {
@@ -38,9 +46,7 @@ export function HoldingCard({
           <span className="font-medium">{name}</span>
           <span className="text-sm text-muted-foreground">
             {symbol}{" "}
-            {amount.toLocaleString(locale, {
-              maximumFractionDigits: 8,
-            })}
+            {formattedAmount}
           </span>
         </div>
 

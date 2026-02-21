@@ -26,7 +26,7 @@ import { TransactionTypeBadge } from "@/components/transaction-type-badge";
 import { PremiumTransactionDialog } from "@/components/premium-transaction-dialog";
 import { TransactionsResponse } from "@/lib/transactions/get-transactions";
 import { cn } from "@/lib/utils";
-import { getPriceDecimals } from "@/lib/format/format-number";
+import { getPriceDecimals, getLocaleSeparators, formatRawAmount } from "@/lib/format/format-number";
 
 interface TransactionsListProps {
   title?: string;
@@ -51,6 +51,7 @@ const PAGE_SIZE_OPTIONS = [15, 25, 50, 100];
 export function TransactionsList({ title, backHref, rank, transactions, isPremium }: TransactionsListProps) {
   const t = useTranslations("account");
   const locale = useLocale();
+  const { group: groupSep, decimal: decimalSep } = getLocaleSeparators(locale);
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
@@ -226,7 +227,9 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                         </span>
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatAmount(tx.amount)}
+                        {tx.amountRaw
+                          ? formatRawAmount(tx.amountRaw, groupSep, decimalSep, 8, true)
+                          : formatAmount(tx.amount)}
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {formatPriceCurrency(tx.pricePerUnit * transactions.exchangeRate, transactions.currency)}

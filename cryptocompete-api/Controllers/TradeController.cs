@@ -32,6 +32,11 @@ public class TradeController : ControllerBase
     [HttpPost("buy")]
     public async Task<IActionResult> Buy([FromBody] TradeRequest request)
     {
+        if (!decimal.TryParse(request.Amount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+        {
+            return BadRequest(new { message = "Invalid amount" });
+        }
+
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
         {
@@ -76,7 +81,7 @@ public class TradeController : ControllerBase
 
         if (request.Mode == "crypto")
         {
-            cryptoAmount = Math.Round(request.Amount, CryptoDecimalPrecision);
+            cryptoAmount = Math.Round(amount, CryptoDecimalPrecision);
             
             if (cryptoAmount <= 0)
             {
@@ -89,7 +94,7 @@ public class TradeController : ControllerBase
         }
         else
         {
-            spendAmountEur = request.Amount * userCurrencyToEur;
+            spendAmountEur = amount * userCurrencyToEur;
             
             if (spendAmountEur <= 0)
             {
@@ -149,6 +154,7 @@ public class TradeController : ControllerBase
             crypto.Name,
             TransactionType.Buy.ToString(),
             cryptoAmount,
+            cryptoAmount.ToString("F18").TrimEnd('0').TrimEnd('.'),
             Math.Round(spendAmountEur * eurToUserCurrency, 2),
             displayCurrency,
             Math.Round(profile.Balance * eurToUserCurrency, 2)
@@ -158,6 +164,11 @@ public class TradeController : ControllerBase
     [HttpPost("sell")]
     public async Task<IActionResult> Sell([FromBody] TradeSellRequest request)
     {
+        if (!decimal.TryParse(request.Amount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+        {
+            return BadRequest(new { message = "Invalid amount" });
+        }
+
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
         {
@@ -206,15 +217,9 @@ public class TradeController : ControllerBase
         decimal cryptoAmount;
         decimal valueEur;
 
-        if (request.SellAll)
+        if (request.Mode == "receive")
         {
-            cryptoAmount = holding.Amount;
-            var valueUsd = cryptoAmount * priceUsd.Value;
-            valueEur = valueUsd * usdToEur;
-        }
-        else if (request.Mode == "receive")
-        {
-            var receiveAmountEur = request.Amount * userCurrencyToEur;
+            var receiveAmountEur = amount * userCurrencyToEur;
             
             if (receiveAmountEur <= 0)
             {
@@ -228,7 +233,7 @@ public class TradeController : ControllerBase
         }
         else
         {
-            cryptoAmount = Math.Round(request.Amount, CryptoDecimalPrecision);
+            cryptoAmount = Math.Round(amount, CryptoDecimalPrecision);
             
             if (cryptoAmount <= 0)
             {
@@ -280,6 +285,7 @@ public class TradeController : ControllerBase
             crypto.Name,
             TransactionType.Sell.ToString(),
             cryptoAmount,
+            cryptoAmount.ToString("F18").TrimEnd('0').TrimEnd('.'),
             Math.Round(valueEur * eurToUserCurrency, 2),
             displayCurrency,
             Math.Round(profile.Balance * eurToUserCurrency, 2)
@@ -460,13 +466,14 @@ public class TradeController : ControllerBase
     }
 }
 
-public record TradeRequest(string Symbol, decimal Amount, string Mode = "spend");
-public record TradeSellRequest(string Symbol, decimal Amount, string Mode = "sell", bool SellAll = false);
+public record TradeRequest(string Symbol, string Amount, string Mode = "spend");
+public record TradeSellRequest(string Symbol, string Amount, string Mode = "sell");
 public record TradeResponse(
     string Symbol,
     string Name,
     string Type,
     decimal CryptoAmount,
+    string CryptoAmountRaw,
     decimal Value,
     string Currency,
     decimal NewBalance

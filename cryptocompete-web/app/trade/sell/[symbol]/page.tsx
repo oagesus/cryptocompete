@@ -68,6 +68,7 @@ export default async function SellDetailPage({ params }: Props) {
         displayCurrency={displayCurrency}
         exchangeRate={exchangeRate}
         holdingAmount={holding.amount}
+        holdingAmountRaw={holding.amountRaw}
         initialPriceUsd={crypto.priceUsd}
         supportedCurrencies={currencyInfo.supportedCurrencies}
       />

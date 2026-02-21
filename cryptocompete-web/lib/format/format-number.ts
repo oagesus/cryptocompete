@@ -1,3 +1,5 @@
+import Decimal from "decimal.js-light";
+
 export function getLocaleSeparators(locale: string) {
   const parts = new Intl.NumberFormat(locale).formatToParts(1234567.89);
   const group = parts.find((p) => p.type === "group")?.value ?? ",";
@@ -29,7 +31,7 @@ export function sanitizeInput(value: string, groupSep: string, decimalSep: strin
   const newDigitCount = cleanValue.replace(new RegExp(`\\${decimalSep}`, "g"), "").length;
   const prevDigitCount = currentValue ? currentValue.replace(/[^0-9]/g, "").length : 0;
 
-  if (newDigitCount > 14 && newDigitCount > prevDigitCount) return null;
+  if (newDigitCount > 18 && newDigitCount > prevDigitCount) return null;
 
   return cleanValue.replace(decimalSep, ".");
 }
@@ -52,6 +54,33 @@ export function formatInputNumber(value: string, groupSep: string, decimalSep: s
 export function formatInputNumberRaw(value: string, decimalSep: string): string {
   if (!value || value === ".") return value.replace(".", decimalSep);
   return value.replace(".", decimalSep);
+}
+
+export function formatRawAmount(raw: string, groupSep: string, decimalSep: string, decimals: number, trimZeros: boolean = false): string {
+  const parts = raw.split(".");
+  const integerPart = parts[0];
+  let decimalPart = (parts[1] ?? "").padEnd(decimals, "0").slice(0, decimals);
+  if (trimZeros) {
+    decimalPart = decimalPart.replace(/0+$/, "");
+  }
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, groupSep);
+  if (!decimalPart) return formattedInteger;
+  return `${formattedInteger}${decimalSep}${decimalPart}`;
+}
+
+export function isGreaterThanRaw(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  return new Decimal(a).gt(new Decimal(b));
+}
+
+export function divideDecimalRaw(numerator: string, denominator: string, precision: number): string {
+  if (!numerator || !denominator || denominator === "0") return "0";
+  return new Decimal(numerator).div(new Decimal(denominator)).toFixed(precision);
+}
+
+export function multiplyDecimalRaw(a: string, b: string, precision: number): string {
+  if (!a || !b) return "0";
+  return new Decimal(a).mul(new Decimal(b)).toFixed(precision);
 }
 
 export function getPriceDecimals(price: number): number {

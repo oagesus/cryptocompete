@@ -6,6 +6,7 @@ export interface Holding {
   symbol: string;
   name: string;
   amount: number;
+  amountRaw: string;
   priceUsd: number | null;
   changePercent24h: number | null;
   rank: number | null;
