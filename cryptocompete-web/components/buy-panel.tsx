@@ -12,7 +12,7 @@ import { SpendCard } from "@/components/spend-card";
 import { BuyCard } from "@/components/buy-card";
 import { AuthRequiredDialog } from "@/components/auth-required-dialog";
 import Decimal from "decimal.js-light";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, formatRawAmount, divideDecimalRaw, multiplyDecimalRaw } from "@/lib/format/format-number";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, formatRawAmount, isGreaterThanRaw, divideDecimalRaw, multiplyDecimalRaw } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -94,13 +94,11 @@ export function BuyPanel({
       ? formatInputNumberRaw(spendAmount, decimalSep)
       : formatInputNumber(spendAmount, groupSep, decimalSep);
 
-  const finalSpendValue = activeField === "spend" 
-    ? parseFloat(spendAmount) || 0
-    : parseFloat(calculatedSpendRaw) || 0;
+  const finalSpendRaw = activeField === "spend" ? spendAmount : calculatedSpendRaw;
 
-  const finalCryptoValue = activeField === "crypto"
-    ? parseFloat(cryptoAmount) || 0
-    : parseFloat(calculatedCryptoRaw) || 0;
+  const isExceedsBalance = balance !== null && finalSpendRaw
+    ? isGreaterThanRaw(finalSpendRaw, balance.toFixed(2))
+    : false;
 
   function handleSpendChange(value: string) {
     const cleaned = sanitizeInput(value, groupSep, decimalSep, spendAmount);
@@ -116,9 +114,14 @@ export function BuyPanel({
     setActiveField("crypto");
   }
 
+  const finalSpendRawNum = parseFloat(finalSpendRaw) || 0;
+  const finalCryptoRawNum = activeField === "crypto"
+    ? parseFloat(cryptoAmount) || 0
+    : parseFloat(calculatedCryptoRaw) || 0;
+
   const isAmountTooSmall = 
-    finalCryptoValue <= 0 || 
-    Math.round(finalSpendValue * 100) / 100 <= 0;
+    finalCryptoRawNum <= 0 || 
+    Math.round(finalSpendRawNum * 100) / 100 <= 0;
 
   async function handleBuy() {
     if (!isAuthenticated) {
@@ -126,7 +129,7 @@ export function BuyPanel({
       return;
     }
 
-    if (finalSpendValue <= 0 || finalCryptoValue <= 0) return;
+    if (finalSpendRawNum <= 0 || finalCryptoRawNum <= 0) return;
 
     setError(null);
     setIsLoading(true);
@@ -222,7 +225,7 @@ export function BuyPanel({
 
           <Button
             onClick={handleBuy}
-            disabled={isLoading || isAmountTooSmall || (balance !== null && finalSpendValue > balance)}
+            disabled={isLoading || isAmountTooSmall || isExceedsBalance}
             className="w-full"
           >
             {isLoading ? (

@@ -68,18 +68,23 @@ export function formatRawAmount(raw: string, groupSep: string, decimalSep: strin
   return `${formattedInteger}${decimalSep}${decimalPart}`;
 }
 
+function isValidDecimal(value: string): boolean {
+  if (!value || value === ".") return false;
+  return isFinite(parseFloat(value));
+}
+
 export function isGreaterThanRaw(a: string, b: string): boolean {
-  if (!a || !b) return false;
+  if (!isValidDecimal(a) || !isValidDecimal(b)) return false;
   return new Decimal(a).gt(new Decimal(b));
 }
 
 export function divideDecimalRaw(numerator: string, denominator: string, precision: number): string {
-  if (!numerator || !denominator || denominator === "0") return "0";
+  if (!isValidDecimal(numerator) || !isValidDecimal(denominator) || denominator === "0") return "0";
   return new Decimal(numerator).div(new Decimal(denominator)).toFixed(precision);
 }
 
 export function multiplyDecimalRaw(a: string, b: string, precision: number): string {
-  if (!a || !b) return "0";
+  if (!isValidDecimal(a) || !isValidDecimal(b)) return "0";
   return new Decimal(a).mul(new Decimal(b)).toFixed(precision);
 }
 
