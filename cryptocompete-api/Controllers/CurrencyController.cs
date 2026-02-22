@@ -1,4 +1,5 @@
 using CryptoCompete.Api.Constants;
+using CryptoCompete.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +14,12 @@ public class CurrencyController : ControllerBase
     public const string DefaultCurrency = "EUR";
     private const int CookieExpirationDays = 365;
     private readonly bool _isProduction;
+    private readonly ICurrencyService _currencyService;
 
-    public CurrencyController(IWebHostEnvironment environment)
+    public CurrencyController(IWebHostEnvironment environment, ICurrencyService currencyService)
     {
         _isProduction = environment.IsProduction();
+        _currencyService = currencyService;
     }
 
     public static string GetDisplayCurrency(HttpRequest request)
@@ -32,14 +35,15 @@ public class CurrencyController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetCurrency()
+    public async Task<IActionResult> GetCurrency()
     {
         var currency = GetDisplayCurrency(Request);
-        return Ok(new CurrencyResponse(currency, SupportedCurrencies.Codes.ToList()));
+        var eurExchangeRate = await _currencyService.GetExchangeRateAsync("EUR", currency);
+        return Ok(new CurrencyResponse(currency, SupportedCurrencies.Codes.ToList(), eurExchangeRate));
     }
 
     [HttpPut]
-    public IActionResult SetCurrency([FromBody] SetCurrencyRequest request)
+    public async Task<IActionResult> SetCurrency([FromBody] SetCurrencyRequest request)
     {
         if (string.IsNullOrEmpty(request.Currency))
         {
@@ -62,9 +66,11 @@ public class CurrencyController : ControllerBase
             MaxAge = TimeSpan.FromDays(CookieExpirationDays)
         });
 
-        return Ok(new CurrencyResponse(currency, SupportedCurrencies.Codes.ToList()));
+        var eurExchangeRate = await _currencyService.GetExchangeRateAsync("EUR", currency);
+
+        return Ok(new CurrencyResponse(currency, SupportedCurrencies.Codes.ToList(), eurExchangeRate));
     }
 }
 
-public record CurrencyResponse(string Currency, List<string> SupportedCurrencies);
+public record CurrencyResponse(string Currency, List<string> SupportedCurrencies, decimal EurExchangeRate);
 public record SetCurrencyRequest(string Currency);

@@ -46,6 +46,7 @@ export default async function SellDetailPage({ params }: Props) {
 
   const displayCurrency = portfolio.currency;
   const exchangeRate = portfolio.exchangeRate;
+  const minTradeAmount = Math.round(currencyInfo.eurExchangeRate * 100) / 100;
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,6 +72,7 @@ export default async function SellDetailPage({ params }: Props) {
         holdingAmountRaw={holding.amountRaw}
         initialPriceUsd={crypto.priceUsd}
         supportedCurrencies={currencyInfo.supportedCurrencies}
+        minTradeAmount={minTradeAmount}
       />
     </div>
   );

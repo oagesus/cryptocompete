@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 import { SellCard } from "@/components/sell-card";
 import { ReceiveCard } from "@/components/receive-card";
 import Decimal from "decimal.js-light";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, formatRawAmount, isGreaterThanRaw, divideDecimalRaw, multiplyDecimalRaw } from "@/lib/format/format-number";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, formatRawAmount, isGreaterThanRaw, isLessThanRaw, divideDecimalRaw, multiplyDecimalRaw } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -25,6 +25,7 @@ interface Props {
   holdingAmountRaw: string;
   initialPriceUsd: number | null;
   supportedCurrencies: string[];
+  minTradeAmount?: number;
 }
 
 export function SellPanel({
@@ -36,6 +37,7 @@ export function SellPanel({
   holdingAmountRaw,
   initialPriceUsd,
   supportedCurrencies,
+  minTradeAmount = 1,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("trade");
@@ -106,6 +108,7 @@ export function SellPanel({
     if (cleaned === null) return;
     setSellAmount(cleaned);
     setActiveField("sell");
+    setError(null);
   }
 
   function handleReceiveAmountChange(value: string) {
@@ -113,6 +116,7 @@ export function SellPanel({
     if (cleaned === null) return;
     setReceiveAmount(cleaned);
     setActiveField("receive");
+    setError(null);
   }
 
   function handlePercentageClick(percentage: number) {
@@ -127,7 +131,18 @@ export function SellPanel({
 
   const isAmountTooSmall = 
     finalSellValue <= 0 || 
-    Math.round(finalReceiveValue * 100) / 100 <= 0;
+    finalReceiveValue <= 0;
+
+  const finalReceiveRaw = activeField === "receive" ? receiveAmount : calculatedReceiveRaw;
+
+  const isBelowMinimum = finalReceiveValue > 0 && isLessThanRaw(finalReceiveRaw, minTradeAmount.toFixed(2));
+
+  const formattedMinAmount = useMemo(() => {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: displayCurrency,
+    }).format(minTradeAmount);
+  }, [locale, displayCurrency, minTradeAmount]);
 
   const isExceedsHolding = activeField === "sell"
     ? isGreaterThanRaw(sellAmount, holdingAmountRaw)
@@ -189,9 +204,16 @@ export function SellPanel({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <span className="text-lg font-semibold">
-          {t("holdings")} = {formatRawAmount(holdingAmountRaw, groupSep, decimalSep, CRYPTO_PRECISION, true)} {symbol}
-        </span>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-lg font-semibold">
+            {t("holdings")} = {formatRawAmount(holdingAmountRaw, groupSep, decimalSep, CRYPTO_PRECISION, true)} {symbol}
+          </span>
+          {priceInUserCurrency && priceInUserCurrency > 0 && (
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              1 {displayCurrency} ≈ {formatCrypto(1 / priceInUserCurrency)} {symbol}
+            </span>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div
@@ -248,19 +270,23 @@ export function SellPanel({
           />
         </div>
 
-        {priceInUserCurrency && priceInUserCurrency > 0 && (
-          <p className="text-xs text-muted-foreground text-center">
-            1 {displayCurrency} ≈ {formatCrypto(1 / priceInUserCurrency)} {symbol}
+          <p className="text-xs text-muted-foreground">
+            {t("minimum")}: {formattedMinAmount}
           </p>
-        )}
 
         {error && (
           <p className="text-sm text-destructive text-center">{error}</p>
         )}
 
+        {!error && isBelowMinimum && (
+          <p className="text-sm text-destructive text-center">
+            {t("minimumTradeAmount", { amount: formattedMinAmount })}
+          </p>
+        )}
+
         <Button
           onClick={handleSell}
-          disabled={isLoading || isAmountTooSmall || isExceedsHolding}
+          disabled={isLoading || isAmountTooSmall || isBelowMinimum || isExceedsHolding}
           className="w-full"
         >
           {isLoading ? (

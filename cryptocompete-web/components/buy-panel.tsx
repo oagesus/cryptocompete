@@ -12,7 +12,7 @@ import { SpendCard } from "@/components/spend-card";
 import { BuyCard } from "@/components/buy-card";
 import { AuthRequiredDialog } from "@/components/auth-required-dialog";
 import Decimal from "decimal.js-light";
-import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, formatRawAmount, isGreaterThanRaw, divideDecimalRaw, multiplyDecimalRaw } from "@/lib/format/format-number";
+import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, formatRawAmount, isGreaterThanRaw, isLessThanRaw, divideDecimalRaw, multiplyDecimalRaw } from "@/lib/format/format-number";
 
 const CRYPTO_PRECISION = 8;
 
@@ -25,6 +25,7 @@ interface Props {
   balance: number | null;
   supportedCurrencies: string[];
   initialPriceUsd: number | null;
+  minTradeAmount?: number;
 }
 
 export function BuyPanel({
@@ -36,6 +37,7 @@ export function BuyPanel({
   balance,
   supportedCurrencies,
   initialPriceUsd,
+  minTradeAmount = 1,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("trade");
@@ -105,6 +107,7 @@ export function BuyPanel({
     if (cleaned === null) return;
     setSpendAmount(cleaned);
     setActiveField("spend");
+    setError(null);
   }
 
   function handleCryptoChange(value: string) {
@@ -112,6 +115,7 @@ export function BuyPanel({
     if (cleaned === null) return;
     setCryptoAmount(cleaned);
     setActiveField("crypto");
+    setError(null);
   }
 
   const finalSpendRawNum = parseFloat(finalSpendRaw) || 0;
@@ -121,7 +125,16 @@ export function BuyPanel({
 
   const isAmountTooSmall = 
     finalCryptoRawNum <= 0 || 
-    Math.round(finalSpendRawNum * 100) / 100 <= 0;
+    finalSpendRawNum <= 0;
+
+  const isBelowMinimum = finalSpendRawNum > 0 && isLessThanRaw(finalSpendRaw, minTradeAmount.toFixed(2));
+
+  const formattedMinAmount = useMemo(() => {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: displayCurrency,
+    }).format(minTradeAmount);
+  }, [locale, displayCurrency, minTradeAmount]);
 
   async function handleBuy() {
     if (!isAuthenticated) {
@@ -178,16 +191,25 @@ export function BuyPanel({
   return (
     <>
       <Card>
-        {isAuthenticated && balance !== null && (
-          <CardHeader className="pb-2">
-            <span className="text-lg font-semibold">
-              {t("balance")} = {new Intl.NumberFormat(locale, {
-                style: "currency",
-                currency: displayCurrency,
-              }).format(balance)}
-            </span>
-          </CardHeader>
-        )}
+        <CardHeader className="pb-2">
+          <div className="flex items-baseline justify-between gap-2">
+            {isAuthenticated && balance !== null ? (
+              <span className="text-lg font-semibold">
+                {t("balance")} = {new Intl.NumberFormat(locale, {
+                  style: "currency",
+                  currency: displayCurrency,
+                }).format(balance)}
+              </span>
+            ) : (
+              <span className="text-lg font-semibold">{name}</span>
+            )}
+            {priceInUserCurrency && priceInUserCurrency > 0 && (
+              <span className="text-xs text-muted-foreground whitespace-nowrap ml-auto">
+                1 {displayCurrency} ≈ {formatCrypto(1 / priceInUserCurrency)} {symbol}
+              </span>
+            )}
+          </div>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div
             onFocus={() => setFocusedField("spend")}
@@ -213,19 +235,23 @@ export function BuyPanel({
             />
           </div>
 
-          {priceInUserCurrency && priceInUserCurrency > 0 && (
-            <p className="text-xs text-muted-foreground text-center">
-              1 {displayCurrency} ≈ {formatCrypto(1 / priceInUserCurrency)} {symbol}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            {t("minimum")}: {formattedMinAmount}
+          </p>
 
           {error && (
             <p className="text-sm text-destructive text-center">{error}</p>
           )}
 
+          {!error && isBelowMinimum && (
+            <p className="text-sm text-destructive text-center">
+              {t("minimumTradeAmount", { amount: formattedMinAmount })}
+            </p>
+          )}
+
           <Button
             onClick={handleBuy}
-            disabled={isLoading || isAmountTooSmall || isExceedsBalance}
+            disabled={isLoading || isAmountTooSmall || isBelowMinimum || isExceedsBalance}
             className="w-full"
           >
             {isLoading ? (

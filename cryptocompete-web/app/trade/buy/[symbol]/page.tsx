@@ -41,6 +41,7 @@ export default async function BuyDetailPage({ params }: Props) {
 
   const displayCurrency = portfolioCurrency ?? crypto.currency;
   const exchangeRate = portfolioExchangeRate ?? crypto.exchangeRate;
+  const minTradeAmount = Math.round(currencyInfo.eurExchangeRate * 100) / 100;
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,6 +67,7 @@ export default async function BuyDetailPage({ params }: Props) {
         balance={balance}
         supportedCurrencies={currencyInfo.supportedCurrencies}
         initialPriceUsd={crypto.priceUsd}
+        minTradeAmount={minTradeAmount}
       />
     </div>
   );

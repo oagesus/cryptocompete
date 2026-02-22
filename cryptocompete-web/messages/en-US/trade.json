@@ -35,6 +35,8 @@
     "pastYear": "Past year",
     "yearToDate": "Year to date",
     "somethingWentWrong": "Something went wrong",
+    "minimumTradeAmount": "Amount too low. Minimum: {amount}",
+    "minimum": "Minimum",
     "successBought": "Successfully bought {amount} {symbol} for {value}",
     "successSold": "Successfully sold {amount} {symbol} for {value}",
     "insufficientBalance": "Insufficient {symbol} balance",

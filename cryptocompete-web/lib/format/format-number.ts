@@ -78,6 +78,11 @@ export function isGreaterThanRaw(a: string, b: string): boolean {
   return new Decimal(a).gt(new Decimal(b));
 }
 
+export function isLessThanRaw(a: string, b: string): boolean {
+  if (!isValidDecimal(a) || !isValidDecimal(b)) return false;
+  return new Decimal(a).lt(new Decimal(b));
+}
+
 export function divideDecimalRaw(numerator: string, denominator: string, precision: number): string {
   if (!isValidDecimal(numerator) || !isValidDecimal(denominator) || denominator === "0") return "0";
   return new Decimal(numerator).div(new Decimal(denominator)).toFixed(precision);

@@ -106,9 +106,10 @@ public class TradeController : ControllerBase
             cryptoAmount = Math.Round(spendAmountUsd / priceUsd.Value, CryptoDecimalPrecision);
         }
 
-        if (cryptoAmount <= 0 || Math.Round(spendAmountEur, 2) <= 0)
+        if (cryptoAmount <= 0 || spendAmountEur < 1m)
         {
-            return BadRequest(new { message = "Amount too small" });
+            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2);
+            return BadRequest(new { message = "Minimum trade amount", minAmount = minInUserCurrency, currency = displayCurrency });
         }
 
         if (spendAmountEur > profile.Balance)
@@ -244,9 +245,10 @@ public class TradeController : ControllerBase
             valueEur = valueUsd * usdToEur;
         }
 
-        if (cryptoAmount <= 0 || Math.Round(valueEur, 2) <= 0)
+        if (cryptoAmount <= 0 || valueEur < 1m)
         {
-            return BadRequest(new { message = "Amount too small" });
+            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2);
+            return BadRequest(new { message = "Minimum trade amount", minAmount = minInUserCurrency, currency = displayCurrency });
         }
 
         if (cryptoAmount > holding.Amount)

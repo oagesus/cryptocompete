@@ -5,6 +5,7 @@ const API_URL = process.env.API_URL;
 export interface CurrencyInfo {
   currency: string;
   supportedCurrencies: string[];
+  eurExchangeRate: number;
 }
 
 export async function getCurrency(): Promise<CurrencyInfo> {
@@ -18,11 +19,11 @@ export async function getCurrency(): Promise<CurrencyInfo> {
     });
 
     if (!response.ok) {
-      return { currency: "EUR", supportedCurrencies: ["EUR", "USD", "GBP", "CHF", "JPY", "CNY", "AUD", "CAD"] };
+      return { currency: "EUR", supportedCurrencies: ["EUR", "USD", "GBP", "CHF", "JPY", "CNY", "AUD", "CAD"], eurExchangeRate: 1 };
     }
 
     return response.json();
   } catch {
-    return { currency: "EUR", supportedCurrencies: ["EUR", "USD", "GBP", "CHF", "JPY", "CNY", "AUD", "CAD"] };
+    return { currency: "EUR", supportedCurrencies: ["EUR", "USD", "GBP", "CHF", "JPY", "CNY", "AUD", "CAD"], eurExchangeRate: 1 };
   }
 }
