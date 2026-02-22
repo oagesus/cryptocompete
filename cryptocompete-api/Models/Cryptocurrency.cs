@@ -12,7 +12,9 @@ public class Cryptocurrency
     public decimal? PercentChange60d { get; set; }
     public decimal? PercentChange90d { get; set; }
     public bool IsActive { get; set; } = true;
+    public DateTimeOffset? DeactivatedAt { get; set; }
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     
     public ICollection<PortfolioHolding> Holdings { get; set; } = new List<PortfolioHolding>();
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

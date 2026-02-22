@@ -35,10 +35,23 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         _coinMarketCapApiKey = configuration["CoinMarketCap:ApiKey"];
     }
 
-    public async Task SyncCryptocurrenciesAsync(CancellationToken cancellationToken = default)
+    public async Task SyncCryptocurrenciesAsync(CancellationToken cancellationToken = default, bool forceSync = false)
     {
         try
         {
+            if (!forceSync)
+            {
+                using var checkScope = _scopeFactory.CreateScope();
+                var checkDb = checkScope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var lastUpdate = await checkDb.Cryptocurrencies.MaxAsync(c => (DateTimeOffset?)c.UpdatedAt, cancellationToken);
+                if (lastUpdate.HasValue && lastUpdate.Value > DateTimeOffset.UtcNow.AddHours(-24))
+                {
+                    _logger.LogInformation("Skipping CoinMarketCap sync - last sync was {MinutesAgo} minutes ago", 
+                        (int)(DateTimeOffset.UtcNow - lastUpdate.Value).TotalMinutes);
+                    return;
+                }
+            }
+
             var binanceData = await GetBinanceDataAsync(cancellationToken);
             if (binanceData.Count == 0)
                 return;
@@ -96,6 +109,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
                 foreach (var crypto in toDeactivate)
                 {
                     crypto.IsActive = false;
+                    crypto.DeactivatedAt = DateTimeOffset.UtcNow;
                 }
                 await db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Deactivated {Count} cryptocurrencies", toDeactivate.Count);
@@ -110,6 +124,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
                 foreach (var crypto in toActivate)
                 {
                     crypto.IsActive = true;
+                    crypto.DeactivatedAt = null;
                 }
                 await db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Reactivated {Count} cryptocurrencies", toActivate.Count);
@@ -154,6 +169,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
                 crypto.PercentChange30d = cmc.PercentChange30d;
                 crypto.PercentChange60d = cmc.PercentChange60d;
                 crypto.PercentChange90d = cmc.PercentChange90d;
+                crypto.UpdatedAt = DateTimeOffset.UtcNow;
                 updated++;
             }
         }
