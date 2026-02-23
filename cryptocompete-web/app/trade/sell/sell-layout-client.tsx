@@ -11,6 +11,7 @@ export interface HoldingItem {
   priceUsd: number | null;
   changePercent24h: number | null;
   rank: number | null;
+  isDelisted: boolean;
 }
 
 interface Props {

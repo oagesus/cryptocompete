@@ -13,6 +13,7 @@ public class PriceAlarm
     public bool IsAbove { get; set; }
     public bool IsRecurring { get; set; }
     public bool IsTriggered { get; set; }
+    public bool IsDelisted { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? TriggeredAt { get; set; }
 }

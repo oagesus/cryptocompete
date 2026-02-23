@@ -10,6 +10,8 @@ interface Holding {
   amount: number;
   priceUsd: number | null;
   investedValue: number;
+  isDelisted: boolean;
+  delistedValueInUserCurrency?: number | null;
 }
 
 interface PublicProfileHeroProps {
@@ -36,10 +38,12 @@ export function PublicProfileHero({
     let invested = 0;
 
     holdings.forEach((holding) => {
-      const livePrice = prices[holding.symbol];
-      const priceUsd = livePrice?.price ?? holding.priceUsd;
-      const value = priceUsd ? holding.amount * priceUsd * exchangeRate : 0;
-      holdingsVal += value;
+      if (holding.isDelisted) {
+        holdingsVal += holding.delistedValueInUserCurrency ?? 0;
+      } else {
+        const priceUsd = prices[holding.symbol]?.price ?? holding.priceUsd;
+        holdingsVal += priceUsd ? holding.amount * priceUsd * exchangeRate : 0;
+      }
       invested += holding.investedValue;
     });
 

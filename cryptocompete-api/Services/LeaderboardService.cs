@@ -1,4 +1,5 @@
 using CryptoCompete.Api.Data;
+using CryptoCompete.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CryptoCompete.Api.Services;
@@ -36,8 +37,39 @@ public class LeaderboardService : ILeaderboardService
                 .Where(p => !p.User.IsBlocked)
                 .ToListAsync(cancellationToken);
 
+            var delistedCryptoIds = profiles
+                .SelectMany(p => p.Holdings)
+                .Where(h => h.Amount > 0 && !h.Cryptocurrency.IsActive)
+                .Select(h => h.CryptocurrencyId)
+                .Distinct()
+                .ToHashSet();
+
+            var delistedInvestedMap = new Dictionary<(int ProfileId, int CryptoId), decimal>();
+
+            if (delistedCryptoIds.Count > 0)
+            {
+                var profileIds = profiles.Select(p => p.Id).ToHashSet();
+
+                var investedData = await db.Transactions
+                    .Where(t => profileIds.Contains(t.ProfileId) && delistedCryptoIds.Contains(t.CryptocurrencyId))
+                    .GroupBy(t => new { t.ProfileId, t.CryptocurrencyId, t.Type })
+                    .Select(g => new { g.Key.ProfileId, g.Key.CryptocurrencyId, g.Key.Type, Total = g.Sum(t => t.TotalValue) })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var group in investedData.GroupBy(d => new { d.ProfileId, d.CryptocurrencyId }))
+                {
+                    var bought = group.Where(d => d.Type == TransactionType.Buy).Sum(d => d.Total);
+                    var sold = group.Where(d => d.Type == TransactionType.Sell).Sum(d => d.Total);
+                    var remaining = bought - sold;
+                    if (remaining > 0)
+                    {
+                        delistedInvestedMap[(group.Key.ProfileId, group.Key.CryptocurrencyId)] = remaining;
+                    }
+                }
+            }
+
             var now = DateTimeOffset.UtcNow;
-            var leaderboardEntries = new List<Models.LeaderboardSnapshot>();
+            var leaderboardEntries = new List<LeaderboardSnapshot>();
 
             foreach (var profile in profiles)
             {
@@ -45,13 +77,19 @@ public class LeaderboardService : ILeaderboardService
                     .Where(h => h.Amount > 0)
                     .Sum(h =>
                     {
+                        if (!h.Cryptocurrency.IsActive)
+                        {
+                            delistedInvestedMap.TryGetValue((profile.Id, h.CryptocurrencyId), out var invested);
+                            return invested;
+                        }
+
                         var priceUsd = _priceService.GetPrice(h.Cryptocurrency.Symbol);
                         return priceUsd.HasValue ? h.Amount * priceUsd.Value * usdToEur : 0;
                     });
 
                 var totalValueEur = profile.Balance + holdingsValueEur;
 
-                leaderboardEntries.Add(new Models.LeaderboardSnapshot
+                leaderboardEntries.Add(new LeaderboardSnapshot
                 {
                     ProfileId = profile.Id,
                     TotalValue = totalValueEur,

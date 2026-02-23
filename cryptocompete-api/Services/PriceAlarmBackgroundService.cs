@@ -56,7 +56,7 @@ public class PriceAlarmBackgroundService : BackgroundService
         var alarms = await db.PriceAlarms
             .Include(a => a.User)
             .Include(a => a.Cryptocurrency)
-            .Where(a => !a.IsTriggered || a.IsRecurring)
+            .Where(a => !a.IsDelisted && (!a.IsTriggered || a.IsRecurring))
             .ToListAsync(cancellationToken);
 
         if (alarms.Count == 0) return;

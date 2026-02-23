@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, Trash2, Pencil, TrendingUp, TrendingDown, Bell, Plus } from "lucide-react";
 import { PremiumRequiredNotifyDialog } from "@/components/premium-required-notify-dialog";
 import { PremiumRequiredNotifyEditDialog } from "@/components/premium-required-notify-edit-dialog";
+import { DelistedBadge } from "@/components/delisted-badge";
 
 interface PriceAlarm {
   publicId: string;
@@ -21,6 +22,7 @@ interface PriceAlarm {
   isAbove: boolean;
   isRecurring: boolean;
   isTriggered: boolean;
+  isDelisted: boolean;
   createdAt: string;
 }
 
@@ -113,56 +115,65 @@ export function AccountNotifyClient({ alarms, isPremium, translations: t }: Prop
             <div className="space-y-6">
               {Object.entries(grouped)
                 .sort(([a], [b]) => a.localeCompare(b))
-                .map(([symbol, symbolAlarms]) => (
-                <div key={symbol} className="space-y-3">
-                  <h3 className="text-lg font-semibold">
-                    {symbolAlarms[0].name} ({symbol})
-                  </h3>
-                  <div className="space-y-2">
-                    {symbolAlarms.map((alarm) => (
-                      <div
-                        key={alarm.publicId}
-                        className="flex items-center justify-between rounded-lg border p-3"
-                      >
-                        <div className="flex flex-col">
-                          <span className="flex items-center gap-3 text-sm font-medium">
-                            {alarm.isAbove ? (
-                              <TrendingUp className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-400" />
-                            ) : (
-                              <TrendingDown className="h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400" />
-                            )}
-                            {formatAlarmPrice(alarm.targetPrice, alarm.currency)}
-                          </span>
-                          <span className="text-xs text-muted-foreground pl-[calc(0.875rem+0.75rem)]">
-                            {alarm.isRecurring ? t.repeatNotification : t.oneTimeNotification}
-                          </span>
+                .map(([symbol, symbolAlarms]) => {
+                const isDelisted = symbolAlarms[0].isDelisted;
+                return (
+                  <div key={symbol} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold">
+                        {symbolAlarms[0].name} ({symbol})
+                      </h3>
+                      {isDelisted && <DelistedBadge />}
+                    </div>
+                    <div className="space-y-2">
+                      {symbolAlarms.map((alarm) => (
+                        <div
+                          key={alarm.publicId}
+                          className={`flex items-center justify-between rounded-lg border p-3 ${
+                            alarm.isDelisted ? "opacity-60" : ""
+                          }`}
+                        >
+                          <div className="flex flex-col">
+                            <span className="flex items-center gap-3 text-sm font-medium">
+                              {alarm.isAbove ? (
+                                <TrendingUp className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-400" />
+                              ) : (
+                                <TrendingDown className="h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400" />
+                              )}
+                              {formatAlarmPrice(alarm.targetPrice, alarm.currency)}
+                            </span>
+                            <span className="text-xs text-muted-foreground pl-[calc(0.875rem+0.75rem)]">
+                              {alarm.isRecurring ? t.repeatNotification : t.oneTimeNotification}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(alarm)}
+                              disabled={alarm.isDelisted}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(alarm.publicId)}
+                              disabled={deletingId === alarm.publicId}
+                            >
+                              {deletingId === alarm.publicId ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(alarm)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(alarm.publicId)}
-                            disabled={deletingId === alarm.publicId}
-                          >
-                            {deletingId === alarm.publicId ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           {isPremium ? (

@@ -26,6 +26,8 @@ interface Props {
   initialPriceUsd: number | null;
   supportedCurrencies: string[];
   minTradeAmount?: number;
+  isDelisted?: boolean;
+  delistedPriceInUserCurrency?: number | null;
 }
 
 export function SellPanel({
@@ -38,6 +40,8 @@ export function SellPanel({
   initialPriceUsd,
   supportedCurrencies,
   minTradeAmount = 1,
+  isDelisted = false,
+  delistedPriceInUserCurrency,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("trade");
@@ -54,14 +58,19 @@ export function SellPanel({
   const { prices } = useCryptoPrices();
 
   const liveData = prices[symbol];
-  const priceUsd = liveData?.price ?? initialPriceUsd;
-  const priceInUserCurrency = priceUsd ? priceUsd * exchangeRate : null;
+  const priceUsd = isDelisted ? initialPriceUsd : (liveData?.price ?? initialPriceUsd);
+  const priceInUserCurrency = isDelisted && delistedPriceInUserCurrency != null
+    ? delistedPriceInUserCurrency
+    : (priceUsd ? priceUsd * exchangeRate : null);
 
   const priceInUserCurrencyStr = useMemo(() => {
+    if (isDelisted && delistedPriceInUserCurrency != null) {
+      return new Decimal(delistedPriceInUserCurrency).toFixed(18);
+    }
     if (!priceUsd) return null;
     const result = new Decimal(priceUsd).mul(new Decimal(exchangeRate));
     return result.toFixed(18);
-  }, [priceUsd, exchangeRate]);
+  }, [priceUsd, exchangeRate, isDelisted, delistedPriceInUserCurrency]);
 
   const calculatedReceiveRaw = useMemo(() => {
     if (activeField !== "sell" || !priceInUserCurrencyStr) return "";
@@ -160,8 +169,10 @@ export function SellPanel({
 
     setIsLoading(true);
 
+    const endpoint = isDelisted ? "/api/trade/sell-delisted" : "/api/trade/sell";
+
     try {
-      const response = await fetch("/api/trade/sell", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -204,15 +215,17 @@ export function SellPanel({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="text-lg font-semibold">
-            {t("holdings")} = {formatRawAmount(holdingAmountRaw, groupSep, decimalSep, CRYPTO_PRECISION, true)} {symbol}
-          </span>
-          {priceInUserCurrency && priceInUserCurrency > 0 && (
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              1 {displayCurrency} ≈ {formatCrypto(1 / priceInUserCurrency)} {symbol}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-lg font-semibold">
+              {t("holdings")} = {formatRawAmount(holdingAmountRaw, groupSep, decimalSep, CRYPTO_PRECISION, true)} {symbol}
             </span>
-          )}
+            {priceInUserCurrency && priceInUserCurrency > 0 && (
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                1 {displayCurrency} ≈ {formatCrypto(1 / priceInUserCurrency)} {symbol}
+              </span>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

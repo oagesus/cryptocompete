@@ -191,11 +191,16 @@ public class TradeController : ControllerBase
         }
 
         var crypto = await _db.Cryptocurrencies
-            .FirstOrDefaultAsync(c => c.Symbol.ToLower() == request.Symbol.ToLower() && c.IsActive);
+            .FirstOrDefaultAsync(c => c.Symbol.ToLower() == request.Symbol.ToLower());
 
         if (crypto == null)
         {
             return NotFound(new { message = $"Cryptocurrency {request.Symbol} not found" });
+        }
+
+        if (!crypto.IsActive)
+        {
+            return BadRequest(new { message = $"Cryptocurrency {request.Symbol} can not be bought" });
         }
 
         var holding = profile.Holdings.FirstOrDefault(h => h.CryptocurrencyId == crypto.Id);
@@ -204,17 +209,17 @@ public class TradeController : ControllerBase
             return BadRequest(new { message = $"You don't own any {crypto.Symbol}" });
         }
 
-        var priceUsd = _priceService.GetPrice(crypto.Symbol);
-        if (!priceUsd.HasValue)
-        {
-            return BadRequest(new { message = $"Price not available for {crypto.Symbol}" });
-        }
-
         var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var usdToEur = await _currencyService.GetExchangeRateAsync("USD", "EUR");
         var userCurrencyToEur = await _currencyService.GetExchangeRateAsync(displayCurrency, "EUR");
         var eurToUsd = 1m / usdToEur;
         var eurToUserCurrency = 1m / userCurrencyToEur;
+
+        var priceUsd = _priceService.GetPrice(crypto.Symbol);
+        if (!priceUsd.HasValue)
+        {
+            return BadRequest(new { message = $"Price not available for {crypto.Symbol}" });
+        }
 
         decimal cryptoAmount;
         decimal valueEur;
@@ -291,6 +296,149 @@ public class TradeController : ControllerBase
             Math.Round(profile.Balance * eurToUserCurrency, 2)
         ));
     }
+
+    [HttpPost("sell-delisted")]
+    public async Task<IActionResult> SellDelisted([FromBody] TradeSellDelistedRequest request)
+    {
+        if (!decimal.TryParse(request.Amount, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+        {
+            return BadRequest(new { message = "Invalid amount" });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var profile = await _db.Profiles
+            .Include(p => p.Holdings)
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == user.ActiveProfileId);
+
+        if (profile == null)
+        {
+            return BadRequest(new { message = "No active profile found" });
+        }
+
+        var crypto = await _db.Cryptocurrencies
+            .FirstOrDefaultAsync(c => c.Symbol.ToLower() == request.Symbol.ToLower());
+
+        if (crypto == null)
+        {
+            return NotFound(new { message = $"Cryptocurrency {request.Symbol} not found" });
+        }
+
+        if (crypto.IsActive)
+        {
+            return BadRequest(new { message = $"{crypto.Symbol} is actively traded, use the regular sell endpoint" });
+        }
+
+        var holding = profile.Holdings.FirstOrDefault(h => h.CryptocurrencyId == crypto.Id);
+        if (holding == null || holding.Amount <= 0)
+        {
+            return BadRequest(new { message = $"You don't own any {crypto.Symbol}" });
+        }
+
+        var remainingInvestedEur = await _db.Transactions
+            .Where(t => t.ProfileId == profile.Id && t.CryptocurrencyId == crypto.Id)
+            .GroupBy(t => t.Type)
+            .Select(g => new { Type = g.Key, Total = g.Sum(t => t.TotalValue) })
+            .ToListAsync();
+
+        var totalBought = remainingInvestedEur.FirstOrDefault(g => g.Type == TransactionType.Buy)?.Total ?? 0;
+        var totalSold = remainingInvestedEur.FirstOrDefault(g => g.Type == TransactionType.Sell)?.Total ?? 0;
+        var investedEur = totalBought - totalSold;
+
+        if (investedEur <= 0)
+        {
+            return BadRequest(new { message = $"No invested value found for {crypto.Symbol}" });
+        }
+
+        var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
+        var eurToUserCurrency = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
+        var userCurrencyToEur = 1m / eurToUserCurrency;
+
+        var pricePerUnitEur = investedEur / holding.Amount;
+
+        decimal cryptoToSell;
+
+        if (request.Mode == "receive")
+        {
+            var receiveEur = amount * userCurrencyToEur;
+
+            if (receiveEur <= 0)
+            {
+                return BadRequest(new { message = "Amount must be greater than 0" });
+            }
+
+            cryptoToSell = Math.Round(receiveEur / pricePerUnitEur, CryptoDecimalPrecision);
+        }
+        else
+        {
+            cryptoToSell = Math.Round(amount, CryptoDecimalPrecision);
+        }
+
+        if (cryptoToSell <= 0)
+        {
+            return BadRequest(new { message = "Amount must be greater than 0" });
+        }
+
+        if (cryptoToSell > holding.Amount)
+        {
+            return BadRequest(new { message = $"Insufficient {crypto.Symbol} balance" });
+        }
+
+        var ratio = cryptoToSell / holding.Amount;
+        var refundEur = Math.Round(investedEur * ratio, 2);
+
+        if (refundEur < 1m)
+        {
+            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2);
+            return BadRequest(new { message = "Minimum trade amount", minAmount = minInUserCurrency, currency = displayCurrency });
+        }
+
+        holding.Amount -= cryptoToSell;
+
+        if (holding.Amount <= 0.00000001m)
+        {
+            holding.Amount = 0;
+        }
+
+        holding.UpdatedAt = DateTimeOffset.UtcNow;
+
+        profile.Balance += refundEur;
+
+        var transaction = new Transaction
+        {
+            ProfileId = profile.Id,
+            CryptocurrencyId = crypto.Id,
+            Type = TransactionType.Sell,
+            Amount = cryptoToSell,
+            PricePerUnit = Math.Round(pricePerUnitEur, CryptoDecimalPrecision),
+            TotalValue = refundEur
+        };
+        _db.Transactions.Add(transaction);
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new TradeResponse(
+            crypto.Symbol,
+            crypto.Name,
+            TransactionType.Sell.ToString(),
+            cryptoToSell,
+            cryptoToSell.ToString("F18").TrimEnd('0').TrimEnd('.'),
+            Math.Round(refundEur * eurToUserCurrency, 2),
+            displayCurrency,
+            Math.Round(profile.Balance * eurToUserCurrency, 2)
+        ));
+    }
+
     [HttpPost("price-alarm")]
     public async Task<IActionResult> CreatePriceAlarm([FromBody] CreatePriceAlarmRequest request)
     {
@@ -358,6 +506,7 @@ public class TradeController : ControllerBase
             alarm.IsAbove,
             alarm.IsRecurring,
             alarm.IsTriggered,
+            alarm.IsDelisted,
             alarm.CreatedAt
         ));
     }
@@ -386,6 +535,7 @@ public class TradeController : ControllerBase
             a.IsAbove,
             a.IsRecurring,
             a.IsTriggered,
+            a.IsDelisted,
             a.CreatedAt
         )).ToList();
 
@@ -440,6 +590,7 @@ public class TradeController : ControllerBase
             alarm.IsAbove,
             alarm.IsRecurring,
             alarm.IsTriggered,
+            alarm.IsDelisted,
             alarm.CreatedAt
         ));
     }
@@ -468,6 +619,7 @@ public class TradeController : ControllerBase
 
 public record TradeRequest(string Symbol, string Amount, string Mode = "spend");
 public record TradeSellRequest(string Symbol, string Amount, string Mode = "sell");
+public record TradeSellDelistedRequest(string Symbol, string Amount, string Mode = "sell");
 public record TradeResponse(
     string Symbol,
     string Name,
@@ -491,6 +643,7 @@ public record PriceAlarmDto(
     bool IsAbove,
     bool IsRecurring,
     bool IsTriggered,
+    bool IsDelisted,
     DateTimeOffset CreatedAt
 );
 

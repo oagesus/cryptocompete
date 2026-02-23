@@ -11,6 +11,7 @@ export interface PriceAlarm {
   isAbove: boolean;
   isRecurring: boolean;
   isTriggered: boolean;
+  isDelisted: boolean;
   createdAt: string;
 }
 

@@ -40,6 +40,8 @@
     "successBought": "Successfully bought {amount} {symbol} for {value}",
     "successSold": "Successfully sold {amount} {symbol} for {value}",
     "insufficientBalance": "Insufficient {symbol} balance",
+    "delisted": "Delisted",
+    "delistedNotice": "{symbol} is no longer supported. Selling at your original purchase value.",
     "priceAlarm": "Price Alarm",
     "targetPrice": "Target Price",
     "setAlarm": "Add Price Alarm",

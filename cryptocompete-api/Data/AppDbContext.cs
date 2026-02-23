@@ -253,6 +253,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.IsAbove).HasDefaultValue(true);
             entity.Property(e => e.IsRecurring).HasDefaultValue(false);
             entity.Property(e => e.IsTriggered).HasDefaultValue(false);
+            entity.Property(e => e.IsDelisted).HasDefaultValue(false);
 
             entity.HasOne(e => e.User)
                 .WithMany()

@@ -40,6 +40,8 @@
     "successBought": "Erfolgreich {amount} {symbol} für {value} gekauft",
     "successSold": "Erfolgreich {amount} {symbol} für {value} verkauft",
     "insufficientBalance": "Nicht genügend {symbol} Guthaben",
+    "delisted": "Delisted",
+    "delistedNotice": "{symbol} wird nicht mehr unterstützt. Der Verkauf erfolgt zum ursprünglichen Kaufwert.",
     "priceAlarm": "Kursalarm",
     "targetPrice": "Zielkurs",
     "setAlarm": "Kursalarm hinzufügen",

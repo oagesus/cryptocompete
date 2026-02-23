@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarPagination } from "@/components/sidebar-pagination";
+import { DelistedBadge } from "@/components/delisted-badge";
 import { cn } from "@/lib/utils";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 
@@ -20,6 +21,8 @@ export interface HoldingItem {
   name: string;
   amount: number;
   priceUsd: number | null;
+  isDelisted: boolean;
+  delistedValueInUserCurrency?: number | null;
 }
 
 interface Props {
@@ -69,7 +72,10 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
     router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
   };
 
-  function getValueUsd(holding: HoldingItem) {
+  function getSortValue(holding: HoldingItem) {
+    if (holding.isDelisted) {
+      return holding.delistedValueInUserCurrency ?? 0;
+    }
     const livePrice = prices[holding.symbol];
     const priceUsd = livePrice?.price ?? holding.priceUsd;
     if (!priceUsd) return 0;
@@ -88,7 +94,7 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
       );
     }
 
-    return [...filtered].sort((a, b) => getValueUsd(b) - getValueUsd(a));
+    return [...filtered].sort((a, b) => getSortValue(b) - getSortValue(a));
   }, [holdings, searchInput, prices]);
 
   const totalPages = Math.ceil(filteredAndSortedHoldings.length / PAGE_SIZE);
@@ -117,6 +123,16 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
   }
 
   function formatValue(holding: HoldingItem) {
+    if (holding.isDelisted) {
+      if (holding.delistedValueInUserCurrency == null) return null;
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(holding.delistedValueInUserCurrency);
+    }
+
     const livePrice = prices[holding.symbol];
     const priceUsd = livePrice?.price ?? holding.priceUsd;
     
@@ -178,8 +194,11 @@ export function CryptocurrencySellSidebar({ holdings, currency, exchangeRate }: 
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium truncate">{holding.name}</span>
-                  <span className="font-medium">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium truncate">{holding.name}</span>
+                    {holding.isDelisted && <DelistedBadge />}
+                  </div>
+                  <span className="font-medium shrink-0 ml-2">
                     {formatValue(holding) ?? "..."}
                   </span>
                 </div>

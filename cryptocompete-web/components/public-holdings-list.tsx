@@ -12,6 +12,8 @@ interface PublicHolding {
   amountRaw?: string;
   priceUsd: number | null;
   investedValue: number;
+  isDelisted: boolean;
+  delistedValueInUserCurrency?: number | null;
 }
 
 interface PublicHoldingsListProps {
@@ -39,16 +41,22 @@ export function PublicHoldingsList({ holdings, currency, exchangeRate }: PublicH
   return (
     <div className="space-y-2">
       {holdings.map((holding) => {
-        const livePrice = prices[holding.symbol];
-        const priceUsd = livePrice?.price ?? holding.priceUsd;
-        
         let currentValue: number | undefined;
         let profitLossPercent: number | undefined;
 
-        if (priceUsd) {
-          currentValue = holding.amount * priceUsd * exchangeRate;
-          if (holding.investedValue > 0) {
-            profitLossPercent = ((currentValue - holding.investedValue) / holding.investedValue) * 100;
+        if (holding.isDelisted) {
+          if (holding.delistedValueInUserCurrency != null) {
+            currentValue = holding.delistedValueInUserCurrency;
+          }
+        } else {
+          const livePrice = prices[holding.symbol];
+          const priceUsd = livePrice?.price ?? holding.priceUsd;
+
+          if (priceUsd) {
+            currentValue = holding.amount * priceUsd * exchangeRate;
+            if (holding.investedValue > 0) {
+              profitLossPercent = ((currentValue - holding.investedValue) / holding.investedValue) * 100;
+            }
           }
         }
 
@@ -62,6 +70,7 @@ export function PublicHoldingsList({ holdings, currency, exchangeRate }: PublicH
             currentValue={currentValue}
             profitLossPercent={profitLossPercent}
             currency={currency}
+            isDelisted={holding.isDelisted}
           />
         );
       })}

@@ -73,12 +73,55 @@ public class LeaderboardController : ControllerBase
 
         var leaderboardEntry = await _leaderboardService.GetEntryByProfileIdAsync(profile.Id, cancellationToken);
 
+        var delistedHoldingIds = profile.Holdings
+            .Where(h => h.Amount > 0 && !h.Cryptocurrency.IsActive)
+            .Select(h => h.CryptocurrencyId)
+            .ToHashSet();
+
+        Dictionary<int, decimal> delistedInvestedMap = new();
+
+        if (delistedHoldingIds.Count > 0)
+        {
+            var investedData = await _db.Transactions
+                .Where(t => t.ProfileId == profile.Id && delistedHoldingIds.Contains(t.CryptocurrencyId))
+                .GroupBy(t => new { t.CryptocurrencyId, t.Type })
+                .Select(g => new { g.Key.CryptocurrencyId, g.Key.Type, Total = g.Sum(t => t.TotalValue) })
+                .ToListAsync(cancellationToken);
+
+            foreach (var cryptoId in delistedHoldingIds)
+            {
+                var bought = investedData
+                    .Where(d => d.CryptocurrencyId == cryptoId && d.Type == TransactionType.Buy)
+                    .Sum(d => d.Total);
+                var sold = investedData
+                    .Where(d => d.CryptocurrencyId == cryptoId && d.Type == TransactionType.Sell)
+                    .Sum(d => d.Total);
+                delistedInvestedMap[cryptoId] = bought - sold;
+            }
+        }
+
         var holdings = profile.Holdings
             .Where(h => h.Amount > 0)
             .Select(h =>
             {
-                var priceUsd = _priceService.GetPrice(h.Cryptocurrency.Symbol);
-                var changePercent = _priceService.GetChangePercent24h(h.Cryptocurrency.Symbol);
+                var isDelisted = !h.Cryptocurrency.IsActive;
+                decimal? priceUsd;
+                decimal? changePercent;
+                decimal? delistedValueInUserCurrency = null;
+
+                if (isDelisted)
+                {
+                    delistedInvestedMap.TryGetValue(h.CryptocurrencyId, out var remainingEur);
+                    delistedValueInUserCurrency = remainingEur > 0 ? Math.Round(remainingEur * balanceExchangeRate, 2) : null;
+                    priceUsd = null;
+                    changePercent = null;
+                }
+                else
+                {
+                    priceUsd = _priceService.GetPrice(h.Cryptocurrency.Symbol);
+                    changePercent = _priceService.GetChangePercent24h(h.Cryptocurrency.Symbol);
+                }
+
                 var investedValue = CalculateInvestedValue(profile.Transactions, h.CryptocurrencyId, balanceExchangeRate);
 
                 return new PublicHoldingDto(
@@ -89,7 +132,9 @@ public class LeaderboardController : ControllerBase
                     priceUsd,
                     changePercent,
                     h.Cryptocurrency.Rank,
-                    investedValue
+                    investedValue,
+                    isDelisted,
+                    delistedValueInUserCurrency
                 );
             })
             .ToList();
@@ -226,7 +271,9 @@ public record PublicHoldingDto(
     decimal? PriceUsd,
     decimal? ChangePercent24h,
     int? Rank,
-    decimal InvestedValue
+    decimal InvestedValue,
+    bool IsDelisted,
+    decimal? DelistedValueInUserCurrency
 );
 
 public record PublicProfileResponse(

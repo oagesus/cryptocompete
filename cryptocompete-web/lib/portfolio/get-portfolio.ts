@@ -11,6 +11,8 @@ export interface Holding {
   changePercent24h: number | null;
   rank: number | null;
   investedValue: number;
+  isDelisted: boolean;
+  delistedValueInUserCurrency: number | null;
   updatedAt: string;
 }
 

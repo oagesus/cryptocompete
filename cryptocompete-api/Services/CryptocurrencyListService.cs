@@ -106,11 +106,27 @@ public class CryptocurrencyListService : ICryptocurrencyListService
 
             if (toDeactivate.Count > 0)
             {
+                var deactivatedIds = toDeactivate.Select(c => c.Id).ToList();
+
                 foreach (var crypto in toDeactivate)
                 {
                     crypto.IsActive = false;
                     crypto.DeactivatedAt = DateTimeOffset.UtcNow;
                 }
+
+                var alarmsToMark = await db.PriceAlarms
+                    .Where(a => deactivatedIds.Contains(a.CryptocurrencyId) && !a.IsDelisted)
+                    .ToListAsync(cancellationToken);
+
+                if (alarmsToMark.Count > 0)
+                {
+                    foreach (var alarm in alarmsToMark)
+                    {
+                        alarm.IsDelisted = true;
+                    }
+                    _logger.LogInformation("Marked {Count} price alarms as delisted", alarmsToMark.Count);
+                }
+
                 await db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Deactivated {Count} cryptocurrencies", toDeactivate.Count);
             }
@@ -121,11 +137,27 @@ public class CryptocurrencyListService : ICryptocurrencyListService
 
             if (toActivate.Count > 0)
             {
+                var reactivatedIds = toActivate.Select(c => c.Id).ToList();
+
                 foreach (var crypto in toActivate)
                 {
                     crypto.IsActive = true;
                     crypto.DeactivatedAt = null;
                 }
+
+                var alarmsToReactivate = await db.PriceAlarms
+                    .Where(a => reactivatedIds.Contains(a.CryptocurrencyId) && a.IsDelisted)
+                    .ToListAsync(cancellationToken);
+
+                if (alarmsToReactivate.Count > 0)
+                {
+                    foreach (var alarm in alarmsToReactivate)
+                    {
+                        alarm.IsDelisted = false;
+                    }
+                    _logger.LogInformation("Reactivated {Count} price alarms", alarmsToReactivate.Count);
+                }
+
                 await db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Reactivated {Count} cryptocurrencies", toActivate.Count);
             }

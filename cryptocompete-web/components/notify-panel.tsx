@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { Loader2, Trash2, TrendingUp, TrendingDown, Pencil } from "lucide-react";
 import { NotifyCard } from "@/components/notify-card";
+import { DelistedBadge } from "@/components/delisted-badge";
 import { getLocaleSeparators, sanitizeInput, formatInputNumber, formatInputNumberRaw, getPriceDecimals } from "@/lib/format/format-number";
 
 interface PriceAlarm {
@@ -21,6 +22,7 @@ interface PriceAlarm {
   isAbove: boolean;
   isRecurring: boolean;
   isTriggered: boolean;
+  isDelisted: boolean;
   createdAt: string;
 }
 
@@ -352,7 +354,9 @@ export function NotifyPanel({
                 className={`flex items-center justify-between rounded-lg border p-3 ${
                   editingId === alarm.publicId
                     ? "border-primary bg-primary/10"
-                    : ""
+                    : alarm.isDelisted
+                      ? "opacity-60"
+                      : ""
                 }`}
               >
                 <div className="flex flex-col">
@@ -365,6 +369,7 @@ export function NotifyPanel({
                     {t(alarm.isAbove ? "priceAbove" : "priceBelow", {
                       price: formatAlarmPrice(alarm.targetPrice, alarm.currency),
                     })}
+                    {alarm.isDelisted && <DelistedBadge />}
                   </span>
                   <span className="text-xs text-muted-foreground pl-[calc(0.875rem+0.75rem)]">
                     {alarm.isRecurring ? t("recurring") : t("once")}
@@ -375,7 +380,7 @@ export function NotifyPanel({
                     variant="ghost"
                     size="icon"
                     onClick={() => handleEditAlarm(alarm)}
-                    disabled={editingId === alarm.publicId}
+                    disabled={editingId === alarm.publicId || alarm.isDelisted}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>

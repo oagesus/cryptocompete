@@ -3,6 +3,7 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
+import { DelistedBadge } from "@/components/delisted-badge";
 import { getLocaleSeparators, formatRawAmount } from "@/lib/format/format-number";
 
 interface HoldingCardProps {
@@ -13,6 +14,7 @@ interface HoldingCardProps {
   currentValue?: number;
   profitLossPercent?: number;
   currency: string;
+  isDelisted?: boolean;
 }
 
 export function HoldingCard({
@@ -23,6 +25,7 @@ export function HoldingCard({
   currentValue,
   profitLossPercent,
   currency,
+  isDelisted = false,
 }: HoldingCardProps) {
   const t = useTranslations("account");
   const locale = useLocale();
@@ -43,7 +46,10 @@ export function HoldingCard({
     <Card>
       <CardContent className="flex items-center justify-between px-4">
         <div className="flex flex-col">
-          <span className="font-medium">{name}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{name}</span>
+            {isDelisted && <DelistedBadge />}
+          </div>
           <span className="text-sm text-muted-foreground">
             {symbol}{" "}
             {formattedAmount}
