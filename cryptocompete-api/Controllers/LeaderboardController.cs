@@ -58,7 +58,6 @@ public class LeaderboardController : ControllerBase
         var profile = await _db.Profiles
             .Include(p => p.Holdings)
                 .ThenInclude(h => h.Cryptocurrency)
-            .Include(p => p.Transactions)
             .FirstOrDefaultAsync(p => EF.Functions.ILike(p.Username, username), cancellationToken);
 
         if (profile == null)
@@ -72,6 +71,11 @@ public class LeaderboardController : ControllerBase
         var convertedBalance = profile.Balance * balanceExchangeRate;
 
         var leaderboardEntry = await _leaderboardService.GetEntryByProfileIdAsync(profile.Id, cancellationToken);
+
+        var activeHoldingIds = profile.Holdings
+            .Where(h => h.Amount > 0)
+            .Select(h => h.CryptocurrencyId)
+            .ToHashSet();
 
         var delistedHoldingIds = profile.Holdings
             .Where(h => h.Amount > 0 && !h.Cryptocurrency.IsActive)
@@ -100,6 +104,17 @@ public class LeaderboardController : ControllerBase
             }
         }
 
+        var transactions = activeHoldingIds.Count > 0
+            ? await _db.Transactions
+                .Where(t => t.ProfileId == profile.Id && activeHoldingIds.Contains(t.CryptocurrencyId))
+                .OrderBy(t => t.CreatedAt)
+                .ToListAsync(cancellationToken)
+            : new List<Transaction>();
+
+        var transactionsByCrypto = transactions
+            .GroupBy(t => t.CryptocurrencyId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         var holdings = profile.Holdings
             .Where(h => h.Amount > 0)
             .Select(h =>
@@ -122,7 +137,8 @@ public class LeaderboardController : ControllerBase
                     changePercent = _priceService.GetChangePercent24h(h.Cryptocurrency.Symbol);
                 }
 
-                var investedValue = CalculateInvestedValue(profile.Transactions, h.CryptocurrencyId, balanceExchangeRate);
+                transactionsByCrypto.TryGetValue(h.CryptocurrencyId, out var cryptoTransactions);
+                var investedValue = CalculateInvestedValue(cryptoTransactions, balanceExchangeRate);
 
                 return new PublicHoldingDto(
                     h.Cryptocurrency.Symbol,
@@ -208,17 +224,15 @@ public class LeaderboardController : ControllerBase
         return Ok(new PublicTransactionsResponse(transactions, displayCurrency, exchangeRate, leaderboardEntry?.Rank));
     }
 
-    private decimal CalculateInvestedValue(ICollection<Transaction> transactions, int cryptoId, decimal exchangeRate)
+    private static decimal CalculateInvestedValue(List<Transaction>? transactions, decimal exchangeRate)
     {
-        var cryptoTransactions = transactions
-            .Where(t => t.CryptocurrencyId == cryptoId)
-            .OrderBy(t => t.CreatedAt)
-            .ToList();
+        if (transactions == null || transactions.Count == 0)
+            return 0;
 
         decimal totalAmount = 0;
         decimal investedValue = 0;
 
-        foreach (var transaction in cryptoTransactions)
+        foreach (var transaction in transactions)
         {
             if (transaction.Type == TransactionType.Buy)
             {

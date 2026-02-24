@@ -39,7 +39,6 @@ public class PortfolioController : ControllerBase
         var profile = await _db.Profiles
             .Include(p => p.Holdings)
                 .ThenInclude(h => h.Cryptocurrency)
-            .Include(p => p.Transactions)
             .FirstOrDefaultAsync(p => p.PublicId == profilePublicId && p.UserId == userId);
 
         if (profile == null)
@@ -51,6 +50,11 @@ public class PortfolioController : ControllerBase
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
         var balanceExchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
         var convertedBalance = profile.Balance * balanceExchangeRate;
+
+        var activeHoldingIds = profile.Holdings
+            .Where(h => h.Amount > 0)
+            .Select(h => h.CryptocurrencyId)
+            .ToHashSet();
 
         var delistedHoldingIds = profile.Holdings
             .Where(h => h.Amount > 0 && !h.Cryptocurrency.IsActive)
@@ -79,6 +83,17 @@ public class PortfolioController : ControllerBase
             }
         }
 
+        var transactions = activeHoldingIds.Count > 0
+            ? await _db.Transactions
+                .Where(t => t.ProfileId == profile.Id && activeHoldingIds.Contains(t.CryptocurrencyId))
+                .OrderBy(t => t.CreatedAt)
+                .ToListAsync()
+            : new List<Transaction>();
+
+        var transactionsByCrypto = transactions
+            .GroupBy(t => t.CryptocurrencyId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         var holdings = profile.Holdings
             .Where(h => h.Amount > 0)
             .Select(h =>
@@ -101,7 +116,8 @@ public class PortfolioController : ControllerBase
                     changePercent = _priceService.GetChangePercent24h(h.Cryptocurrency.Symbol);
                 }
 
-                var investedValue = CalculateInvestedValue(profile.Transactions, h.CryptocurrencyId, balanceExchangeRate);
+                transactionsByCrypto.TryGetValue(h.CryptocurrencyId, out var cryptoTransactions);
+                var investedValue = CalculateInvestedValue(cryptoTransactions, balanceExchangeRate);
 
                 return new HoldingDto(
                     h.Cryptocurrency.Symbol,
@@ -185,17 +201,15 @@ public class PortfolioController : ControllerBase
         return Ok(new TransactionsResponse(transactions, displayCurrency, exchangeRate));
     }
 
-    private decimal CalculateInvestedValue(ICollection<Transaction> transactions, int cryptoId, decimal exchangeRate)
+    private static decimal CalculateInvestedValue(List<Transaction>? transactions, decimal exchangeRate)
     {
-        var cryptoTransactions = transactions
-            .Where(t => t.CryptocurrencyId == cryptoId)
-            .OrderBy(t => t.CreatedAt)
-            .ToList();
+        if (transactions == null || transactions.Count == 0)
+            return 0;
 
         decimal totalAmount = 0;
         decimal investedValue = 0;
 
-        foreach (var transaction in cryptoTransactions)
+        foreach (var transaction in transactions)
         {
             if (transaction.Type == TransactionType.Buy)
             {
