@@ -57,6 +57,7 @@ export default async function BuyDetailPage({ params }: Props) {
         percentChange7d={crypto.percentChange7d}
         percentChange30d={crypto.percentChange30d}
         percentChange90d={crypto.percentChange90d}
+        marketCap={crypto.marketCap}
       />
       <BuyPanel
         symbol={crypto.symbol}

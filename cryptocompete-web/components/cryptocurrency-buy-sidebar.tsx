@@ -110,10 +110,10 @@ export function CryptocurrencyBuySidebar({ cryptocurrencies, currency, exchangeR
     
     switch (sortMode) {
       case "mcap-high":
-        sorted.sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity));
+        sorted.sort((a, b) => (b.marketCap ?? -Infinity) - (a.marketCap ?? -Infinity));
         break;
       case "mcap-low":
-        sorted.sort((a, b) => (b.rank ?? -Infinity) - (a.rank ?? -Infinity));
+        sorted.sort((a, b) => (a.marketCap ?? Infinity) - (b.marketCap ?? Infinity));
         break;
       case "perf-high":
         sorted.sort((a, b) => (getChangePercent(b) ?? -Infinity) - (getChangePercent(a) ?? -Infinity));

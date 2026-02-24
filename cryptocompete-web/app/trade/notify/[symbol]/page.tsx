@@ -55,6 +55,7 @@ export default async function NotifyDetailPage({ params, searchParams }: Props) 
         percentChange7d={crypto.percentChange7d}
         percentChange30d={crypto.percentChange30d}
         percentChange90d={crypto.percentChange90d}
+        marketCap={crypto.marketCap}
       />
       <NotifyPanel
         symbol={crypto.symbol}

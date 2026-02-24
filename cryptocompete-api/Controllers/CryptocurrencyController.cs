@@ -33,6 +33,7 @@ public class CryptocurrencyController : ControllerBase
     {
         var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
+        var eurExchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
 
         var cryptocurrencies = await _db.Cryptocurrencies
             .Where(c => c.IsActive)
@@ -44,7 +45,8 @@ public class CryptocurrencyController : ControllerBase
                 c.PercentChange7d,
                 c.PercentChange30d,
                 c.PercentChange60d,
-                c.PercentChange90d
+                c.PercentChange90d,
+                c.MarketCap
             })
             .ToListAsync();
 
@@ -61,7 +63,8 @@ public class CryptocurrencyController : ControllerBase
                 c.PercentChange7d,
                 c.PercentChange30d,
                 c.PercentChange60d,
-                c.PercentChange90d
+                c.PercentChange90d,
+                c.MarketCap.HasValue ? c.MarketCap.Value * eurExchangeRate : null
             );
         }).ToList();
 
@@ -79,7 +82,8 @@ public class CryptocurrencyController : ControllerBase
                 c.PercentChange7d,
                 c.PercentChange30d,
                 c.PercentChange60d,
-                c.PercentChange90d
+                c.PercentChange90d,
+                c.MarketCap
             })
             .FirstOrDefaultAsync();
 
@@ -90,6 +94,7 @@ public class CryptocurrencyController : ControllerBase
 
         var displayCurrency = CurrencyController.GetDisplayCurrency(Request);
         var exchangeRate = await _currencyService.GetExchangeRateAsync("USD", displayCurrency);
+        var eurExchangeRate = await _currencyService.GetExchangeRateAsync("EUR", displayCurrency);
         var priceUsd = _priceService.GetPrice(crypto.Symbol);
         var changePercent24h = _priceService.GetChangePercent24h(crypto.Symbol);
 
@@ -103,7 +108,8 @@ public class CryptocurrencyController : ControllerBase
             crypto.PercentChange7d,
             crypto.PercentChange30d,
             crypto.PercentChange60d,
-            crypto.PercentChange90d
+            crypto.PercentChange90d,
+            crypto.MarketCap.HasValue ? crypto.MarketCap.Value * eurExchangeRate : null
         ));
     }
 
@@ -179,7 +185,8 @@ public record CryptocurrencyWithPriceDto(
     decimal? PercentChange7d,
     decimal? PercentChange30d,
     decimal? PercentChange60d,
-    decimal? PercentChange90d
+    decimal? PercentChange90d,
+    decimal? MarketCap
 );
 
 public record CryptocurrencyListResponse(
@@ -198,7 +205,8 @@ public record CryptocurrencyDetailDto(
     decimal? PercentChange7d,
     decimal? PercentChange30d,
     decimal? PercentChange60d,
-    decimal? PercentChange90d
+    decimal? PercentChange90d,
+    decimal? MarketCap
 );
 
 public record KlineDto(

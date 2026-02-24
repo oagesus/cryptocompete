@@ -10,6 +10,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly HttpClient _httpClient;
     private readonly ILogger<CryptocurrencyListService> _logger;
+    private readonly ICurrencyService _currencyService;
     private readonly string? _coinMarketCapApiKey;
 
     private static readonly HashSet<string> ExcludedSymbols = new() { "EUR", "1MBABYDOGE", "1000SATS", "1000CHEEMS", "1000CAT" };
@@ -27,11 +28,13 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         IServiceScopeFactory scopeFactory,
         HttpClient httpClient,
         ILogger<CryptocurrencyListService> logger,
+        ICurrencyService currencyService,
         IConfiguration configuration)
     {
         _scopeFactory = scopeFactory;
         _httpClient = httpClient;
         _logger = logger;
+        _currencyService = currencyService;
         _coinMarketCapApiKey = configuration["CoinMarketCap:ApiKey"];
     }
 
@@ -58,6 +61,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
 
             var binanceSymbols = binanceData.Select(b => b.Symbol).ToHashSet();
             var cmcData = await GetCoinMarketCapDataAsync(cancellationToken);
+            var usdToEur = await _currencyService.GetExchangeRateAsync("USD", "EUR");
 
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -85,6 +89,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
                             PercentChange30d = cmc?.PercentChange30d,
                             PercentChange60d = cmc?.PercentChange60d,
                             PercentChange90d = cmc?.PercentChange90d,
+                            MarketCap = cmc?.MarketCapUsd.HasValue == true ? cmc.MarketCapUsd.Value * usdToEur : null,
                             IsActive = true
                         };
                     })
@@ -97,7 +102,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
 
             if (cmcData.Count > 0)
             {
-                await UpdateFromCmcAsync(db, existingCryptos, cmcData, cancellationToken);
+                await UpdateFromCmcAsync(db, existingCryptos, cmcData, usdToEur, cancellationToken);
             }
 
             var toDeactivate = existingCryptos
@@ -186,6 +191,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         AppDbContext db, 
         List<Cryptocurrency> existingCryptos, 
         Dictionary<string, CoinMarketCapData> cmcData, 
+        decimal usdToEur,
         CancellationToken cancellationToken)
     {
         var updated = 0;
@@ -201,6 +207,7 @@ public class CryptocurrencyListService : ICryptocurrencyListService
                 crypto.PercentChange30d = cmc.PercentChange30d;
                 crypto.PercentChange60d = cmc.PercentChange60d;
                 crypto.PercentChange90d = cmc.PercentChange90d;
+                crypto.MarketCap = cmc.MarketCapUsd.HasValue ? cmc.MarketCapUsd.Value * usdToEur : null;
                 crypto.UpdatedAt = DateTimeOffset.UtcNow;
                 updated++;
             }
@@ -276,7 +283,8 @@ public class CryptocurrencyListService : ICryptocurrencyListService
                             quote?.PercentChange7d,
                             quote?.PercentChange30d,
                             quote?.PercentChange60d,
-                            quote?.PercentChange90d
+                            quote?.PercentChange90d,
+                            quote?.MarketCap
                         );
                     }
                 );
@@ -307,7 +315,8 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         decimal? PercentChange7d,
         decimal? PercentChange30d,
         decimal? PercentChange60d,
-        decimal? PercentChange90d
+        decimal? PercentChange90d,
+        decimal? MarketCapUsd
     );
 
     private class BinanceCryptoData
@@ -383,5 +392,8 @@ public class CryptocurrencyListService : ICryptocurrencyListService
         
         [JsonPropertyName("percent_change_90d")]
         public decimal? PercentChange90d { get; set; }
+        
+        [JsonPropertyName("market_cap")]
+        public decimal? MarketCap { get; set; }
     }
 }

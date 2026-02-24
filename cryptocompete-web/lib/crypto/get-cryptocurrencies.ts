@@ -11,6 +11,7 @@ export interface Cryptocurrency {
   percentChange7d: number | null;
   percentChange30d: number | null;
   percentChange90d: number | null;
+  marketCap: number | null;
 }
 
 export interface CryptocurrencyListResponse {
@@ -29,6 +30,7 @@ export interface CryptocurrencyDetail {
   percentChange7d: number | null;
   percentChange30d: number | null;
   percentChange90d: number | null;
+  marketCap: number | null;
 }
 
 export async function getAllCryptocurrencies(): Promise<CryptocurrencyListResponse> {

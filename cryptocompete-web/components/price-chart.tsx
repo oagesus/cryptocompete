@@ -8,6 +8,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { ProfitLossBadge } from "@/components/profit-loss-badge";
 import { useCryptoPrices } from "@/hooks/use-crypto-prices";
 import { type Kline, type KlineTimeframe } from "@/lib/crypto/get-klines";
+import { MarketCapBadge } from "@/components/market-cap-badge";
 import { getPriceDecimals } from "@/lib/format/format-number";
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
   percentChange7d?: number | null;
   percentChange30d?: number | null;
   percentChange90d?: number | null;
+  marketCap?: number | null;
 }
 
 const TIMEFRAMES: { value: KlineTimeframe; label: string }[] = [
@@ -142,6 +144,7 @@ export function PriceChart({
   percentChange7d,
   percentChange30d,
   percentChange90d,
+  marketCap,
 }: Props) {
   const t = useTranslations("trade");
   const locale = useLocale();
@@ -441,22 +444,25 @@ export function PriceChart({
   return (
     <Card>
       <CardHeader className="pb-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {formattedLivePrice && (
-              <span className="text-2xl font-semibold tracking-tight">
-                1 {symbol} = {formattedLivePrice}
-              </span>
-            )}
-            {chartData.length > 0 && (
-              <div className="flex items-center gap-2">
-                <ProfitLossBadge percent={priceChangePercent} />
-                <span className="text-sm text-muted-foreground">
-                  {getTimeframeLabel(timeframe)}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 min-w-0">
+              {formattedLivePrice && (
+                <span className="text-2xl font-semibold tracking-tight">
+                  1 {symbol} = {formattedLivePrice}
                 </span>
-              </div>
-            )}
-          </div>
+              )}
+              {chartData.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <ProfitLossBadge percent={priceChangePercent} />
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {getTimeframeLabel(timeframe)}
+                  </span>
+                </div>
+              )}
+              {marketCap && (
+                <MarketCapBadge value={marketCap} currency={displayCurrency} />
+              )}
+            </div>
           <div className="flex items-center gap-1 shrink-0">
             {TIMEFRAMES.map((tf) => (
               <button

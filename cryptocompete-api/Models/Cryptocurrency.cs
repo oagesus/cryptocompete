@@ -11,6 +11,7 @@ public class Cryptocurrency
     public decimal? PercentChange30d { get; set; }
     public decimal? PercentChange60d { get; set; }
     public decimal? PercentChange90d { get; set; }
+    public decimal? MarketCap { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTimeOffset? DeactivatedAt { get; set; }
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.UtcNow;

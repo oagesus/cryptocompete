@@ -76,6 +76,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.PercentChange30d).HasPrecision(18, 8).IsRequired(false);
             entity.Property(e => e.PercentChange60d).HasPrecision(18, 8).IsRequired(false);
             entity.Property(e => e.PercentChange90d).HasPrecision(18, 8).IsRequired(false);
+            entity.Property(e => e.MarketCap).HasPrecision(28, 2).IsRequired(false);
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
         });
 
