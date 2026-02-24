@@ -61,12 +61,18 @@ public class PriceAlarmBackgroundService : BackgroundService
 
         if (alarms.Count == 0) return;
 
-        // Cache exchange rates for unique currencies
         var currencies = alarms.Select(a => a.Currency).Distinct().ToList();
         var ratesToUsd = new Dictionary<string, decimal>();
         foreach (var currency in currencies)
         {
-            ratesToUsd[currency] = await currencyService.GetExchangeRateAsync(currency, "USD");
+            try
+            {
+                ratesToUsd[currency] = await currencyService.GetExchangeRateAsync(currency, "USD");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Skipping alarms for currency {Currency} — exchange rate unavailable", currency);
+            }
         }
 
         var alarmsToNotify = new List<(PriceAlarm Alarm, decimal CurrentPriceUsd)>();
@@ -76,6 +82,7 @@ public class PriceAlarmBackgroundService : BackgroundService
         {
             var currentPriceUsd = _priceService.GetPrice(alarm.Cryptocurrency.Symbol);
             if (!currentPriceUsd.HasValue) continue;
+            if (!ratesToUsd.ContainsKey(alarm.Currency)) continue;
 
             var targetPriceUsd = alarm.TargetPrice * ratesToUsd[alarm.Currency];
 
@@ -85,7 +92,6 @@ public class PriceAlarmBackgroundService : BackgroundService
 
             if (isConditionMet && !alarm.IsTriggered)
             {
-                // Alarm triggers
                 alarm.IsTriggered = true;
                 alarm.TriggeredAt = DateTimeOffset.UtcNow;
                 hasChanges = true;
@@ -93,7 +99,6 @@ public class PriceAlarmBackgroundService : BackgroundService
             }
             else if (!isConditionMet && alarm.IsTriggered && alarm.IsRecurring)
             {
-                // Price crossed back — re-arm recurring alarm
                 alarm.IsTriggered = false;
                 hasChanges = true;
             }
@@ -111,7 +116,14 @@ public class PriceAlarmBackgroundService : BackgroundService
         var notifyCurrencies = alarmsToNotify.Select(a => a.Alarm.Currency).Distinct().ToList();
         foreach (var currency in notifyCurrencies)
         {
-            ratesFromUsd[currency] = await currencyService.GetExchangeRateAsync("USD", currency);
+            try
+            {
+                ratesFromUsd[currency] = await currencyService.GetExchangeRateAsync("USD", currency);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Skipping notification for currency {Currency} — exchange rate unavailable", currency);
+            }
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -120,6 +132,8 @@ public class PriceAlarmBackgroundService : BackgroundService
         {
             alarm.IsTriggered = true;
             alarm.TriggeredAt = now;
+
+            if (!ratesFromUsd.ContainsKey(alarm.Currency)) continue;
 
             try
             {
