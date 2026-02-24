@@ -106,7 +106,7 @@ public class PortfolioController : ControllerBase
                 if (isDelisted)
                 {
                     delistedInvestedMap.TryGetValue(h.CryptocurrencyId, out var remainingEur);
-                    delistedValueInUserCurrency = remainingEur > 0 ? Math.Round(remainingEur * balanceExchangeRate, 2) : null;
+                    delistedValueInUserCurrency = remainingEur > 0 ? Math.Round(remainingEur * balanceExchangeRate, 2, MidpointRounding.AwayFromZero) : null;
                     priceUsd = null;
                     changePercent = null;
                 }

@@ -83,7 +83,7 @@ public class TradeController : ControllerBase
 
         if (request.Mode == "crypto")
         {
-            cryptoAmount = Math.Round(amount, CryptoDecimalPrecision);
+            cryptoAmount = Math.Round(amount, CryptoDecimalPrecision, MidpointRounding.AwayFromZero);
             
             if (cryptoAmount <= 0)
             {
@@ -103,12 +103,12 @@ public class TradeController : ControllerBase
             }
             
             var spendAmountUsd = spendAmountEur * eurToUsd;
-            cryptoAmount = Math.Round(spendAmountUsd / priceUsd.Value, CryptoDecimalPrecision);
+            cryptoAmount = Math.Round(spendAmountUsd / priceUsd.Value, CryptoDecimalPrecision, MidpointRounding.AwayFromZero);
         }
 
         if (cryptoAmount <= 0 || spendAmountEur < 1m)
         {
-            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2);
+            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2, MidpointRounding.AwayFromZero);
             return BadRequest(new { message = "Minimum trade amount", minAmount = minInUserCurrency, currency = displayCurrency });
         }
 
@@ -142,8 +142,8 @@ public class TradeController : ControllerBase
             CryptocurrencyId = crypto.Id,
             Type = TransactionType.Buy,
             Amount = cryptoAmount,
-            PricePerUnit = Math.Round(spendAmountEur / cryptoAmount, CryptoDecimalPrecision),
-            TotalValue = Math.Round(spendAmountEur, 2)
+            PricePerUnit = Math.Round(spendAmountEur / cryptoAmount, CryptoDecimalPrecision, MidpointRounding.AwayFromZero),
+            TotalValue = Math.Round(spendAmountEur, 2, MidpointRounding.AwayFromZero)
         };
         _db.Transactions.Add(transaction);
 
@@ -155,9 +155,9 @@ public class TradeController : ControllerBase
             TransactionType.Buy.ToString(),
             cryptoAmount,
             cryptoAmount.ToString("F18").TrimEnd('0').TrimEnd('.'),
-            Math.Round(spendAmountEur * eurToUserCurrency, 2),
+            Math.Round(spendAmountEur * eurToUserCurrency, 2, MidpointRounding.AwayFromZero),
             displayCurrency,
-            Math.Round(profile.Balance * eurToUserCurrency, 2)
+            Math.Round(profile.Balance * eurToUserCurrency, 2, MidpointRounding.AwayFromZero)
         ));
     }
 
@@ -234,12 +234,12 @@ public class TradeController : ControllerBase
             }
             
             var receiveAmountUsd = receiveAmountEur * eurToUsd;
-            cryptoAmount = Math.Round(receiveAmountUsd / priceUsd.Value, CryptoDecimalPrecision);
+            cryptoAmount = Math.Round(receiveAmountUsd / priceUsd.Value, CryptoDecimalPrecision, MidpointRounding.AwayFromZero);
             valueEur = receiveAmountEur;
         }
         else
         {
-            cryptoAmount = Math.Round(amount, CryptoDecimalPrecision);
+            cryptoAmount = Math.Round(amount, CryptoDecimalPrecision, MidpointRounding.AwayFromZero);
             
             if (cryptoAmount <= 0)
             {
@@ -252,7 +252,7 @@ public class TradeController : ControllerBase
 
         if (cryptoAmount <= 0 || valueEur < 1m)
         {
-            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2);
+            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2, MidpointRounding.AwayFromZero);
             return BadRequest(new { message = "Minimum trade amount", minAmount = minInUserCurrency, currency = displayCurrency });
         }
 
@@ -278,8 +278,8 @@ public class TradeController : ControllerBase
             CryptocurrencyId = crypto.Id,
             Type = TransactionType.Sell,
             Amount = cryptoAmount,
-            PricePerUnit = Math.Round(valueEur / cryptoAmount, CryptoDecimalPrecision),
-            TotalValue = Math.Round(valueEur, 2)
+            PricePerUnit = Math.Round(valueEur / cryptoAmount, CryptoDecimalPrecision, MidpointRounding.AwayFromZero),
+            TotalValue = Math.Round(valueEur, 2, MidpointRounding.AwayFromZero)
         };
         _db.Transactions.Add(transaction);
 
@@ -291,9 +291,9 @@ public class TradeController : ControllerBase
             TransactionType.Sell.ToString(),
             cryptoAmount,
             cryptoAmount.ToString("F18").TrimEnd('0').TrimEnd('.'),
-            Math.Round(valueEur * eurToUserCurrency, 2),
+            Math.Round(valueEur * eurToUserCurrency, 2, MidpointRounding.AwayFromZero),
             displayCurrency,
-            Math.Round(profile.Balance * eurToUserCurrency, 2)
+            Math.Round(profile.Balance * eurToUserCurrency, 2, MidpointRounding.AwayFromZero)
         ));
     }
 
@@ -377,11 +377,11 @@ public class TradeController : ControllerBase
                 return BadRequest(new { message = "Amount must be greater than 0" });
             }
 
-            cryptoToSell = Math.Round(receiveEur / pricePerUnitEur, CryptoDecimalPrecision);
+            cryptoToSell = Math.Round(receiveEur / pricePerUnitEur, CryptoDecimalPrecision, MidpointRounding.AwayFromZero);
         }
         else
         {
-            cryptoToSell = Math.Round(amount, CryptoDecimalPrecision);
+            cryptoToSell = Math.Round(amount, CryptoDecimalPrecision, MidpointRounding.AwayFromZero);
         }
 
         if (cryptoToSell <= 0)
@@ -395,11 +395,11 @@ public class TradeController : ControllerBase
         }
 
         var ratio = cryptoToSell / holding.Amount;
-        var refundEur = Math.Round(investedEur * ratio, 2);
+        var refundEur = Math.Round(investedEur * ratio, 2, MidpointRounding.AwayFromZero);
 
         if (refundEur < 1m)
         {
-            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2);
+            var minInUserCurrency = Math.Round(1m * eurToUserCurrency, 2, MidpointRounding.AwayFromZero);
             return BadRequest(new { message = "Minimum trade amount", minAmount = minInUserCurrency, currency = displayCurrency });
         }
 
@@ -420,7 +420,7 @@ public class TradeController : ControllerBase
             CryptocurrencyId = crypto.Id,
             Type = TransactionType.Sell,
             Amount = cryptoToSell,
-            PricePerUnit = Math.Round(pricePerUnitEur, CryptoDecimalPrecision),
+            PricePerUnit = Math.Round(pricePerUnitEur, CryptoDecimalPrecision, MidpointRounding.AwayFromZero),
             TotalValue = refundEur
         };
         _db.Transactions.Add(transaction);
@@ -433,9 +433,9 @@ public class TradeController : ControllerBase
             TransactionType.Sell.ToString(),
             cryptoToSell,
             cryptoToSell.ToString("F18").TrimEnd('0').TrimEnd('.'),
-            Math.Round(refundEur * eurToUserCurrency, 2),
+            Math.Round(refundEur * eurToUserCurrency, 2, MidpointRounding.AwayFromZero),
             displayCurrency,
-            Math.Round(profile.Balance * eurToUserCurrency, 2)
+            Math.Round(profile.Balance * eurToUserCurrency, 2, MidpointRounding.AwayFromZero)
         ));
     }
 
