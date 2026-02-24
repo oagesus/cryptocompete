@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -8,7 +9,14 @@ interface ProfitLossBadgeProps {
 }
 
 export function ProfitLossBadge({ percent }: ProfitLossBadgeProps) {
+  const locale = useLocale();
   const isPositive = percent >= 0;
+
+  const formatted = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    signDisplay: "exceptZero",
+  }).format(percent);
 
   return (
     <Badge
@@ -23,8 +31,7 @@ export function ProfitLossBadge({ percent }: ProfitLossBadgeProps) {
       ) : (
         <TrendingDown className="h-3 w-3" />
       )}
-      {isPositive ? "+" : ""}
-      {percent.toFixed(2)}%
+      {formatted}%
     </Badge>
   );
 }
