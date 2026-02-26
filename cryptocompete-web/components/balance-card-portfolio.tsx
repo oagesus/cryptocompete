@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface BalanceCardProps {
@@ -9,7 +9,6 @@ interface BalanceCardProps {
 }
 
 export function BalanceCardPortfolio({ balance, currency }: BalanceCardProps) {
-  const t = useTranslations("account");
   const locale = useLocale();
 
   const formattedBalance = new Intl.NumberFormat(locale, {
@@ -20,7 +19,7 @@ export function BalanceCardPortfolio({ balance, currency }: BalanceCardProps) {
   return (
     <Card>
       <CardContent className="flex items-center justify-between px-4">
-        <span className="text-sm text-muted-foreground">{t("balance")}</span>
+        <span className="text-sm text-muted-foreground">{currency}</span>
         <span className="font-semibold">{formattedBalance}</span>
       </CardContent>
     </Card>

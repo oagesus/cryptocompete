@@ -144,7 +144,7 @@ public class LeaderboardController : ControllerBase
                     h.Cryptocurrency.Symbol,
                     h.Cryptocurrency.Name,
                     h.Amount,
-                    h.Amount.ToString("G29"),
+                    h.Amount.ToString("F18").TrimEnd('0').TrimEnd('.'),
                     priceUsd,
                     changePercent,
                     h.Cryptocurrency.Rank,
@@ -213,8 +213,9 @@ public class LeaderboardController : ControllerBase
                 t.Cryptocurrency.Name,
                 t.Type.ToString(),
                 t.Amount,
-                t.Amount.ToString("G29"),
+                t.Amount.ToString("F18").TrimEnd('0').TrimEnd('.'),
                 t.PricePerUnit,
+                t.PricePerUnit.ToString("F18").TrimEnd('0').TrimEnd('.'),
                 t.TotalValue,
                 displayCurrency,
                 t.CreatedAt
@@ -308,6 +309,7 @@ public record PublicTransactionDto(
     decimal Amount,
     string AmountRaw,
     decimal PricePerUnit,
+    string PricePerUnitRaw,
     decimal TotalValue,
     string Currency,
     DateTimeOffset CreatedAt

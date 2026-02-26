@@ -10,6 +10,7 @@ export interface Transaction {
   amount: number;
   amountRaw: string;
   pricePerUnit: number;
+  pricePerUnitRaw: string;
   totalValue: number;
   currency: string;
   createdAt: string;

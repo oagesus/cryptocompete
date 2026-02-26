@@ -192,6 +192,7 @@ public class PortfolioController : ControllerBase
                 t.Amount,
                 t.Amount.ToString("F18").TrimEnd('0').TrimEnd('.'),
                 t.PricePerUnit,
+                t.PricePerUnit.ToString("F18").TrimEnd('0').TrimEnd('.'),
                 t.TotalValue,
                 displayCurrency,
                 t.CreatedAt
@@ -268,6 +269,7 @@ public record TransactionDto(
     decimal Amount,
     string AmountRaw,
     decimal PricePerUnit,
+    string PricePerUnitRaw,
     decimal TotalValue,
     string Currency,
     DateTimeOffset CreatedAt

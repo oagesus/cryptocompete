@@ -27,6 +27,7 @@ import { PremiumTransactionDialog } from "@/components/premium-transaction-dialo
 import { TransactionsResponse } from "@/lib/transactions/get-transactions";
 import { cn } from "@/lib/utils";
 import { getPriceDecimals, getLocaleSeparators, formatRawAmount } from "@/lib/format/format-number";
+import Decimal from "decimal.js-light";
 
 interface TransactionsListProps {
   title?: string;
@@ -232,7 +233,12 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                           : formatAmount(tx.amount)}
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatPriceCurrency(tx.pricePerUnit * transactions.exchangeRate, transactions.currency)}
+                        {formatPriceCurrency(
+                          tx.pricePerUnitRaw
+                            ? Number(new Decimal(tx.pricePerUnitRaw).mul(new Decimal(transactions.exchangeRate)))
+                            : tx.pricePerUnit * transactions.exchangeRate,
+                          transactions.currency
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {formatCurrency(tx.totalValue * transactions.exchangeRate, transactions.currency)}

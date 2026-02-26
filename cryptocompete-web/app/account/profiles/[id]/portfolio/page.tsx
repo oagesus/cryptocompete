@@ -43,29 +43,27 @@ export default async function PortfolioPage({
           exchangeRate={portfolio.exchangeRate}
         />
         <Separator />
-        <CardContent className="pt-6 space-y-6">
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">{t("balance")}</h3>
-            <BalanceCardPortfolio balance={portfolio.balance} currency={portfolio.currency} />
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">{t("holdings")}</h3>
-            <HoldingsList
-              holdings={portfolio.holdings}
-              currency={portfolio.currency}
-              exchangeRate={portfolio.exchangeRate}
-            />
-          </div>
-
-          <div>
-            <ViewTransactionsLink
-              href={`/account/profiles/${publicId}/portfolio/transactions`}
-              isPremium={userIsPremium}
-              label={t("viewTransactions")}
-            />
-          </div>
+        <CardContent className="pt-6 space-y-3">
+          <h3 className="text-lg font-semibold">{t("balance")}</h3>
+          <BalanceCardPortfolio balance={portfolio.balance} currency={portfolio.currency} />
         </CardContent>
+
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold px-6 pt-6">{t("holdings", { count: portfolio.holdings.length })}</h3>
+          <HoldingsList
+            holdings={portfolio.holdings}
+            currency={portfolio.currency}
+            exchangeRate={portfolio.exchangeRate}
+          />
+        </div>
+
+        <div className="px-6">
+          <ViewTransactionsLink
+            href={`/account/profiles/${publicId}/portfolio/transactions`}
+            isPremium={userIsPremium}
+            label={t("viewTransactions")}
+          />
+        </div>
       </Card>
     </div>
   );

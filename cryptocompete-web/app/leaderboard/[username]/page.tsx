@@ -108,30 +108,28 @@ export default async function PublicProfilePage({ params, searchParams }: PagePr
             exchangeRate={profile.exchangeRate}
           />
           <Separator />
-          <CardContent className="pt-6 space-y-6">
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold">{t("balance")}</h3>
-              <BalanceCardPortfolio balance={profile.balance} currency={profile.currency} />
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold">{t("holdings")}</h3>
-              <PublicHoldingsList
-                holdings={profile.holdings}
-                currency={profile.currency}
-                exchangeRate={profile.exchangeRate}
-              />
-            </div>
-
-            <div>
-              <ViewTransactionsLink
-                href={`/leaderboard/${encodeURIComponent(profile.username)}/transactions${backParams.toString() ? `?${backParams.toString()}` : ""}`}
-                isAuthenticated={!!user}
-                isPremium={userIsPremium}
-                label={t("viewTransactions")}
-              />
-            </div>
+          <CardContent className="pt-6 space-y-3">
+            <h3 className="text-lg font-semibold">{t("balance")}</h3>
+            <BalanceCardPortfolio balance={profile.balance} currency={profile.currency} />
           </CardContent>
+
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold px-6 pt-6">{t("holdings", { count: profile.holdings.length })}</h3>
+            <PublicHoldingsList
+              holdings={profile.holdings}
+              currency={profile.currency}
+              exchangeRate={profile.exchangeRate}
+            />
+          </div>
+
+          <div className="px-6">
+            <ViewTransactionsLink
+              href={`/leaderboard/${encodeURIComponent(profile.username)}/transactions${backParams.toString() ? `?${backParams.toString()}` : ""}`}
+              isAuthenticated={!!user}
+              isPremium={userIsPremium}
+              label={t("viewTransactions")}
+            />
+          </div>
         </Card>
       </div>
     </div>
