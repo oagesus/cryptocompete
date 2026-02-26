@@ -120,11 +120,7 @@ export function HoldingsList({ holdings, currency, exchangeRate }: HoldingsListP
 
   if (holdings.length === 0) {
     return (
-      <Card>
-        <CardContent className="px-4">
-          <p className="text-sm text-muted-foreground">{t("noHoldingsYet")}</p>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-muted-foreground px-6">{t("noHoldingsYet")}</p>
     );
   }
 

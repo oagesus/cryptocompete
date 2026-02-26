@@ -276,7 +276,9 @@ public class AuthController : ControllerBase
         {
             var settings = new GoogleJsonWebSignature.ValidationSettings
             {
-                Audience = new[] { _googleClientId }
+                Audience = new[] { _googleClientId },
+                IssuedAtClockTolerance = TimeSpan.FromMinutes(10),
+                ExpirationTimeClockTolerance = TimeSpan.FromMinutes(10)
             };
             
             payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
@@ -415,7 +417,9 @@ public class AuthController : ControllerBase
         {
             var settings = new GoogleJsonWebSignature.ValidationSettings
             {
-                Audience = new[] { _googleClientId }
+                Audience = new[] { _googleClientId },
+                IssuedAtClockTolerance = TimeSpan.FromMinutes(10),
+                ExpirationTimeClockTolerance = TimeSpan.FromMinutes(10)
             };
             
             payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);

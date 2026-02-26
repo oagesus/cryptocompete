@@ -19,7 +19,7 @@
     "holdingValue": "Holding",
     "holdingPrice": "Price per Unit",
     "holdingTotal": "Total",
-    "noHoldingsYet": "No holdings yet.",
+    "noHoldingsYet": "No assets yet.",
     "viewTransactions": "View Transactions",
     "userTransactions": "{username}'s Transactions",
     "userPortfolio": "{username}'s Portfolio",

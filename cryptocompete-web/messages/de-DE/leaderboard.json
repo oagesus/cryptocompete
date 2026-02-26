@@ -19,7 +19,7 @@
     "holdingValue": "Bestand",
     "holdingPrice": "Preis pro Einheit",
     "holdingTotal": "Gesamt",
-    "noHoldingsYet": "Noch keine Bestände.",
+    "noHoldingsYet": "Noch keine Assets.",
     "viewTransactions": "Transaktionen anzeigen",
     "userTransactions": "{username}'s Transaktionen",
     "userPortfolio": "{username}'s Portfolio",

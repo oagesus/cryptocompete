@@ -196,23 +196,25 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
           {isPremium && transactions && transactions.transactions.length === 0 && (
             <p className="text-sm text-muted-foreground">{t("noTransactions")}</p>
           )}
-          {isPremium && transactions && transactions.transactions.length > 0 && (
+        </CardContent>
+        {isPremium && transactions && transactions.transactions.length > 0 && (
+          <>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-semibold">{t("transactionDate")}</TableHead>
-                    <TableHead className="font-semibold">{t("transactionType")}</TableHead>
-                    <TableHead className="font-semibold">{t("transactionAsset")}</TableHead>
-                    <TableHead className="font-semibold text-right">{t("transactionAmount")}</TableHead>
-                    <TableHead className="font-semibold text-right">{t("transactionPricePerUnit")}</TableHead>
-                    <TableHead className="font-semibold text-right">{t("transactionTotal")}</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="text-muted-foreground font-normal pl-6">{t("transactionDate")}</TableHead>
+                    <TableHead className="text-muted-foreground font-normal">{t("transactionType")}</TableHead>
+                    <TableHead className="text-muted-foreground font-normal">{t("transactionAsset")}</TableHead>
+                    <TableHead className="text-muted-foreground font-normal text-right">{t("transactionAmount")}</TableHead>
+                    <TableHead className="text-muted-foreground font-normal text-right">{t("transactionPricePerUnit")}</TableHead>
+                    <TableHead className="text-muted-foreground font-normal text-right pr-6">{t("transactionTotal")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedTransactions.map((tx) => (
                     <TableRow key={tx.id} className="border-0">
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap pl-6">
                         {formatDate(tx.createdAt)}
                       </TableCell>
                       <TableCell>
@@ -240,14 +242,16 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                           transactions.currency
                         )}
                       </TableCell>
-                      <TableCell className="text-right font-mono">
+                      <TableCell className="text-right font-mono pr-6">
                         {formatCurrency(tx.totalValue * transactions.exchangeRate, transactions.currency)}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              {totalPages > 1 && (
+            </div>
+            {totalPages > 1 && (
+              <CardContent>
                 <div className="flex flex-col gap-1 pt-4">
                   <div className="flex items-center justify-between md:justify-center md:gap-1">
                     <Button
@@ -323,10 +327,10 @@ export function TransactionsList({ title, backHref, rank, transactions, isPremiu
                     </Button>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-        </CardContent>
+              </CardContent>
+            )}
+          </>
+        )}
       </Card>
       <PremiumTransactionDialog
         open={showPremiumDialog}
