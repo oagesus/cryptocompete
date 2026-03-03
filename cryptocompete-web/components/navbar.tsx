@@ -22,52 +22,53 @@ export async function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm px-6">
       <div className="mx-auto flex h-16 w-full max-w-screen-xl items-center justify-between">
-        <Link href={user ? "/dashboard" : "/"} className="text-2xl font-thin">
+        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3 text-2xl font-thin">
+          <img src="/icon.svg" alt="CryptoCompete Logo" className="h-8 w-8" />
           CryptoCompete
         </Link>
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/dashboard">{t("dashboard")}</Link>
               </Button>
-              <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href={`/account/profiles/${activeProfile?.publicId}/portfolio`}>{t("portfolio")}</Link>
               </Button>
-              <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/trade">{t("trade")}</Link>
               </Button>
-              <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/leaderboard">{t("leaderboard")}</Link>
               </Button>
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 <UserMenu user={user} currencyInfo={currencyInfo} />
               </div>
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <MobileMenu user={user} currencyInfo={currencyInfo} />
               </div>
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/trade/buy">{t("trade")}</Link>
               </Button>
-              <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/leaderboard">{t("leaderboard")}</Link>
               </Button>
-              <div className="hidden md:block w-px h-5 bg-border" />
-              <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <div className="hidden lg:block w-px h-5 bg-border" />
+              <Button variant="ghost" asChild className="hidden lg:inline-flex">
                 <Link href="/auth/login">{t("login")}</Link>
               </Button>
-              <Button asChild className="hidden md:inline-flex">
+              <Button asChild className="hidden lg:inline-flex">
                 <Link href="/auth/register">{t("register")}</Link>
               </Button>
-              <div className="hidden md:flex items-center gap-1">
+              <div className="hidden lg:flex items-center gap-1">
                 <ThemeToggle />
                 <CurrencyToggle currencyInfo={currencyInfo} />
                 <LanguageToggle />
               </div>
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <MobileMenuPublic currencyInfo={currencyInfo} />
               </div>
             </>
