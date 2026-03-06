@@ -1,7 +1,8 @@
-<p align="center">
+<h1 align="center">
   <a href="https://cryptocompete.net"><img src="cryptocompete-web/app/icon.svg" alt="CryptoCompete Logo" width="120" height="120" /></a>
-</p>
-<h1 align="center">CryptoCompete</h1>
+  <br>
+  CryptoCompete
+</h1>
 
 <p align="center">
   <strong>The ultimate crypto trading simulator for competitive traders</strong>
