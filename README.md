@@ -1,7 +1,6 @@
 <p align="center">
   <a href="https://cryptocompete.net"><img src="cryptocompete-web/app/icon.svg" alt="CryptoCompete Logo" width="120" height="120" /></a>
 </p>
-
 <h1 align="center">CryptoCompete</h1>
 
 <p align="center">
