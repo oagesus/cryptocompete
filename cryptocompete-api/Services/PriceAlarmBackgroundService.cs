@@ -20,7 +20,7 @@ public class PriceAlarmBackgroundService : BackgroundService
         _scopeFactory = scopeFactory;
         _priceService = priceService;
         _logger = logger;
-        _frontendUrl = configuration["FrontendUrl"] ?? "https://cryptocompete.com";
+        _frontendUrl = configuration["FrontendUrl"] ?? "https://cryptocompete.net";
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
