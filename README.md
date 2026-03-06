@@ -60,7 +60,7 @@ CryptoCompete is an open-source cryptocurrency trading simulator where each user
 | [Entity Framework Core 10](https://learn.microsoft.com/ef/core/) | ORM and data access |
 | [PostgreSQL](https://www.postgresql.org/) | Relational database |
 | [SignalR](https://learn.microsoft.com/aspnet/core/signalr/) | Real-time WebSocket communication |
-| [JWT](https://jwt.io/) | Authentication with refresh tokens |
+| [JWT](https://jwt.io/) | Token-based authentication |
 | [BCrypt](https://github.com/BcryptNet/bcrypt.net) | Password hashing |
 
 ### External Services
