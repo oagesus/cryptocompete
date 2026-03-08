@@ -49,3 +49,5 @@ jobs:
           context: ./cryptocompete-web
           push: true
           tags: ${{ vars.DOCKER_USERNAME }}/cryptocompete-web:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.cryptocompete.net/api
