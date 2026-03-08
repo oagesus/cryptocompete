@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace cryptocompete_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260210142839_AddPriceAlarmIsRecurring")]
-    partial class AddPriceAlarmIsRecurring
+    [Migration("20260308174759_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,6 +38,10 @@ namespace cryptocompete_api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("added_at");
 
+                    b.Property<DateTimeOffset?>("DeactivatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deactivated_at");
+
                     b.Property<int>("DecimalPrecision")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -49,6 +53,11 @@ namespace cryptocompete_api.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("is_active");
+
+                    b.Property<decimal?>("MarketCap")
+                        .HasPrecision(28, 2)
+                        .HasColumnType("numeric(28,2)")
+                        .HasColumnName("market_cap");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -85,6 +94,12 @@ namespace cryptocompete_api.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("symbol");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("NOW()");
 
                     b.HasKey("Id")
                         .HasName("pk_cryptocurrencies");
@@ -272,6 +287,10 @@ namespace cryptocompete_api.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_leaderboard_snapshots_profile_id");
 
+                    b.HasIndex("TotalValue")
+                        .IsDescending()
+                        .HasDatabaseName("ix_leaderboard_snapshots_total_value");
+
                     b.ToTable("leaderboard_snapshots", (string)null);
                 });
 
@@ -404,8 +423,8 @@ namespace cryptocompete_api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(28, 18)
-                        .HasColumnType("numeric(28,18)")
+                        .HasPrecision(28, 8)
+                        .HasColumnType("numeric(28,8)")
                         .HasColumnName("amount");
 
                     b.Property<int>("CryptocurrencyId")
@@ -450,6 +469,26 @@ namespace cryptocompete_api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("cryptocurrency_id");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("EUR")
+                        .HasColumnName("currency");
+
+                    b.Property<bool>("IsAbove")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_above");
+
+                    b.Property<bool>("IsDelisted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_delisted");
+
                     b.Property<bool>("IsRecurring")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -462,9 +501,13 @@ namespace cryptocompete_api.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_triggered");
 
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("public_id");
+
                     b.Property<decimal>("TargetPrice")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("numeric(18,8)")
+                        .HasPrecision(28, 8)
+                        .HasColumnType("numeric(28,8)")
                         .HasColumnName("target_price");
 
                     b.Property<DateTimeOffset?>("TriggeredAt")
@@ -480,6 +523,10 @@ namespace cryptocompete_api.Migrations
 
                     b.HasIndex("CryptocurrencyId")
                         .HasDatabaseName("ix_price_alarms_cryptocurrency_id");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_price_alarms_public_id");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_price_alarms_user_id");
@@ -655,8 +702,8 @@ namespace cryptocompete_api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(28, 18)
-                        .HasColumnType("numeric(28,18)")
+                        .HasPrecision(28, 8)
+                        .HasColumnType("numeric(28,8)")
                         .HasColumnName("amount");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -738,6 +785,14 @@ namespace cryptocompete_api.Migrations
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uuid")
                         .HasColumnName("public_id");
+
+                    b.Property<string>("Timezone")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("UTC")
+                        .HasColumnName("timezone");
 
                     b.HasKey("Id")
                         .HasName("pk_users");

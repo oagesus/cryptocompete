@@ -4,7 +4,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=cryptocompete_dev;Username=postgres;Password=devpassword
       - Resend__ApiKey=${RESEND_API_KEY}
-      - Resend__FromEmail=noreply@mstubenvoll.com
+      - Resend__FromEmail=noreply@cryptocompete.net
       - Jwt__Secret=${JWT_SECRET}
       - Google__ClientId=${GOOGLE_CLIENT_ID}
       - CoinMarketCap__ApiKey=${COINMARKETCAP_API_KEY}
