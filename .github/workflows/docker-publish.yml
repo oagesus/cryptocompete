@@ -51,3 +51,5 @@ jobs:
           tags: ${{ vars.DOCKER_USERNAME }}/cryptocompete-web:latest
           build-args: |
             NEXT_PUBLIC_API_URL=https://api.cryptocompete.net/api
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
+            NEXT_PUBLIC_PAYPAL_CLIENT_ID=${{ vars.PAYPAL_CLIENT_ID_LIVE }}
