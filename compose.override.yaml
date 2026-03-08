@@ -18,6 +18,12 @@ services:
         condition: service_healthy
 
   web:
+    build:
+      context: ./cryptocompete-web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5000
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        NEXT_PUBLIC_PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
     environment:
       - API_URL=http://api:8080
       - NEXT_PUBLIC_API_URL=http://localhost:5000
