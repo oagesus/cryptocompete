@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { useTranslations, useLocale } from "next-intl";
 import { Separator } from "@/components/ui/separator";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Read the CryptoCompete privacy policy. Learn how we handle your data and protect your privacy on our crypto trading simulator.",
+};
 
 const LAST_UPDATED = new Date("2026-02-18");
 

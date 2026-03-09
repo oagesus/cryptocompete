@@ -94,3 +94,5 @@ yarn-error.log*
 next-env.d.ts
 
 cryptocompete-api/Scripts/
+
+.claude/

@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { getPortfolio } from "@/lib/portfolio/get-portfolio";
+
+export const metadata: Metadata = {
+  title: "Portfolio",
+  description: "View your virtual crypto portfolio, holdings, and performance on CryptoCompete.",
+};
 import { getUser } from "@/lib/auth/get-user";
 import { isPremium } from "@/lib/auth/user-utils";
 import { BalanceCardPortfolio } from "@/components/balance-card-portfolio";

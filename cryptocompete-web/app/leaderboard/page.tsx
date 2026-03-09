@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { getLeaderboard } from "@/lib/leaderboard/get-leaderboard";
 import { getTimezone } from "@/lib/timezone/get-timezone";
 import { LeaderboardClient } from "./leaderboard-client";
+
+export const metadata: Metadata = {
+  title: "Leaderboard",
+  description:
+    "See who tops the CryptoCompete leaderboard. Compare virtual crypto portfolios and compete with traders worldwide.",
+};
 
 export const dynamic = "force-dynamic";
 

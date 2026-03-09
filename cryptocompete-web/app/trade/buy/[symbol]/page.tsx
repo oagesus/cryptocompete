@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
 import { getKlines } from "@/lib/crypto/get-klines";
@@ -11,6 +12,15 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ symbol: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { symbol } = await params;
+  const upper = symbol.toUpperCase();
+  return {
+    title: `Buy ${upper}`,
+    description: `View live ${upper} price charts and practice buying ${upper} with virtual money on CryptoCompete.`,
+  };
 }
 
 export default async function BuyDetailPage({ params }: Props) {

@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { useTranslations, useLocale } from "next-intl";
 import { Separator } from "@/components/ui/separator";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Read the CryptoCompete terms of service. Understand the rules and conditions for using our free crypto trading simulator.",
+};
 
 const LAST_UPDATED = new Date("2026-02-18");
 

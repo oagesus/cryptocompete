@@ -24,8 +24,32 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CryptoCompete",
-  description: "Cryptocurrency portfolio competition",
+  title: {
+    default: "CryptoCompete - Free Crypto Trading Simulator",
+    template: "%s | CryptoCompete",
+  },
+  description:
+    "CryptoCompete is a free, open-source crypto trading simulator. Start with €10,000 in virtual funds, trade at live prices, and compete on a global leaderboard.",
+  openGraph: {
+    title: "CryptoCompete - Free Crypto Trading Simulator",
+    description:
+      "CryptoCompete is a free, open-source crypto trading simulator. Start with €10,000 in virtual funds, trade at live prices, and compete on a global leaderboard.",
+    url: "https://cryptocompete.net",
+    siteName: "CryptoCompete",
+    images: [
+      {
+        url: "/og-image.png",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CryptoCompete - Free Crypto Trading Simulator",
+    description:
+      "CryptoCompete is a free, open-source crypto trading simulator. Start with €10,000 in virtual funds, trade at live prices, and compete on a global leaderboard.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default async function RootLayout({

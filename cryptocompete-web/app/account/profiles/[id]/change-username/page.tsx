@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+
+export const metadata: Metadata = {
+  title: "Change Username",
+  description: "Change your CryptoCompete profile username.",
+};
 import { getUser } from "@/lib/auth/get-user";
 import { ChangeUsernameForm } from "./change-username-form";
 

@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Your CryptoCompete dashboard. Quickly access trading, portfolio, and leaderboard.",
+};
 import { Suspense } from "react";
 import { PlusCircle, MinusCircle, Wallet, User, Trophy } from "lucide-react";
 import { getTranslations } from "next-intl/server";

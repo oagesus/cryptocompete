@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { getUser } from "@/lib/auth/get-user";
+
+export const metadata: Metadata = {
+  title: "Upgrade",
+  description: "Upgrade your CryptoCompete account to unlock premium features like multiple profiles and transaction history.",
+};
 import { isPremium } from "@/lib/auth/user-utils";
 import { getSubscriptionStatus } from "@/lib/subscription/get-subscription-status";
 import { UpgradeCards } from "@/components/upgrade-cards";

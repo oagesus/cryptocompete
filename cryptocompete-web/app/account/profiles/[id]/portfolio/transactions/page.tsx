@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth/get-user";
+
+export const metadata: Metadata = {
+  title: "Transactions",
+  description: "View your crypto trading transaction history on CryptoCompete.",
+};
 import { isPremium } from "@/lib/auth/user-utils";
 import { getTransactions } from "@/lib/transactions/get-transactions";
 import { TransactionsList } from "@/components/transactions-list";

@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { useTranslations, useLocale } from "next-intl";
 import { Separator } from "@/components/ui/separator";
+
+export const metadata: Metadata = {
+  title: "Imprint",
+  description:
+    "Legal information and operator details for CryptoCompete, a free cryptocurrency trading simulator.",
+};
 
 const LAST_UPDATED = new Date("2026-02-18");
 

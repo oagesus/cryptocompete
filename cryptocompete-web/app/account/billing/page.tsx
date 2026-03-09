@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { getLocale } from "next-intl/server";
 import { getUser } from "@/lib/auth/get-user";
+
+export const metadata: Metadata = {
+  title: "Billing",
+  description: "Manage your CryptoCompete subscription and view billing history.",
+};
 import { isPremium } from "@/lib/auth/user-utils";
 import { getSubscriptionStatus } from "@/lib/subscription/get-subscription-status";
 import { getInvoices } from "@/lib/subscription/get-invoices";

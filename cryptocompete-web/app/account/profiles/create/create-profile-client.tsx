@@ -1,0 +1,154 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { useAccount } from "@/components/account-provider";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+
+const errorMap: Record<string, string> = {
+  "Username is already taken": "usernameAlreadyTaken",
+};
+
+export default function CreateProfilePage() {
+  const router = useRouter();
+  const { refetch } = useAccount();
+  const t = useTranslations("account");
+  const tApi = useTranslations("api.errors");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createProfileSchema = z.object({
+    username: z
+      .string()
+      .min(3, t("usernameMinLength"))
+      .max(20, t("usernameMaxLength"))
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        t("usernameInvalidChars")
+      ),
+  });
+
+  type CreateProfileFormValues = z.infer<typeof createProfileSchema>;
+
+  const form = useForm<CreateProfileFormValues>({
+    resolver: zodResolver(createProfileSchema),
+    defaultValues: {
+      username: "",
+    },
+  });
+
+  async function onSubmit(data: CreateProfileFormValues) {
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/profiles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          username: data.username,
+        }),
+      });
+
+      if (response.status === 403) {
+        setError(t("premiumRequiredForProfiles"));
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json();
+        const errorKey = errorMap[data.message];
+        if (errorKey) {
+          setError(tApi(errorKey));
+        } else {
+          setError(t("failedToCreateProfile"));
+        }
+        return;
+      }
+
+      const profile = await response.json();
+      setError(null);
+      await refetch();
+      toast.success(t("profileCreated"));
+      router.push(`/account/profiles/${profile.publicId}`);
+    } catch {
+      setError(t("failedToCreateProfile"));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-2xl font-bold">{t("createProfile")}</CardTitle>
+      </CardHeader>
+      <Separator />
+      <CardContent className="pt-6">
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">{t("username")}</h3>
+          <p className="text-sm text-muted-foreground">
+            {t("enterUsernameToCreate")}
+          </p>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {error && (
+                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+                  {error}
+                </div>
+              )}
+
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex flex-col gap-3 md:flex-row">
+                      <FormControl>
+                        <Input
+                          placeholder="your_username"
+                          autoComplete="off"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {t("createProfile")}
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

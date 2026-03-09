@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+
+export const metadata: Metadata = {
+  title: "Trade",
+  description:
+    "Buy and sell cryptocurrencies with virtual money on CryptoCompete. Practice trading strategies risk-free with live market prices.",
+};
 import { getUser } from "@/lib/auth/get-user";
 import { isPremium } from "@/lib/auth/user-utils";
 import { SellLink } from "./sell-link";

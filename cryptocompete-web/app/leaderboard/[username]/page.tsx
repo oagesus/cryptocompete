@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -19,6 +20,15 @@ export const dynamic = "force-dynamic";
 interface PageProps {
   params: Promise<{ username: string }>;
   searchParams: Promise<{ page?: string; pageSize?: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { username } = await params;
+  const decoded = decodeURIComponent(username);
+  return {
+    title: `${decoded}'s Portfolio`,
+    description: `View ${decoded}'s virtual crypto portfolio and trading performance on CryptoCompete.`,
+  };
 }
 
 export default async function PublicProfilePage({ params, searchParams }: PageProps) {

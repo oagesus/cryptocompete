@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getCryptocurrency } from "@/lib/crypto/get-cryptocurrencies";
 import { getKlines } from "@/lib/crypto/get-klines";
@@ -13,6 +14,15 @@ export const dynamic = "force-dynamic";
 interface Props {
   params: Promise<{ symbol: string }>;
   searchParams: Promise<{ edit?: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { symbol } = await params;
+  const upper = symbol.toUpperCase();
+  return {
+    title: `${upper} Price Alarm`,
+    description: `Set a price alarm for ${upper} on CryptoCompete. Get notified when the price hits your target.`,
+  };
 }
 
 export default async function NotifyDetailPage({ params, searchParams }: Props) {

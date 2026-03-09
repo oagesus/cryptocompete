@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CheckEmailForm } from "./check-email-form";
+
+export const metadata: Metadata = {
+  title: "Check Your Email",
+  description: "Check your inbox to verify your CryptoCompete account.",
+};
 
 const RESEND_COOLDOWN = 60;
 
