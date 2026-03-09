@@ -101,6 +101,7 @@ builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>();
 builder.Services.AddHostedService<LeaderboardBackgroundService>();
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 builder.Services.AddHostedService<PriceAlarmBackgroundService>();
+builder.Services.AddHostedService<RefreshTokenCleanupBackgroundService>();
 
 builder.Services.AddOpenApi();
 

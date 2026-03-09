@@ -604,6 +604,8 @@ public class AuthController : ControllerBase
 
         if (storedToken.ExpiresAt < DateTimeOffset.UtcNow)
         {
+            _db.RefreshTokens.Remove(storedToken);
+            await _db.SaveChangesAsync();
             return Unauthorized(new { message = "Refresh token has expired" });
         }
 
@@ -984,6 +986,11 @@ public class AuthController : ControllerBase
 
         _db.UserSessions.Add(session);
         await _db.SaveChangesAsync();
+
+        var expiredTokens = await _db.RefreshTokens
+            .Where(t => t.UserId == user.Id && t.ExpiresAt < DateTimeOffset.UtcNow)
+            .ToListAsync();
+        _db.RefreshTokens.RemoveRange(expiredTokens);
 
         var refreshTokenEntity = new RefreshToken
         {
