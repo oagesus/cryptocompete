@@ -19,7 +19,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { symbol } = await params;
-  const upper = symbol.toUpperCase();
+  const upper = decodeURIComponent(symbol).toUpperCase();
   return {
     title: `Sell ${upper}`,
     description: `Sell your virtual ${upper} holdings on CryptoCompete.`,

@@ -18,7 +18,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { symbol } = await params;
-  const upper = symbol.toUpperCase();
+  const upper = decodeURIComponent(symbol).toUpperCase();
   return {
     title: `${upper} Price Alarm`,
     description: `Set a price alarm for ${upper} on CryptoCompete. Get notified when the price hits your target.`,
