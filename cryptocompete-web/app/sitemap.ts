@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 
 const BASE_URL = "https://cryptocompete.net";
+const API_URL = process.env.API_URL;
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return [
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
       changeFrequency: "weekly",
@@ -60,4 +61,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
   ];
+
+  let cryptoRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const response = await fetch(`${API_URL}/api/cryptocurrencies/all`, {
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      cryptoRoutes = data.cryptocurrencies.map(
+        (crypto: { symbol: string }) => ({
+          url: `${BASE_URL}/trade/buy/${crypto.symbol.toLowerCase()}`,
+          changeFrequency: "daily" as const,
+          priority: 0.7,
+        })
+      );
+    }
+  } catch {}
+
+  return [...staticRoutes, ...cryptoRoutes];
 }
