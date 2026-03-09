@@ -109,13 +109,6 @@ export function MobileMenu({ user, currencyInfo }: MobileMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => router.push(`/account/profiles/${activeProfile.publicId}`)}
-          className="cursor-pointer"
-        >
-          <User className="mr-2 h-4 w-4" />
-          {t("profile")}
-        </DropdownMenuItem>
-        <DropdownMenuItem
           onClick={() => router.push("/account/settings")}
           className="cursor-pointer"
         >
@@ -135,6 +128,13 @@ export function MobileMenu({ user, currencyInfo }: MobileMenuProps) {
         >
           <Bell className="mr-2 h-4 w-4" />
           {t("priceAlarms")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push(`/account/profiles/${activeProfile.publicId}`)}
+          className="cursor-pointer"
+        >
+          <User className="mr-2 h-4 w-4" />
+          {t("profile")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
