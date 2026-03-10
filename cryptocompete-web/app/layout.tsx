@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     siteName: "CryptoCompete",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://cryptocompete.net/og-image.png",
       },
     ],
     type: "website",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     title: "CryptoCompete - Free Crypto Trading Simulator",
     description:
       "CryptoCompete is a free, open-source crypto trading simulator. Start with €10,000 in virtual funds, trade at live prices, and compete on a global leaderboard.",
-    images: ["/og-image.png"],
+    images: ["https://cryptocompete.net/og-image.png"],
   },
 };
 
