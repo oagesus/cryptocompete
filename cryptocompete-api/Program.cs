@@ -1,4 +1,5 @@
 using System.Text;
+using Prometheus;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Filters;
 using CryptoCompete.Api.Hubs;
@@ -122,7 +123,10 @@ if (!app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHttpMetrics();
+
 app.MapControllers();
 app.MapHub<CryptoPriceHub>("/hubs/prices");
+app.MapMetrics();
 
 app.Run();
