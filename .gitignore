@@ -52,6 +52,10 @@ nunit-*.xml
 # Production compose
 compose.prod.yaml
 
+# Monitoring compose
+compose.monitoring.yaml
+prometheus.yml
+
 # ===========================================
 # Next.js / Node.js (cryptocompete-web)
 # ===========================================
