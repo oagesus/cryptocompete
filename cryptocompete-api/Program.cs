@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Prometheus;
 using CryptoCompete.Api.Data;
 using CryptoCompete.Api.Filters;
@@ -123,7 +124,13 @@ if (!app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseHttpMetrics();
+app.UseHttpMetrics(options =>
+{
+    options.AddCustomLabel("controller", context =>
+        context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>()?.ControllerName ?? "");
+    options.AddCustomLabel("action", context =>
+        context.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>()?.ActionName ?? "");
+});
 
 app.MapControllers();
 app.MapHub<CryptoPriceHub>("/hubs/prices");
