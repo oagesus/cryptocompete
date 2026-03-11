@@ -451,7 +451,7 @@ export function PriceChart({
             </span>
           )}
           {chartData.length > 0 && (
-            <div className="flex items-center gap-2 w-full lg:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <ProfitLossBadge percent={priceChangePercent} />
               <span className="text-sm text-muted-foreground whitespace-nowrap">
                 {getTimeframeLabel(timeframe)}
@@ -459,11 +459,11 @@ export function PriceChart({
             </div>
           )}
           {marketCap && (
-            <div className="w-full lg:w-auto">
+            <div className="w-full sm:w-auto">
               <MarketCapBadge value={marketCap} currency={displayCurrency} />
             </div>
           )}
-          <div className="flex items-center gap-1 w-full lg:w-auto lg:ml-auto">
+          <div className="flex items-center gap-1 w-full sm:w-auto lg:ml-auto">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf.value}
