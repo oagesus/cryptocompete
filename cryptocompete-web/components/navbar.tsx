@@ -22,7 +22,7 @@ export async function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm px-6">
       <div className="mx-auto flex h-16 w-full max-w-screen-xl items-center justify-between">
-        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3 text-2xl font-thin">
+        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3 text-2xl font-light">
           <img src="/icon.svg" alt="CryptoCompete Logo" className="h-8 w-8" />
           CryptoCompete
         </Link>
