@@ -14,8 +14,8 @@ interface Props {
 export function NotifyLayoutClient({ children, cryptocurrencies, currency, exchangeRate }: Props) {
   return (
     <div className="flex flex-1">
-      <div className="flex w-full flex-col gap-6 md:flex-row">
-        <div className="w-full shrink-0 md:w-80">
+      <div className="flex w-full flex-col gap-6 lg:flex-row">
+        <div className="w-full shrink-0 lg:w-80">
           <CryptocurrencyNotifySidebar
             cryptocurrencies={cryptocurrencies}
             currency={currency}
