@@ -444,26 +444,24 @@ export function PriceChart({
   return (
     <Card>
       <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 min-w-0">
-              {formattedLivePrice && (
-                <span className="text-2xl font-semibold tracking-tight">
-                  1 {symbol} = {formattedLivePrice}
-                </span>
-              )}
-              {chartData.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <ProfitLossBadge percent={priceChangePercent} />
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    {getTimeframeLabel(timeframe)}
-                  </span>
-                </div>
-              )}
-              {marketCap && (
-                <MarketCapBadge value={marketCap} currency={displayCurrency} />
-              )}
+        <div className="flex flex-wrap items-center gap-3">
+          {formattedLivePrice && (
+            <span className="text-2xl font-semibold tracking-tight">
+              1 {symbol} = {formattedLivePrice}
+            </span>
+          )}
+          {chartData.length > 0 && (
+            <div className="flex items-center gap-2">
+              <ProfitLossBadge percent={priceChangePercent} />
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                {getTimeframeLabel(timeframe)}
+              </span>
             </div>
-          <div className="flex items-center gap-1 shrink-0">
+          )}
+          {marketCap && (
+            <MarketCapBadge value={marketCap} currency={displayCurrency} />
+          )}
+          <div className="flex items-center gap-1 ml-auto">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf.value}
