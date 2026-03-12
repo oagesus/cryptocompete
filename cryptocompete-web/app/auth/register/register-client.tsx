@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const registerSchema = z
     .object({
@@ -86,6 +88,7 @@ export default function RegisterPage() {
           username: data.username,
           email: data.email,
           password: data.password,
+          turnstileToken,
         }),
       });
 
@@ -212,10 +215,18 @@ export default function RegisterPage() {
               )}
             />
 
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+              onSuccess={setTurnstileToken}
+              onError={() => setTurnstileToken(null)}
+              onExpire={() => setTurnstileToken(null)}
+              options={{ appearance: "interaction-only" }}
+            />
+
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading || isGoogleLoading || !turnstileToken}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t("submit")}
@@ -233,9 +244,10 @@ export default function RegisterPage() {
         </div>
 
         <GoogleSignInButton
-          disabled={isLoading}
+          disabled={isLoading || !turnstileToken}
           onError={setError}
           onLoadingChange={setIsGoogleLoading}
+          turnstileToken={turnstileToken}
         />
       </CardContent>
       <CardFooter className="flex justify-center">

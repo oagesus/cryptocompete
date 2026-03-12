@@ -53,3 +53,4 @@ jobs:
             NEXT_PUBLIC_API_URL=https://api.cryptocompete.net
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
             NEXT_PUBLIC_PAYPAL_CLIENT_ID=${{ vars.PAYPAL_CLIENT_ID_LIVE }}
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.TURNSTILE_SITE_KEY }}

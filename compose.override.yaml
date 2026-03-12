@@ -13,6 +13,7 @@ services:
       - PayPal__WebhookId=${PAYPAL_WEBHOOK_ID}
       - PayPal__PlanId=${PAYPAL_PLAN_ID}
       - PayPal__UseSandbox=true
+      - Turnstile__SecretKey=${TURNSTILE_SECRET_KEY}
     depends_on:
       db:
         condition: service_healthy
@@ -24,11 +25,13 @@ services:
         NEXT_PUBLIC_API_URL: http://localhost:5000
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
         NEXT_PUBLIC_PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
     environment:
       - API_URL=http://api:8080
       - NEXT_PUBLIC_API_URL=http://localhost:5000
       - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - NEXT_PUBLIC_PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
+      - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
 
   db:
     image: postgres:17-alpine

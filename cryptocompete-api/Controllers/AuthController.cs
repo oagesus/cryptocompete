@@ -17,6 +17,7 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IEmailService _emailService;
     private readonly IJwtService _jwtService;
+    private readonly ITurnstileService _turnstileService;
     private readonly string _frontendUrl;
     private readonly int _refreshTokenExpirationDays;
     private readonly int _accessTokenExpirationMinutes;
@@ -24,15 +25,17 @@ public class AuthController : ControllerBase
     private readonly string _googleClientId;
 
     public AuthController(
-        AppDbContext db, 
-        IEmailService emailService, 
+        AppDbContext db,
+        IEmailService emailService,
         IJwtService jwtService,
+        ITurnstileService turnstileService,
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
         _db = db;
         _emailService = emailService;
         _jwtService = jwtService;
+        _turnstileService = turnstileService;
         _frontendUrl = configuration["FrontendUrl"] 
             ?? throw new InvalidOperationException("FrontendUrl is not configured");
         _refreshTokenExpirationDays = configuration.GetValue<int>("Jwt:RefreshTokenExpirationDays", 30);
@@ -45,6 +48,11 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
+        if (!await _turnstileService.ValidateTokenAsync(request.TurnstileToken))
+        {
+            return BadRequest(new { message = "Bot verification failed" });
+        }
+
         var existingUserByEmail = await _db.Users
             .Include(u => u.Profiles)
             .FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -221,6 +229,11 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
+        if (!await _turnstileService.ValidateTokenAsync(request.TurnstileToken))
+        {
+            return BadRequest(new { message = "Bot verification failed" });
+        }
+
         var user = await _db.Users
             .Include(u => u.Profiles)
             .FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -270,6 +283,11 @@ public class AuthController : ControllerBase
     [HttpPost("google")]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
     {
+        if (!await _turnstileService.ValidateTokenAsync(request.TurnstileToken))
+        {
+            return BadRequest(new { message = "Bot verification failed" });
+        }
+
         GoogleJsonWebSignature.Payload payload;
         
         try
@@ -1227,9 +1245,9 @@ public class AuthController : ControllerBase
     }
 }
 
-public record RegisterRequest(string Username, string Email, string Password);
-public record LoginRequest(string Email, string Password);
-public record GoogleLoginRequest(string IdToken);
+public record RegisterRequest(string Username, string Email, string Password, string TurnstileToken);
+public record LoginRequest(string Email, string Password, string TurnstileToken);
+public record GoogleLoginRequest(string IdToken, string TurnstileToken);
 public record LoginResponse(string AccessToken, string RefreshToken, int UserId, string Username, string Email);
 public record RefreshResponse(string AccessToken, string RefreshToken);
 public record ProfileDto(Guid PublicId, string Username, bool IsMain);

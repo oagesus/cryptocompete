@@ -60,6 +60,7 @@ interface GoogleSignInButtonProps {
   disabled?: boolean;
   onError?: (error: string) => void;
   onLoadingChange?: (isLoading: boolean) => void;
+  turnstileToken?: string | null;
   tabIndex?: number;
 }
 
@@ -67,6 +68,7 @@ export function GoogleSignInButton({
   disabled,
   onError,
   onLoadingChange,
+  turnstileToken,
   tabIndex,
 }: GoogleSignInButtonProps) {
   const router = useRouter();
@@ -96,6 +98,7 @@ export function GoogleSignInButton({
           credentials: "include",
           body: JSON.stringify({
             idToken: response.credential,
+            turnstileToken,
           }),
         });
 
@@ -124,7 +127,7 @@ export function GoogleSignInButton({
         setLoadingState(false);
       }
     },
-    [router, onError, setLoadingState, t, tApi]
+    [router, onError, setLoadingState, turnstileToken, t, tApi]
   );
 
   useEffect(() => {
