@@ -72,7 +72,7 @@ export function LeaderboardList({ entries, currency, exchangeRate, hideSubtitle,
             href={`/leaderboard/${encodeURIComponent(entry.username)}${leaderboardParams ? `?${leaderboardParams}` : ""}`}
             className="block"
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between py-3 px-3 rounded-md hover:bg-muted">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 px-3 rounded-md hover:bg-muted">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div
                   className={cn(
@@ -87,7 +87,7 @@ export function LeaderboardList({ entries, currency, exchangeRate, hideSubtitle,
                 </div>
                 <span className="text-sm font-medium truncate">{entry.username}</span>
               </div>
-              <span className="text-sm font-medium shrink-0 ml-9 md:ml-0">{formattedValue}</span>
+              <span className="text-sm font-medium shrink-0 ml-9 sm:ml-0">{formattedValue}</span>
             </div>
           </Link>
         );
