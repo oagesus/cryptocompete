@@ -179,7 +179,7 @@ export function LeaderboardClient({
         </CardHeader>
         <Separator />
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
             <span className="text-2xl font-bold">{t("rankedByPortfolioValue")}</span>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{t("rowsPerPage")}</span>
