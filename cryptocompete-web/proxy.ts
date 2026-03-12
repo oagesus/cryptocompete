@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
 import { handleAuthRedirects } from "./lib/proxy/redirects";
 import { handleTokenRefresh } from "./lib/auth/refresh";
 
@@ -8,6 +7,9 @@ export async function proxy(request: NextRequest) {
 
   const redirect = handleAuthRedirects(request, isAuthenticated);
   if (redirect) {
+    for (const cookie of response.cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
     return redirect;
   }
 
