@@ -63,7 +63,7 @@ public class CryptoPriceBackgroundService : BackgroundService
     {
         _webSocket = new ClientWebSocket();
         _webSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-        var uri = new Uri("wss://stream.binance.com:9443/ws/!ticker@arr");
+        var uri = new Uri("wss://stream.binance.com:9443/ws/!miniTicker@arr");
 
         _logger.LogInformation("Connecting to Binance WebSocket...");
         await _webSocket.ConnectAsync(uri, stoppingToken);
@@ -108,7 +108,10 @@ public class CryptoPriceBackgroundService : BackgroundService
                 var symbol = ticker.Symbol.Replace("USDT", "");
                 
                 if (!decimal.TryParse(ticker.LastPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var price)) continue;
-                if (!decimal.TryParse(ticker.PriceChangePercent, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var changePercent)) continue;
+                if (!decimal.TryParse(ticker.OpenPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var openPrice)) continue;
+                if (openPrice <= 0) continue;
+
+                var changePercent = Math.Round((price - openPrice) / openPrice * 100, 3);
 
                 var priceUpdate = new PriceUpdate(symbol, price, changePercent);
                 
@@ -158,8 +161,8 @@ public class CryptoPriceBackgroundService : BackgroundService
         [JsonPropertyName("c")]
         public string LastPrice { get; set; } = string.Empty;
 
-        [JsonPropertyName("P")]
-        public string PriceChangePercent { get; set; } = string.Empty;
+        [JsonPropertyName("o")]
+        public string OpenPrice { get; set; } = string.Empty;
     }
 }
 
